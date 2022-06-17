@@ -1,0 +1,24 @@
+{
+  "name": "discordframework",
+  "version": "4.0-indev",
+  "description": "A FiveM custom framework build specifically for JCRP",
+  "dependencies": {
+    "discord.js": "^13.8.0",
+    "eslint": "^8.17.0",
+    "mongodb": "^4.7.0",
+    "pretty-ms": "^8.0.0"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/JusticeCommunityRP/DiscordFramework.git"
+  },
+  "author": "ItsAmmarB#7897",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/JusticeCommunityRP/DiscordFramework/issues"
+  },
+  "homepage": "https://github.com/JusticeCommunityRP/DiscordFramework#readme"
+}
