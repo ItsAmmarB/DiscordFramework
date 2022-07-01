@@ -111,3 +111,6 @@ yarn.lock
 
 # ESLint
 .eslintrc.json
+
+# FiveM CFX DATA Resouce Cache folder 
+/cache
