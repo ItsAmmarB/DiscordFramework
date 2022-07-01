@@ -3,10 +3,10 @@ fx_version 'cerulean'
 game 'gta5'
 
 name 'DiscordFramework'
-description 'A custom framework based on the Discord id for permissions'
+description 'A custom framework based on the Discord for permissions'
 author 'ItsAmmarB#7897'
-version 'v4.0-indec'
-url 'https://github.com/ItsAmmarB/DiscordFramework'
+version 'v4.0-indev'
+url 'https://github.com/ItsAmmarB/DiscordFramework/'
 
 dependency 'yarn'
 
