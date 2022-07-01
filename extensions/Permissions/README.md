@@ -405,7 +405,7 @@ Outcome
 ```
 ### Outcome
 ```js
-    'PLAYE SERVE ID'
+    'PLAYER SERVER ID'
 ```
 
 </details>
