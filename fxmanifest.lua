@@ -10,56 +10,73 @@ url 'https://github.com/ItsAmmarB/DiscordFramework/'
 
 dependency 'yarn'
 
-debug_mode 'false' 
-
-client_script {
-    
-    -- Configurations
-    'configurations/cl_config.js',
-
-    -- Modules
-    'modules/**/cl_**.js',
-
-    -- Extensions
-    'extensions/**/cl_**.js',
-
-    -- Commands
-    'commands/**/cl_**.js'
-
-}
-
 server_script {
 
+    -- CORE
+    'core/configs/sv_**.js',
+    'core/sv_**.js',
+
+    
     -- Configurations
     'configurations/sv_config.js',
 
-    -- Modules
+    -- MODULES
     'modules/**/sv_**.js',
 
-    -- Extensions
+    -- EXTENSIONS
     'extensions/**/sv_**.js',
 
-    -- Commands
-    'commands/**/sv_**.js'
+    -- COMMANDS
+    'commands/**/sv_**.js',
 
+    -- UTILS
+    'utils/**/sv_**.js'
+
+}
+
+client_script {
+
+    -- CORE
+    'core/configs/cl_**.js',
+    'core/cl_**.js',
+
+    
+    -- Configurations
+    'configurations/sv_config.js',
+
+    -- MODULES
+    'modules/**/cl_**.js',
+
+    -- EXTENSIONS
+    'extensions/**/cl_**.js',
+
+    -- COMMANDS
+    'commands/**/cl_**.js',
+ 
+    -- UTILS
+    'utils/**/cl_**.js'
 }
 
 shared_script {
 
-    -- Configurations
-    'configurations/sh_config.js',
+    -- CORE
+    'core/configs/sh_**.js',
+    'core/sh_**.js',
 
-    -- Modules
+
+    -- MODULES
     'modules/**/sh_**.js',
 
     -- Functions
     'modules/functions.js',
 
-    -- Extensions
+    -- EXTENSIONS
     'extensions/**/sh_**.js',
    
-    -- Commands
-    'commands/**/sh_**.js'
-   
+    -- COMMANDS
+    'commands/**/sh_**.js',
 
+    -- UTILS
+    'utils/**/sh_**.js'
+   
 }
