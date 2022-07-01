@@ -40,7 +40,7 @@ class Extensions {
             if(this.error) {
                 this.Register(2);
                 await this.Delay(5000);
-                return PrintError(this.error);
+                return this.PrintError(this.error);
             }
 
             // Check if the extension is a mere template and register it as 'Template'
@@ -97,7 +97,7 @@ class Extensions {
 
         } catch(err) {
             this.Register(2);
-            PrintError(err);
+            this.PrintError(err);
         }
 
     }
@@ -106,7 +106,7 @@ class Extensions {
         this.state = State;
         if(SV_Config.Extensions.filter(extension => extension.name === this.name).length > 1) {
             SV_Config.Extensions.filter(extension => extension.name === this.name).forEach(extension => extension.state = 2);
-            return PrintError(new Error(`EXTEN_DUPLIC: Duplicate extension config names were found "${this.name}"`));
+            return this.PrintError(new Error(`EXTEN_DUPLIC: Duplicate extension config names were found "${this.name}"`));
         }
 
         if(SV_Config.Extensions.find(extension => extension.name === this.name)) {
@@ -175,25 +175,25 @@ class Extensions {
     async Run() {
         await this.Delay(1000);
         this.Register(2);
-        PrintError(new Error(`${this.name} Extension doesn't have a Run() method.`));
+        this.PrintError(new Error(`${this.name} Extension doesn't have a Run() method.`));
     }
 
     async Delay(WaitMS) {
         return await new Promise(resolve => setTimeout(resolve, WaitMS));
     }
 
-}
+    async PrintError(Err) {
 
-const PrintError = async Err => {
+        while(CoreReady !== 2) {
+            await Extensions.prototype.Delay(1500);
+        }
 
-    while(CoreReady !== 2) {
-        await Extensions.prototype.Delay(1500);
+        setTimeout(() => {
+            console.error(Err);
+        }, 1500);
     }
 
-    setTimeout(() => {
-        console.error(Err);
-    }, 1500);
-};
+}
 
 const GetExtensionsCount = () => {
     const Enabled = SV_Config.Extensions.filter(Extension => Extension.state === 1);
