@@ -2,7 +2,7 @@ onNet('DiscordFramework:Extensions:RunClientSide:Permissions', () => {
 
     let DiscordID = null;
     let ServerID = null;
-    let Guilds = null;
+    let Guilds = [];
 
     const Config = {
         mainGuildOnly: null,
@@ -107,6 +107,10 @@ onNet('DiscordFramework:Extensions:RunClientSide:Permissions', () => {
 
         // FiveM Exports for external use
         exports('Permissions.CheckPermission', (Roles, Guild = null) => CheckPermission(Roles, Guild));
+        exports('Permissions.GetGuilds', (Guild = null) => Guild ? Guilds.filter(guild => guild.id === Guild) : Guilds);
+        exports('Permissions.GetAllowedGuilds', (Guild = null) => GetAllowedGuilds(Guild));
+        exports('Permissions.GetDiscordID', () => DiscordID);
+        exports('Permissions.GetServerID', () => ServerID);
     });
 
 });

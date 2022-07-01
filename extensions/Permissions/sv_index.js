@@ -42,9 +42,9 @@ new class Permissions extends global.Extensions.Extension {
                         Member.push(member);
                     }
 
-                    setTimeout(() => {
+                    setTimeout(async () => {
                         this.UpdatePermissions(Player, Member);
-                    // this.AcePermissionsAdd(Player.discordId);
+                        await this.AcePermissionsAdd(Player);
                     }, 200);
 
                 }
@@ -61,9 +61,10 @@ new class Permissions extends global.Extensions.Extension {
                 emitNet('DiscordFramework:Permissions:Initialize', PlayerId, config);
             });
 
-            on('DiscordFramework:Player:Disconnected', (PlayerId) => {
+            on('DiscordFramework:Player:Disconnected', async (PlayerId) => {
 
-                this.AcePermissionsRemove(PlayerId);
+                const Player = SH_Config.Core.Players.Connected.find(p => p.serverId === PlayerId);
+                if (Player.discordId) await this.AcePermissionsRemove(Player);
 
                 this.players = this.players.filter(player => player.id !== PlayerId);
 
@@ -84,14 +85,34 @@ new class Permissions extends global.Extensions.Extension {
 
             // FiveM Exports for external use
             exports('Permissions.CheckPermission', (PlayerId, Roles, Guild = null) => this.CheckPermission(PlayerId, Roles, Guild));
+            exports('Permissions.GetGuilds', (PlayerId, Guild = null) => {
+                const LocalPlayer = this.players.find(player => player.serverId === PlayerId || player.discordId === PlayerId);
+                if(!LocalPlayer) return null;
+                if(Guild) {
+                    return LocalPlayer.guilds.filter(guild => guild.id === guild);
+                } else {
+                    return LocalPlayer.guilds;
+                }
+            });
+            exports('Permissions.GetAllowedGuilds', (Guild = null) => this.GetAllowedGuilds(Guild));
+            exports('Permissions.GetDiscordID', PlayerId => {
+                const LocalPlayer = this.players.find(player => player.serverId === PlayerId || player.discordId === PlayerId);
+                if(!LocalPlayer) return null;
+                return LocalPlayer.discordId;
+            });
+            exports('Permissions.GetServerID', PlayerId => {
+                const LocalPlayer = this.players.find(player => player.serverId === PlayerId || player.discordId === PlayerId);
+                if(!LocalPlayer) return null;
+                return LocalPlayer.serverId;
+            });
         });
     }
 
     /**
      * @description Used to match provided roles ID and/or users' IDs against players' roles' IDs and/or players' IDs
-     * @param {*} PlayerId The player's server ID, or Discord ID
-     * @param {*} Roles An array or roles' IDs or users' IDs
-     * @param {*} Guild A guild ID (Optional)
+     * @param PlayerId The player's server ID, or Discord ID
+     * @param Roles An array or roles' IDs or users' IDs
+     * @param Guild A guild ID (Optional)
      * @returns Boolean
      */
     CheckPermission(PlayerId, Roles, Guild = null) {
@@ -160,16 +181,19 @@ new class Permissions extends global.Extensions.Extension {
         }
     }
 
-    // Member is an array of GuildMember from the different discord guild specified in the extension Config
-    UpdatePermissions(Player, NewMember) {
+    /**
+     * @description Used to update the server and the client sided stored data
+     * @param Player The player's network object stored in Core
+     * @param Member An array of "GuildMember" objects related to the "Player"
+     */
+    UpdatePermissions(Player, Member) {
 
         let LocalPlayer = this.players.find(player => player.discordId === Player.discordId);
-
         if(LocalPlayer) {
             const _Player = this.players.find(player => player.discordId === Player.discordId);
 
-            for (let i = 0; i < NewMember.length; i++) {
-                const member = NewMember[i];
+            for (let i = 0; i < Member.length; i++) {
+                const member = Member[i];
                 const roles = [];
 
                 member.roles.cache.forEach(role => roles.push(({ name: role.name, id: role.id, guild: role.guild.id })));
@@ -210,6 +234,11 @@ new class Permissions extends global.Extensions.Extension {
 
     }
 
+    /**
+     * @description Used to get all of the allowed guilds or search for one within the allowed guilds for the members' roles to be fetched from; guilds must be registered in the config
+     * @param GuildID The guild ID (Option)
+     * @return object
+     */
     GetAllowedGuilds(GuildID = null) {
         if(GuildID) {
             return this.GetAllowedGuilds().filter(guild => guild.id === GuildID);
@@ -224,20 +253,24 @@ new class Permissions extends global.Extensions.Extension {
         }
     }
 
-    AcePermissionsAdd(Player) {
+    async AcePermissionsAdd(Player) {
 
         if (this.Config().AcePermissions.enabled) {
             if (Player.discordId) {
 
-                const { GetMember } = require(SH_Config.resourceDirectory + '/core/discord/index');
-                const Member = GetMember(Player.discordId);
+                for (let i = 0; i < this.Config().AcePermissions.roles.length; i++) {
 
-                if (Member.roles.cache.find(role => this.Config().AcePermissions.roles[role.id])) {
-                    const Role = Roles.find(role => this.Config().AcePermissions.roles[role.id]);
+                    const Role = this.Config().AcePermissions.roles[i];
+                    const IsAllowed = this.CheckPermission(Player.discordId, [Role]);
 
-                    Role.group ? ExecuteCommand('add_principal identifier.discord:' + DiscordId + ' ' + Role.group) : undefined;
-                    Role.ace ? ExecuteCommand('add_ace identifier.discord:' + DiscordId + ' ' + Role.ace) : undefined;
-                    Role.group || Role.ace ? ExecuteCommand('refresh') : undefined;
+                    await this.Delay(25); // Delay is present in the parent class as a method
+
+                    if(IsAllowed) {
+                        Role.group ? ExecuteCommand('add_principal identifier.discord:' + Player.discordId + ' ' + Role.group) : undefined;
+                        Role.ace ? ExecuteCommand('add_ace identifier.discord:' + Player.discordId + ' ' + Role.ace) : undefined;
+                        Role.group || Role.ace ? ExecuteCommand('refresh') : undefined;
+                    }
+
                 }
 
             }
@@ -245,22 +278,24 @@ new class Permissions extends global.Extensions.Extension {
 
     }
 
-    AcePermissionsRemove(PlayerId) {
+    async AcePermissionsRemove(Player) {
 
         if (this.Config().AcePermissions.enabled) {
+            if (Player.discordId) {
 
-            const Player = SH_Config.Core.Players.Total.find(player => player.id === PlayerId);
-            if (Player && Player.discordId) {
+                for (let i = 0; i < this.Config().AcePermissions.roles.length; i++) {
 
-                const { GetMember } = require(SH_Config.resourceDirectory + '/core/discord/index');
-                const Member = GetMember(Player.discordId);
+                    const Role = this.Config().AcePermissions.roles[i];
+                    const IsAllowed = this.CheckPermission(Player.discordId, [Role]);
 
-                if (Member.roles.cache.find(role => this.Config().AcePermissions.roles[role.id])) {
-                    const Role = Roles.find(role => this.Config().AcePermissions.roles[role.id]);
+                    await this.Delay(25); // Delay is present in the parent class as a method
 
-                    Role.group ? ExecuteCommand('remove_principal identifier.discord:' + DiscordId + ' ' + Role.group) : undefined;
-                    Role.ace ? ExecuteCommand('remove_ace identifier.discord:' + DiscordId + ' ' + Role.ace) : undefined;
-                    Role.group || Role.ace ? ExecuteCommand('refresh') : undefined;
+                    if(IsAllowed) {
+                        Role.group ? ExecuteCommand('remove_principal identifier.discord:' + Player.discordId + ' ' + Role.group) : undefined;
+                        Role.ace ? ExecuteCommand('remove_ace identifier.discord:' + Player.discordId + ' ' + Role.ace) : undefined;
+                        Role.group || Role.ace ? ExecuteCommand('refresh') : undefined;
+                    }
+
                 }
 
             }
@@ -269,19 +304,3 @@ new class Permissions extends global.Extensions.Extension {
     }
 
 }().Initialize();
-
-/**
- *      MAKE SURE TO CHANGE THE ({CHANGE_ME}) OF THE CLASS WITH THE EXTENSION NAME ELSE AN ERROR WILL BE THROWN IN THE CONSOLE
- *
- *      This is a server side file and can only be used for server sided functions/natives
- *      refer to https://docs.fivem.net/natives/ to see 'Server' functions/natives
- *
- *      this file can not be removed, and it is essential for the extension to work as of now, version; v4.0-indev
- *
- *      you can used this event to trigger the client side, not client side can only be useful after you trigger this event
- *      otherwise modification/altering is needed for the template to work
- *
- *           emitNet(`DiscordFramework:Extensions:RunClientSide:${this.constructor.name}`, this.constructor.name);
- *
- *      also make sure that you change the event in the client side to match the server side more on it in the 'cl_index.js'
- */
