@@ -1,8 +1,10 @@
-SV_Config.Extensions.push({
-    name: 'Template', // Extension name here, and make sure it the same as the one in the extension class in the 'sv_index.js'
-    config: {
+on('DiscordFramework:Core:Ready', () => {
+    SV_Config.Extensions.push({
+        name: 'Template', // Extension name here, and make sure it the same as the one in the extension class in the 'sv_index.js'
+        config: {
 
-    }
+        }
+    });
 });
 
 
