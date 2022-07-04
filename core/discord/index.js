@@ -1,4 +1,4 @@
-const Config = require(SH_Config.resourceDirectory + '/core/discord/config');
+const Config = require(SV_Config.resourceDirectory + '/core/discord/config');
 const Discord = require('discord.js');
 const Client = new Discord.Client({ fetchAllMembers: true, intents: 131071 });
 
@@ -45,7 +45,7 @@ const GetMember = async (PlayerId, DiscordGuildId) => {
     if(PlayerId.length > 10) {
         MemberId = PlayerId;
     } else {
-        const Player = SH_Config.Core.Players.Connected.find(player => player.server.id) || SH_Config.Core.Players.Total.find(player => player.server.id);
+        const Player = SV_Config.Core.Players.Connected.find(player => player.server.id) || SV_Config.Core.Players.Session.find(player => player.server.id);
         if(!Player) return new Error('DiscordFramework: Discord --> GetMember() Player does not have a player network object');
         MemberId.discord.id;
     }

@@ -1,4 +1,4 @@
-const Config = require(SH_Config.resourceDirectory + '/core/mongodb/config');
+const Config = require(SV_Config.resourceDirectory + '/core/mongodb/config');
 
 const MongoDB = require('mongodb');
 

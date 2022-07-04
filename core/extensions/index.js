@@ -91,7 +91,7 @@ class Extensions {
             }
 
             this.Run();
-            this.InitiateClientSide(this.name);
+            this.DeflectEvent(this.name);
             await this.Delay(75);
             this.Register(1);
 
@@ -151,26 +151,33 @@ class Extensions {
         }
     }
 
-    InitiateClientSide(exName) {
-        on(`DiscordFramework:Extensions:RunClientSide:${exName}`, async (_exName) => {
-            await this.Delay(500);
-            emitNet(`DiscordFramework:Extensions:RunClientSide:${_exName}`, -1, _exName);
-            emitNet('DiscordFramework:Extensions:ClientSideLoaded', -1, _exName);
+
+    /**
+     * this needs so revisions to work a better way to execute
+     *
+     * PS: Every extension should handle its client runners and on player connected on it own
+     */
+    DeflectEvent(exName) {
+        on(`DiscordFramework:Extensions:RunClientSide:${exName}`, (extensionName, playerId) => {
+            emitNet(`DiscordFramework:Extensions:RunClientSide:${extensionName}`, playerId, extensionName);
+            emitNet('DiscordFramework:Core:Console', playerId, `^2[^0Extensions^2]^3: ^4${extensionName} loaded!`);
         });
     }
 
-    PlayerConnected() {
-        onNet('DiscordFramework:Core:PlayerConnected:Client', (PlayerId) => {
-            SV_Config.Extensions.forEach(async extension => {
-                if(extension.state === 1) {
-                    await this.Delay(500);
-                    emitNet(`DiscordFramework:Extensions:RunClientSide:${extension.name}`, PlayerId, extension.name);
-                    await this.Delay(500);
-                    emitNet('DiscordFramework:Extensions:Loaded', PlayerId, extension.name);
-                }
-            });
-        });
-    }
+    // PlayerConnected() {
+    //     on('DiscordFramework:Player:Connected', async PlayerId => {
+    //         for (let i = 0; i < SV_Config.Extensions.length; i++) {
+    //             const extension = SV_Config.Extensions[i];
+    //             if(extension.state === 1) {
+    //                 console.log(extension.name, i);
+    //                 await this.Delay(500);
+    //                 emitNet(`DiscordFramework:Extensions:RunClientSide:${extension.name}`, PlayerId, extension.name);
+    //                 emitNet('DiscordFramework:Extensions:ClientSideLoaded', PlayerId, extension.name);
+    //             }
+    //         }
+    //     });
+    // }
+
 
     async Run() {
         await this.Delay(1000);
@@ -184,7 +191,8 @@ class Extensions {
 
     async PrintError(Err) {
 
-        while(CoreReady !== 2) {
+        while(!IsCoreReady) {
+            console.log('Extensions: Core is not ready!!!');
             await Extensions.prototype.Delay(1500);
         }
 
