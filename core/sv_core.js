@@ -2,12 +2,12 @@ const PrettyMS = require('pretty-ms');
 const MomentTimezone = require('moment-timezone');
 
 // Declares the resource path to be used in both server and client
-SH_Config.resourceDirectory = GetResourcePath(GetCurrentResourceName());
+SV_Config.resourceDirectory = GetResourcePath(GetCurrentResourceName());
 
-const Config = require(SH_Config.resourceDirectory + '/core/config');
-const Discord = require(SH_Config.resourceDirectory + '/core/discord/index');
-const MongoDB = require(SH_Config.resourceDirectory + '/core/mongodb/index');
-const Extensions = require(SH_Config.resourceDirectory + '/core/extensions/index');
+const Config = require(SV_Config.resourceDirectory + '/core/config');
+const Discord = require(SV_Config.resourceDirectory + '/core/discord/index');
+const MongoDB = require(SV_Config.resourceDirectory + '/core/mongodb/index');
+const Extensions = require(SV_Config.resourceDirectory + '/core/extensions/index');
 
 let IsDiscordReady = false;
 let IsMongoDBReady = false;
@@ -28,7 +28,7 @@ const ClientReady = Client => {
         IsCoreReady = true;
         console.log('Core is now ready!');
         emit('DiscordFramework:Core:Ready');
-        PlaytimeInterval();
+        PlaytimeInterval(); // commented out for development
     }
 };
 
@@ -86,8 +86,8 @@ const PlayerConnected = (PlayerId) => {
         }
     };
 
-    SH_Config.Core.Players.Connected.push(NetworkPlayerObject);
-    SH_Config.Core.Players.Total.push(NetworkPlayerObject);
+    SV_Config.Core.Players.Connected.push(NetworkPlayerObject);
+    SV_Config.Core.Players.Session.push(NetworkPlayerObject);
 
     // Database
     MongoDB.DatabaseFindOne('Players', { 'details.discordId': DiscordID }, async Player => {
@@ -177,14 +177,13 @@ const PlayerConnected = (PlayerId) => {
 
 const PlayerDisconnected = (PlayerId, Reason) => {
 
-    if(SH_Config.Core.Players.Connected.find(player => player.serverId === PlayerId)) {
-        SH_Config.Core.Players.Connected = SH_Config.Core.Players.Connected.filter(player => player.serverId !== PlayerId);
+    if(SV_Config.Core.Players.Connected.find(player => player.serverId === PlayerId)) {
+        SV_Config.Core.Players.Connected = SV_Config.Core.Players.Connected.filter(player => player.serverId !== PlayerId);
     }
-    if(SH_Config.Core.Players.Total.find(player => player.serverId === PlayerId)) {
-        SH_Config.Core.Players.Total.find(player => player.serverId === PlayerId).connection.disconnectedAt = Date.now();
-        SH_Config.Core.Players.Total.find(player => player.serverId === PlayerId).connection.disconnectReason = Reason;
+    if(SV_Config.Core.Players.Session.find(player => player.serverId === PlayerId)) {
+        SV_Config.Core.Players.Session.find(player => player.serverId === PlayerId).connection.disconnectedAt = Date.now();
+        SV_Config.Core.Players.Session.find(player => player.serverId === PlayerId).connection.disconnectReason = Reason;
     }
-
 
 };
 
@@ -232,8 +231,8 @@ const CheckBan = async (DiscordID, Deferrals) => {
 
 const PlaytimeInterval = () => setInterval(async () => {
     if(IsCoreReady) {
-        for (let i = 0; i < SH_Config.Core.Players.Connected.length; i++) {
-            const Player = SH_Config.Core.Players.Connected[i];
+        for (let i = 0; i < SV_Config.Core.Players.Connected.length; i++) {
+            const Player = SV_Config.Core.Players.Connected[i];
             await Delay(250);
             MongoDB.DatabaseUpdateOne('Players', { 'details.discordId': Player.discordId }, {
                 $inc: { 'playtime': 1 },
@@ -258,9 +257,16 @@ const Interval = setInterval(async () => {
         clearInterval(Interval);
 
         // This loop makes sure all extensions are registered
+        let counter = 0;
         while (SV_Config.Extensions.length !== SV_Config.Extensions.filter(exten => exten.state).length) {
-            new Promise((resolve) => setTimeout(resolve(), 100));
+            await Delay(500);
+            counter++;
+            if(counter === 40) { // A fail-safe to not crash the server
+                console.warn('Some extensions failed to load!');
+                break;
+            }
         }
+        console.debug(`Extensions tool ${counter / 2} second(s) to load!`); // just for debuging
 
         // Construct extension console log
         const ExtensionsLog = Extensions.GetExtensionsCount().total.map(exten => {
@@ -305,7 +311,7 @@ on('DiscordFramework:MongoDB:Client:Ready', () => {
 
 on('playerConnecting', (name, setKickReason, deferral) => {
     deferral.defer();
-    emit('DiscordFramework:Core:Player:Connecting', global.source, deferral);
+    emit('DiscordFramework:Player:Connecting', global.source, deferral);
     PlayerConnecting(global.source, deferral);
 });
 
@@ -327,9 +333,9 @@ on('playerDropped', (Reason) => {
 // ------------------------------------------------------------------- CORE EXPORTS ---------------------------------------------------------------------
 // ------------------------------------------------------------------------------------------------------------------------------------------------------
 
-// exports('Core.Ready', () => IsCoreReady);
-// exports('Core.GetPlayerInfo', (PlayerId) => SH_Config.Core.Players.Total.find(p => p.serverId === PlayerId) || null);
-// exports('Core.GetConnectedPlayers', () => SH_Config.Core.Players.Connected);
+// exports('Ready', () => IsCoreReady);
+// exports('GetPlayerInfo', (PlayerId) => SV_Config.Core.Players.Session.find(p => p.serverId === PlayerId) || null);
+// exports('GetConnectedPlayers', () => SV_Config.Core.Players.Connected);
 
 /**
  * apparently server side exports don't work!!
