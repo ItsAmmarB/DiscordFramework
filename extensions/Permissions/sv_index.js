@@ -1,36 +1,37 @@
-new class Permissions extends global.Extensions.Extension {
-    constructor() {
-        super({
-            Name: 'Permissions', // Change to extension name
-            Description: 'Provides permissions checking using Discord roles', // Add a brief decription of what does the extension do
-            Enabled: true, // Whether the extension is supposed to be enabled or disabled
-            Dependencies: [], // Add the dependencies/other extensions needed for this extension to be usable
-            Version: '1.0', // The current version of the extension if available
-            Author: 'ItsAmmarB'
-        });
-        this.players = [];
-    }
+on('DiscordFramework:Core:Ready', () => {
+    console.log('Permissions started loading..');
 
-    Config() {
-        return SV_Config.Extensions.find(extension => extension.name === this.constructor.name).config;
-    }
+    new class Permissions extends global.Extensions.Extension {
+        constructor() {
+            super({
+                Name: 'Permissions', // Change to extension name
+                Description: 'Provides permissions checking using Discord roles', // Add a brief decription of what does the extension do
+                Enabled: true, // Whether the extension is supposed to be enabled or disabled
+                Dependencies: [], // Add the dependencies/other extensions needed for this extension to be usable
+                Version: '1.0', // The current version of the extension if available
+                Author: 'ItsAmmarB'
+            });
+            this.players = [];
+        }
 
-    Run() {
-        const { Client, GetMember } = require(SH_Config.resourceDirectory + '/core/discord/index');
+        Config() {
+            return SV_Config.Extensions.find(extension => extension.name === this.constructor.name).config;
+        }
 
-        on('DiscordFramework:Core:Ready', () => {
-
-            // Trigger the client side
-            emit(`DiscordFramework:Extensions:RunClientSide:${this.constructor.name}`, this.constructor.name);
+        Run() {
+            const { Client, GetMember } = require(SV_Config.resourceDirectory + '/core/discord/index');
 
             // When a player connects do shizz
             on('DiscordFramework:Player:Connected', async (PlayerId) => {
+
+                // Trigger the client side
+                emit(`DiscordFramework:Extensions:RunClientSide:${this.constructor.name}`, this.constructor.name, PlayerId);
 
                 /**
                  * Get the player roles and discord information and store it for the first time
                  * Then send the server side constructed config to the client
                  */
-                const Player = SH_Config.Core.Players.Connected.find(p => p.serverId === PlayerId);
+                const Player = SV_Config.Core.Players.Connected.find(p => p.serverId === PlayerId);
                 if (Player.discordId) {
 
                     const Member = [];
@@ -63,7 +64,7 @@ new class Permissions extends global.Extensions.Extension {
 
             on('DiscordFramework:Player:Disconnected', async (PlayerId) => {
 
-                const Player = SH_Config.Core.Players.Connected.find(p => p.serverId === PlayerId);
+                const Player = SV_Config.Core.Players.Connected.find(p => p.serverId === PlayerId);
                 if (Player.discordId) await this.AcePermissionsRemove(Player);
 
                 this.players = this.players.filter(player => player.id !== PlayerId);
@@ -71,7 +72,7 @@ new class Permissions extends global.Extensions.Extension {
             });
 
             Client.on('guildMemberUpdate', (oldMember, newMember) => {
-                const Player = SH_Config.Core.Players.Connected.find(player => player.discordId === newMember.id);
+                const Player = SV_Config.Core.Players.Connected.find(player => player.discordId === newMember.id);
                 if (Player) {
 
                     if(this.GetAllowedGuilds().find(guild => guild.id === newMember.guild.id)) {
@@ -105,26 +106,26 @@ new class Permissions extends global.Extensions.Extension {
                 if(!LocalPlayer) return null;
                 return LocalPlayer.serverId;
             });
-        });
-    }
 
-    /**
+        }
+
+        /**
      * @description Used to match provided roles ID and/or users' IDs against players' roles' IDs and/or players' IDs
      * @param PlayerId The player's server ID, or Discord ID
      * @param Roles An array or roles' IDs or users' IDs
      * @param Guild A guild ID (Optional)
      * @returns Boolean
      */
-    CheckPermission(PlayerId, Roles, Guild = null) {
+        CheckPermission(PlayerId, Roles, Guild = null) {
 
-        // if "allowEveryone" then just save the time and just return true; otherwise keep going... :P
-        if (this.Config().allowEveryone || PlayerId === 0) return true;
+            // if "allowEveryone" then just save the time and just return true; otherwise keep going... :P
+            if (this.Config().allowEveryone || PlayerId === 0) return true;
 
-        // Get and check of the player has a network object store in the Core
-        const Player = SH_Config.Core.Players.Connected.find(player => player.serverId === PlayerId || player.discordId === PlayerId);
-        if (Player && Player.discordId) {
+            // Get and check of the player has a network object store in the Core
+            const Player = SV_Config.Core.Players.Connected.find(player => player.serverId === PlayerId || player.discordId === PlayerId);
+            if (Player && Player.discordId) {
 
-            /**
+                /**
              * If "Guild" was provided, then look for the server whilst also keeping in mind;
              * if "mainGuildOnly" was true, only and only check the main guild if the IDs match; but
              * if "mainGuildOnly" was false; then check all registered guilds provided in the config
@@ -135,26 +136,26 @@ new class Permissions extends global.Extensions.Extension {
              *
              * The returned guild(s) are the "AllowedGuilds"; which means they can be looked into; AKA. *allowed*
              */
-            let AllowedGuilds = this.GetAllowedGuilds(Guild);
-            if(AllowedGuilds.length < 1) return false;
-            AllowedGuilds = AllowedGuilds.map(guild => guild.id);
+                let AllowedGuilds = this.GetAllowedGuilds(Guild);
+                if(AllowedGuilds.length < 1) return false;
+                AllowedGuilds = AllowedGuilds.map(guild => guild.id);
 
-            /**
+                /**
              * Get basic player/member information for easy access later;
              */
-            const LocalPlayer = this.players.find(player => player.discordId === Player.discordId);
-            const MemberGuilds = LocalPlayer.guilds.filter(guild => AllowedGuilds.includes(guild.id));
-            const IsMemberAdministrator = MemberGuilds.find(guild => guild.administrator) ? true : false;
+                const LocalPlayer = this.players.find(player => player.discordId === Player.discordId);
+                const MemberGuilds = LocalPlayer.guilds.filter(guild => AllowedGuilds.includes(guild.id));
+                const IsMemberAdministrator = MemberGuilds.find(guild => guild.administrator) ? true : false;
 
-            /**
+                /**
              * Check if member is an admin and the "discordAdmin"; if both are true, then just return true to save time and CPU usage
              * and the same goes for "selfPermission", if the member's ID was present within the provided "Roles"; then also just return
              * true to save time and ... you know it; CPU usage :D
              */
-            if (this.Config().discordAdmin && IsMemberAdministrator) return true;
-            if (this.Config().selfPermission && Roles.includes(Player.discordId)) return true;
+                if (this.Config().discordAdmin && IsMemberAdministrator) return true;
+                if (this.Config().selfPermission && Roles.includes(Player.discordId)) return true;
 
-            /**
+                /**
              * This is very confusing as I don't even how I did it myself
              *
              * jk; so basically, you try to find a matching role within the guilds that are allowed!
@@ -165,142 +166,144 @@ new class Permissions extends global.Extensions.Extension {
              * but if not found it will return null in which it will falsely the if statement
              * and then return false
              */
-            const MatchingRole = Roles.find(roleID => {
-                return MemberGuilds.find(guild => {
-                    return guild.roles.find(_role => {
-                        return _role.id === roleID;
+                const MatchingRole = Roles.find(roleID => {
+                    return MemberGuilds.find(guild => {
+                        return guild.roles.find(_role => {
+                            return _role.id === roleID;
+                        });
                     });
                 });
-            });
-            console.log(MatchingRole);
-            if (MatchingRole) return true;
 
-            return false;
-        } else {
-            return false;
+                if (MatchingRole) return true;
+
+                return false;
+            } else {
+                return false;
+            }
         }
-    }
 
-    /**
+        /**
      * @description Used to update the server and the client sided stored data
      * @param Player The player's network object stored in Core
      * @param Member An array of "GuildMember" objects related to the "Player"
      */
-    UpdatePermissions(Player, Member) {
+        UpdatePermissions(Player, Member) {
 
-        let LocalPlayer = this.players.find(player => player.discordId === Player.discordId);
-        if(LocalPlayer) {
-            const _Player = this.players.find(player => player.discordId === Player.discordId);
+            let LocalPlayer = this.players.find(player => player.discordId === Player.discordId);
+            if(LocalPlayer) {
+                const _Player = this.players.find(player => player.discordId === Player.discordId);
 
-            for (let i = 0; i < Member.length; i++) {
-                const member = Member[i];
-                const roles = [];
+                for (let i = 0; i < Member.length; i++) {
+                    const member = Member[i];
+                    const roles = [];
 
-                member.roles.cache.forEach(role => roles.push(({ name: role.name, id: role.id, guild: role.guild.id })));
-                _Player.guilds.find(guild => guild.id === member.guild.id).roles = roles;
+                    member.roles.cache.forEach(role => roles.push(({ name: role.name, id: role.id, guild: role.guild.id })));
+                    _Player.guilds.find(guild => guild.id === member.guild.id).roles = roles;
 
-                member.permissions.has('ADMINISTRATOR') ?
-                    _Player.guilds.find(guild => guild.id === member.guild.id).administrator = true :
-                    _Player.guilds.find(guild => guild.id === member.guild.id).administrator = false;
-            }
+                    member.permissions.has('ADMINISTRATOR') ?
+                        _Player.guilds.find(guild => guild.id === member.guild.id).administrator = true :
+                        _Player.guilds.find(guild => guild.id === member.guild.id).administrator = false;
+                }
 
-            LocalPlayer = this.players.find(player => player.discordId === Player.discordId);
-        } else {
-            const player = {
-                serverId: Player.serverId,
-                discordId: Player.discordId,
-                guilds: []
-            };
-
-            for (let i = 0; i < NewMember.length; i++) {
-                const member = NewMember[i];
-                const guild = {
-                    id: member.guild.id,
-                    name: member.guild.name,
-                    administrator: false,
-                    roles: []
+                LocalPlayer = this.players.find(player => player.discordId === Player.discordId);
+            } else {
+                const player = {
+                    serverId: Player.serverId,
+                    discordId: Player.discordId,
+                    guilds: []
                 };
 
-                if(member.permissions.has('ADMINISTRATOR')) guild.administrator = true;
-                member.roles.cache.forEach(role => guild.roles.push(({ name: role.name, id: role.id })));
-                player.guilds.push(guild);
+                for (let i = 0; i < Member.length; i++) {
+                    const member = Member[i];
+                    const guild = {
+                        id: member.guild.id,
+                        name: member.guild.name,
+                        administrator: false,
+                        roles: []
+                    };
+
+                    if(member.permissions.has('ADMINISTRATOR')) guild.administrator = true;
+                    member.roles.cache.forEach(role => guild.roles.push(({ name: role.name, id: role.id })));
+                    player.guilds.push(guild);
+                }
+
+                this.players.push(player);
+                LocalPlayer = this.players.find(_player => _player.discordId === Player.discordId);
             }
 
-            this.players.push(player);
-            LocalPlayer = this.players.find(_player => _player.discordId === Player.discordId);
+            emitNet('DiscordFramework:Permissions:UpdatePermissions', LocalPlayer.serverId, LocalPlayer);
+
         }
 
-        emitNet('DiscordFramework:Permissions:UpdatePermissions', LocalPlayer.serverId, LocalPlayer);
-
-    }
-
-    /**
+        /**
      * @description Used to get all of the allowed guilds or search for one within the allowed guilds for the members' roles to be fetched from; guilds must be registered in the config
      * @param GuildID The guild ID (Option)
      * @return object
      */
-    GetAllowedGuilds(GuildID = null) {
-        if(GuildID) {
-            return this.GetAllowedGuilds().filter(guild => guild.id === GuildID);
-        } else {
-            return this.Config().guilds.filter(guild => {
-                if(this.Config().mainGuildOnly) {
-                    return guild.main;
-                } else {
-                    return guild;
-                }
-            });
-        }
-    }
-
-    async AcePermissionsAdd(Player) {
-
-        if (this.Config().AcePermissions.enabled) {
-            if (Player.discordId) {
-
-                for (let i = 0; i < this.Config().AcePermissions.roles.length; i++) {
-
-                    const Role = this.Config().AcePermissions.roles[i];
-                    const IsAllowed = this.CheckPermission(Player.discordId, [Role]);
-
-                    await this.Delay(25); // Delay is present in the parent class as a method
-
-                    if(IsAllowed) {
-                        Role.group ? ExecuteCommand('add_principal identifier.discord:' + Player.discordId + ' ' + Role.group) : undefined;
-                        Role.ace ? ExecuteCommand('add_ace identifier.discord:' + Player.discordId + ' ' + Role.ace) : undefined;
-                        Role.group || Role.ace ? ExecuteCommand('refresh') : undefined;
+        GetAllowedGuilds(GuildID = null) {
+            if(GuildID) {
+                return this.GetAllowedGuilds().filter(guild => guild.id === GuildID);
+            } else {
+                return this.Config().guilds.filter(guild => {
+                    if(this.Config().mainGuildOnly) {
+                        return guild.main;
+                    } else {
+                        return guild;
                     }
-
-                }
-
+                });
             }
         }
 
-    }
+        async AcePermissionsAdd(Player) {
 
-    async AcePermissionsRemove(Player) {
+            if (this.Config().AcePermissions.enabled) {
+                if (Player.discordId) {
 
-        if (this.Config().AcePermissions.enabled) {
-            if (Player.discordId) {
+                    for (let i = 0; i < this.Config().AcePermissions.roles.length; i++) {
 
-                for (let i = 0; i < this.Config().AcePermissions.roles.length; i++) {
+                        const Role = this.Config().AcePermissions.roles[i];
+                        const IsAllowed = this.CheckPermission(Player.discordId, [Role]);
 
-                    const Role = this.Config().AcePermissions.roles[i];
-                    const IsAllowed = this.CheckPermission(Player.discordId, [Role]);
+                        await this.Delay(25); // Delay is present in the parent class as a method
 
-                    await this.Delay(25); // Delay is present in the parent class as a method
+                        if(IsAllowed) {
+                            Role.group ? ExecuteCommand('add_principal identifier.discord:' + Player.discordId + ' ' + Role.group) : undefined;
+                            Role.ace ? ExecuteCommand('add_ace identifier.discord:' + Player.discordId + ' ' + Role.ace) : undefined;
+                            Role.group || Role.ace ? ExecuteCommand('refresh') : undefined;
+                        }
 
-                    if(IsAllowed) {
-                        Role.group ? ExecuteCommand('remove_principal identifier.discord:' + Player.discordId + ' ' + Role.group) : undefined;
-                        Role.ace ? ExecuteCommand('remove_ace identifier.discord:' + Player.discordId + ' ' + Role.ace) : undefined;
-                        Role.group || Role.ace ? ExecuteCommand('refresh') : undefined;
                     }
 
                 }
-
             }
+
         }
 
-    }
+        async AcePermissionsRemove(Player) {
 
-}().Initialize();
+            if (this.Config().AcePermissions.enabled) {
+                if (Player.discordId) {
+
+                    for (let i = 0; i < this.Config().AcePermissions.roles.length; i++) {
+
+                        const Role = this.Config().AcePermissions.roles[i];
+                        const IsAllowed = this.CheckPermission(Player.discordId, [Role]);
+
+                        await this.Delay(25); // Delay is present in the parent class as a method
+
+                        if(IsAllowed) {
+                            Role.group ? ExecuteCommand('remove_principal identifier.discord:' + Player.discordId + ' ' + Role.group) : undefined;
+                            Role.ace ? ExecuteCommand('remove_ace identifier.discord:' + Player.discordId + ' ' + Role.ace) : undefined;
+                            Role.group || Role.ace ? ExecuteCommand('refresh') : undefined;
+                        }
+
+                    }
+
+                }
+            }
+
+        }
+
+    }().Initialize();
+
+});

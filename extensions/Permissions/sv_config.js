@@ -1,8 +1,10 @@
-SV_Config.Extensions.push({
-    name: 'Permissions', // Extension name here, and make sure it the same as the one in the extension class in the 'sv_index.js'
-    config: {
-        guilds: [
-        /**
+on('DiscordFramework:Core:Ready', () => {
+
+    SV_Config.Extensions.push({
+        name: 'Permissions', // Extension name here, and make sure it the same as the one in the extension class in the 'sv_index.js'
+        config: {
+            guilds: [
+                /**
          * At least one guild has to be labeled main
          * otherwise all requests will be nullified.
          *
@@ -17,19 +19,19 @@ SV_Config.Extensions.push({
          * meaning, it it's false then you can remove that variables if you wish to do so
          *
          */
-            {
-                id: '572195755922685962',
-                name: 'The WM Project',
-                main: true
-            },
-            {
-                id: '902547132928655370',
-                name: 'JCRP | Whitelist'
-            }
-        ],
-        AcePermissions: {
-            enabled: true,
-            roles: [
+                {
+                    id: '572195755922685962',
+                    name: 'The WM Project',
+                    main: true
+                },
+                {
+                    id: '902547132928655370',
+                    name: 'JCRP | Whitelist'
+                }
+            ],
+            AcePermissions: {
+                enabled: true,
+                roles: [
                 /**
                  * The role is the specific role that contains the permission
                  * the group is the group related to the role to be given
@@ -45,17 +47,17 @@ SV_Config.Extensions.push({
                  * Now whoever has the "623157095948353546" role will be in "group.admin" and will have the "command.ban" permission
                  * The group and ace can be removed if not needed, ex; if you use group, and do not need ace, you can remove ace, and vice versa
                  */
-                {
-                    role: '623157095948353546', // ROLE ID
-                    group: 'group.example', // ADD THE PERSON TO THIS GROUP
-                    ace: 'example.example' // GIVE THE PERSON THIS ACE
-                }
-            ]
-        },
-        mainGuildOnly: false, // Whether perssions should only be based off of the main guild in the this config in the guilds section
-        allowEveryone: false, // Give permission to everyone, EVERY PERSON/PLAYER; this is a dangerous toggle!!!!
-        discordAdmin: false, // If a player is present in the discord server and has administrator permission, if this toggle is true, they will have permission to everything, otherwise no
-        /**
+                    {
+                        role: '623157095948353546', // ROLE ID
+                        group: 'group.example', // ADD THE PERSON TO THIS GROUP
+                        ace: 'example.example' // GIVE THE PERSON THIS ACE
+                    }
+                ]
+            },
+            mainGuildOnly: false, // Whether perssions should only be based off of the main guild in the this config in the guilds section
+            allowEveryone: false, // Give permission to everyone, EVERY PERSON/PLAYER; this is a dangerous toggle!!!!
+            discordAdmin: false, // If a player is present in the discord server and has administrator permission, if this toggle is true, they will have permission to everything, otherwise no
+            /**
          * "selfPermission" if this is toggle, meaning it's true, it would unlock a new way of checking permissions.
          * it would allow for indiviual's discord ID to be checked instead of just matching their roles,
          * meaning; instead of just providing roles' ids, you can also provide members' ids as well, and they will be checked,
@@ -79,6 +81,8 @@ SV_Config.Extensions.push({
          *
          * also; it doesn't hurt to keep it on; "true"
          */
-        selfPermission: true
-    }
+            selfPermission: true
+        }
+    });
+
 });
