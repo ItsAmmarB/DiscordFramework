@@ -29,7 +29,8 @@ const SV_Config = {
             ]
         }
     },
-    Extensions: [],
     Discord: {},
-    MongoDB: {}
+    MongoDB: {},
+    Extensions: [],
+    Commands: []
 };
