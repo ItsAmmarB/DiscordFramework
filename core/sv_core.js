@@ -1,10 +1,6 @@
-const PrettyMS = require('pretty-ms');
-const MomentTimezone = require('moment-timezone');
-
 // Declares the resource path to be used in both server and client
 SV_Config.resourceDirectory = GetResourcePath(GetCurrentResourceName());
 
-const Config = require(SV_Config.resourceDirectory + '/core/config');
 const Discord = require(SV_Config.resourceDirectory + '/core/discord/index');
 const MongoDB = require(SV_Config.resourceDirectory + '/core/mongodb/index');
 const Extensions = require(SV_Config.resourceDirectory + '/core/extensions/index');
@@ -33,9 +29,8 @@ const ClientReady = Client => {
 };
 
 const PlayerConnecting = async (PlayerConnId, Deferrals) => {
-
     if(!IsCoreReady) { // if core not ready then don't allow connections
-        Deferrals.done('[DiscordFramework] Core is not ready yet, please try again in a few minutes!');
+        Deferrals.done('[DiscordFramework] Core is not ready yet, please try again in a few seconds!');
     } else {
 
         // Fetching identifiers
@@ -51,22 +46,10 @@ const PlayerConnecting = async (PlayerConnId, Deferrals) => {
         Deferrals.update('[DiscordFramework] Checking community membership...');
         await Delay(300);
         const Member = Discord.GetMember(DiscordID);
-        if(!Member) return Deferrals.done('[DiscordFramework] You are not a member of the community!');
+        if(!Member) Deferrals.update('[DiscordFramework] You are not a member of the community!');
 
-        if(Config.whitelist.enabled) {
-            Deferrals.update('[DiscordFramework] Checking whitelist...');
-            if(!Member.roles.cache.find(role => Config.whitelist.roles.find(role.id))) return Deferrals.done('[DiscordFramework] You are not whitelisted!');
-        }
-
-        // Check if the player is banned
-        try {
-            await CheckBan(DiscordID, Deferrals).then(async IsPlayerBanned => {
-                await Delay(200);
-                if(!IsPlayerBanned) {
-                    Deferrals.done();
-                }
-            });
-        } catch(err) {console.log(err);}
+        await Delay(3000); // yes; I know, waiting 3 seconds to start connecting is just absurd but it should be enough time for extensions to check and do stuff
+        Deferrals.done();
 
     }
 };
@@ -87,7 +70,7 @@ const PlayerConnected = (PlayerId) => {
     };
 
     SV_Config.Core.Players.Connected.push(NetworkPlayerObject);
-    SV_Config.Core.Players.Session.push(NetworkPlayerObject);
+    SV_Config.Core.Players.Network.push(NetworkPlayerObject);
 
     // Database
     MongoDB.DatabaseFindOne('Players', { 'details.discordId': DiscordID }, async Player => {
@@ -143,14 +126,7 @@ const PlayerConnected = (PlayerId) => {
                     identifiers: Identifiers,
                     names: [ GetPlayerName(PlayerId) ],
                     location: null
-                },
-                administrative: {
-                    banned: false,
-                    muted: false,
-                    jailed: false,
-                    passive: false
-                },
-                infractions: []
+                }
             };
 
             // Get the player's country AKA. GeoIP
@@ -180,54 +156,12 @@ const PlayerDisconnected = (PlayerId, Reason) => {
     if(SV_Config.Core.Players.Connected.find(player => player.serverId === PlayerId)) {
         SV_Config.Core.Players.Connected = SV_Config.Core.Players.Connected.filter(player => player.serverId !== PlayerId);
     }
-    if(SV_Config.Core.Players.Session.find(player => player.serverId === PlayerId)) {
-        SV_Config.Core.Players.Session.find(player => player.serverId === PlayerId).connection.disconnectedAt = Date.now();
-        SV_Config.Core.Players.Session.find(player => player.serverId === PlayerId).connection.disconnectReason = Reason;
+    if(SV_Config.Core.Players.Network.find(player => player.serverId === PlayerId)) {
+        SV_Config.Core.Players.Network.find(player => player.serverId === PlayerId).connection.disconnectedAt = Date.now();
+        SV_Config.Core.Players.Network.find(player => player.serverId === PlayerId).connection.disconnectReason = Reason;
     }
 
 };
-
-const CheckBan = async (DiscordID, Deferrals) => {
-    return await new Promise(resolve => {
-        MongoDB.DatabaseFindOne('Players', { 'details.discordId': DiscordID }, async callback => {
-            if(callback) {
-                Deferrals.update('[DiscordFramework] Checking ban...');
-                await Delay(100);
-
-                // Check if banned
-                if(callback.administrative.banned) {
-                    const BanDetails = callback.infrations.find(infraction => infraction.id === callback.administrative.banned);
-
-                    if((BanDetails.details.timestamp + BanDetails.details.duration) <= Date.now()) {
-                        Deferrals.update('[DiscordFramework] Lifting ban...');
-                        MongoDB.DatabaseUpdateOne('Players', { 'details.discordId': DiscordID }, {
-                            $set: { 'administrative.banned': false }
-                        }, err => {
-                            if (err) new Error(err);
-                        });
-                        await Delay(400);
-                        Deferrals.update('[DiscordFramework] Ban lifted!');
-                        resolve(false);
-                    } else {
-                        Deferrals.done(`[DiscordFramework] You are ${BanDetails.details.duration > -1 ? 'temporarily' : 'permanently' } banned!
-                    -   Ban ID: ${BanDetails.id}
-                    -   Reason: ${BanDetails.details.reason}
-                    -   Moderator: ${BanDetails.moderator.server.name} | @ ${BanDetails.moderator.discord.name}
-                    -   Banned On: ${MomentTimezone(BanDetails.details.timestamp).tz('America/New_York').format('dddd, MMMM D, YYYY @ H:MM A zz')}
-                    ${BanDetails.details.duration > -1 ? `-   Expires in: ${PrettyMS(BanDetails.details.duration, { verbose: true })}` : '\u0008' }
-                    `);
-                        resolve(true);
-                    }
-                } else {
-                    resolve(false);
-                }
-            } else {
-                resolve(false);
-            }
-        });
-    });
-};
-
 
 const PlaytimeInterval = () => setInterval(async () => {
     if(IsCoreReady) {
@@ -252,9 +186,9 @@ const Delay = async (MS) => await new Promise(resolve => setTimeout(resolve, MS)
 // ------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
-const Interval = setInterval(async () => {
+const CoreConsoleInterval = setInterval(async () => {
     if(IsCoreReady) {
-        clearInterval(Interval);
+        clearInterval(CoreConsoleInterval);
 
         // This loop makes sure all extensions are registered
         let counter = 0;
@@ -266,16 +200,17 @@ const Interval = setInterval(async () => {
                 break;
             }
         }
-        console.debug(`Extensions tool ${counter / 2} second(s) to load!`); // just for debuging
+        console.debug(`Extensions took ${counter / 2} second(s) to load!`); // just for debuging
 
         // Construct extension console log
-        const ExtensionsLog = Extensions.GetExtensionsCount().total.map(exten => {
-            const name = `     ^4${exten.name} ^3| `;
+        const ExtensionsLog = Extensions.GetExtensionsCount().total.map((exten, index) => {
+            const inde = `     ^9${index + 1} ^3| `;
+            const name = `^4${exten.name} ^3| `;
             const state = exten.state === 1 ? `^2${Extensions.TranslateState(exten.state)}` : exten.state === 7 ? `^9${Extensions.TranslateState(exten.state)}` : `^1${Extensions.TranslateState(exten.state)}`;
-            const version = exten.version ? ` ^3| ^4${exten.version}` : '';
+            const version = exten.version ? ` ^3| ^4v${exten.version}` : '';
             const author = exten.author ? ` ^3| ^6By ${exten.author}` : '';
 
-            return name + state + version + author;
+            return inde + name + state + version + author;
         }).sort((a, b) => { return a.state - b.state; }).join('\n');
 
         // Database information
@@ -297,17 +232,14 @@ const Interval = setInterval(async () => {
 }, 500);
 
 // ------------------------------------------------------------------------------------------------------------------------------------------------------
-// --------------------------------------------------------------------- EVENT -----------------------------------------------------------------------
+// -------------------------------------------------------------------- EVENTS -----------------------------------------------------------------------
 // ------------------------------------------------------------------------------------------------------------------------------------------------------
 
 // Always check discord client first, if discord client isn't ready then no need to get database client ready... 'Discord'Framework
-on('DiscordFramework:Discord:Client:Ready', () => {
-    ClientReady('Discord');
+on('DiscordFramework:Client:Ready', (Client) => {
+    ClientReady(Client);
 });
 
-on('DiscordFramework:MongoDB:Client:Ready', () => {
-    ClientReady('MongoDB');
-});
 
 on('playerConnecting', (name, setKickReason, deferral) => {
     deferral.defer();
@@ -333,10 +265,6 @@ on('playerDropped', (Reason) => {
 // ------------------------------------------------------------------- CORE EXPORTS ---------------------------------------------------------------------
 // ------------------------------------------------------------------------------------------------------------------------------------------------------
 
-// exports('Ready', () => IsCoreReady);
-// exports('GetPlayerInfo', (PlayerId) => SV_Config.Core.Players.Session.find(p => p.serverId === PlayerId) || null);
-// exports('GetConnectedPlayers', () => SV_Config.Core.Players.Connected);
-
-/**
- * apparently server side exports don't work!!
- */
+exports('Ready', () => IsCoreReady);
+exports('GetPlayerInfo', (PlayerId) => SV_Config.Core.Players.Network.find(p => p.serverId === PlayerId) || null);
+exports('GetConnectedPlayers', () => SV_Config.Core.Players.Connected);

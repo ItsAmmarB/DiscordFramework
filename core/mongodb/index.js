@@ -5,7 +5,7 @@ const MongoDB = require('mongodb');
 const Client = new MongoDB.MongoClient('mongodb://localhost:27017/', { useUnifiedTopology: true, useNewUrlParser: true, keepAlive: true });
 Client.connect(err => {
     if(err) return new Error(err);
-    emit('DiscordFramework:MongoDB:Client:Ready');
+    emit('DiscordFramework:Client:Ready', 'MongoDB');
 });
 
 const DatabaseInsertOne = (Collection, Data, Callback) => {

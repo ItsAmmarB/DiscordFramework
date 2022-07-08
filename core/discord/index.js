@@ -3,11 +3,11 @@ const Discord = require('discord.js');
 const Client = new Discord.Client({ fetchAllMembers: true, intents: 131071 });
 
 Client.on('ready', () => {
-    emit('DiscordFramework:Discord:Client:Ready');
+    emit('DiscordFramework:Client:Ready', 'Discord');
 });
 
 Client.login(Config.token); // Discord client login..
-Config.token = null; // Nullify the token as a security measure; but you still must mindfull of what you add!!
+Config.token = null; // nullify token
 
 /**
  * @description Gets a discord guild information from a discord guild id
@@ -33,10 +33,10 @@ const GetGuild = async (DiscordGuildId) => {
 /**
  * @description Checks a player exists in a discord guild
  * @param {*} PlayerId The player server ID or the player discord ID or any player identifier
- * @param {*} DiscordGuildId The discord guild id
+ * @param {*} DiscordGuildId The discord guild id (optional)
  * @returns Discord GuildMember
  */
-const GetMember = async (PlayerId, DiscordGuildId) => {
+const GetMember = async (PlayerId, DiscordGuildId = Config.guildId) => {
 
     if(!PlayerId) return new Error('DiscordFramework: Discord --> GetMember() No player ID provided');
     if(isNaN(PlayerId)) return new Error('DiscordFramework: Discord --> GetMember() Invalid player ID provided');
@@ -45,7 +45,7 @@ const GetMember = async (PlayerId, DiscordGuildId) => {
     if(PlayerId.length > 10) {
         MemberId = PlayerId;
     } else {
-        const Player = SV_Config.Core.Players.Connected.find(player => player.server.id) || SV_Config.Core.Players.Session.find(player => player.server.id);
+        const Player = SV_Config.Core.Players.Connected.find(player => player.server.id) || SV_Config.Core.Players.Network.find(player => player.server.id);
         if(!Player) return new Error('DiscordFramework: Discord --> GetMember() Player does not have a player network object');
         MemberId.discord.id;
     }
@@ -67,10 +67,10 @@ const GetMember = async (PlayerId, DiscordGuildId) => {
 /**
  * @description Get a discord role information from a discord role id
  * @param {*} RoleId The discord role id
- * @param {*} DiscordGuildId The discord guild id
+ * @param {*} DiscordGuildId The discord guild id (optional)
  * @return Discord Role
  */
-const GetRole = async (RoleId, DiscordGuildId) => {
+const GetRole = async (RoleId, DiscordGuildId = Config.guildId) => {
 
     if(!RoleId) return new Error('DiscordFramework: Discord --> GetRole() No role ID provided');
     if(isNaN(RoleId)) return new Error('DiscordFramework: Discord --> GetRole() Invalid role ID provided');

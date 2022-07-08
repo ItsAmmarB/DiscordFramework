@@ -6,27 +6,32 @@ class Extensions {
 
         if(!Extension.Name) error = 'UNKNOWN_EXTENTION: attempted to register a nameless extension';
         if(!error && typeof Extension.Name !== 'string') error = 'UNKNOWN_EXTENTION: Extension "Name" must be a String';
-        if(!error) this.name = Extension.Name;
+        if(!error) this.Name = Extension.Name;
 
         if(Extension.Description) {
             if(!error && typeof Extension.Description !== 'string') error = 'UNKNOWN_EXTENTION: Extension "Description" must be a string';
-            if(!error) this.description = Extension.Description;
+            if(!error) this.Description = Extension.Description;
         }
 
         if(!error && typeof Extension.Enabled !== 'boolean') error = 'UNKNOWN_EXTENTION: Extension "Enabled" must be a Boolean';
-        if(!error) this.enabled = Extension.Enabled;
+        if(!error) this.Enabled = Extension.Enabled;
 
         if(!error && typeof Extension.Dependencies !== 'object' || !Array.isArray(Extension.Dependencies)) error = 'UNKNOWN_EXTENTION: Extension "Dependencies" must be an Array';
-        if(!error) this.dependencies = Extension.Dependencies;
+        if(!error) this.Dependencies = Extension.Dependencies;
 
         if(Extension.Author) {
             if(!error && typeof Extension.Author !== 'string') error = 'UNKNOWN_EXTENTION: Extension "Author" must be a string';
             if(!error) this.Author = Extension.Author;
         }
 
-        if(!error) this.state = null;
+        if(Extension.Version) {
+            if(!error && typeof Extension.Version !== 'string') error = 'UNKNOWN_EXTENTION: Extension "Version" must be a string';
+            if(!error) this.Version = Extension.Version;
+        }
 
-        if(error) this.error = error;
+        if(!error) this.State = null;
+
+        if(error) this.Error = error;
 
     }
 
@@ -37,25 +42,25 @@ class Extensions {
         try {
 
             // Check whether and error occured during constructor validation
-            if(this.error) {
+            if(this.Error) {
                 this.Register(2);
                 await this.Delay(5000);
-                return this.PrintError(this.error);
+                return this.PrintError(this.Error);
             }
 
             // Check if the extension is a mere template and register it as 'Template'
-            if(this.name === 'Template') {
+            if(this.Name === 'Template') {
                 return this.Register(7);
             }
 
             // Check if the extension is supposed to be enabled and if not then register it as disabled
-            if(!this.enabled) {
+            if(!this.Enabled) {
                 return this.Register(0);
             }
 
             // Check the extension's dependencies and if all dependencies are enabled and active
-            if(this.dependencies.length > 0) {
-                const Dependencies = this.dependencies.map(dependency => ({ name: dependency, state: null }));
+            if(this.Dependencies.length > 0) {
+                const Dependencies = this.Dependencies.map(dependency => ({ name: dependency, state: null }));
 
                 await this.Delay(100);
 
@@ -73,7 +78,7 @@ class Extensions {
                             break;
                         }
                         if(Dependency === 7) {
-                            console.warn(`Template cannot be a dependency for an extension!\n         Dependency was ignored in the "${this.name}" extension`);
+                            console.warn(`Template cannot be a dependency for an extension!\n         Dependency was ignored in the "${this.Name}" extension`);
                             Dependencies[i].state = 1;
                             break;
                         }
@@ -91,7 +96,7 @@ class Extensions {
             }
 
             this.Run();
-            this.DeflectEvent(this.name);
+            this.DeflectEvent(this.Name);
             await this.Delay(75);
             this.Register(1);
 
@@ -103,30 +108,32 @@ class Extensions {
     }
 
     Register(State) {
-        this.state = State;
-        if(SV_Config.Extensions.filter(extension => extension.name === this.name).length > 1) {
-            SV_Config.Extensions.filter(extension => extension.name === this.name).forEach(extension => extension.state = 2);
-            return this.PrintError(new Error(`EXTEN_DUPLIC: Duplicate extension config names were found "${this.name}"`));
+        this.State = State;
+        if(SV_Config.Extensions.filter(extension => extension.name === this.Name).length > 1) {
+            SV_Config.Extensions.filter(extension => extension.name === this.Name).forEach(extension => extension.state = 2);
+            return this.PrintError(new Error(`EXTEN_DUPLIC: Duplicate extension config names were found "${this.Name}"`));
         }
 
-        if(SV_Config.Extensions.find(extension => extension.name === this.name)) {
+        if(SV_Config.Extensions.find(extension => extension.name === this.Name)) {
             const Config = {
-                name: this.name,
-                description: this.description,
-                enabled: this.enabled,
-                dependencies: this.dependencies,
-                state: this.state,
+                name: this.Name,
+                description: this.Description,
+                enabled: this.Enabled,
+                dependencies: this.Dependencies,
+                state: this.State,
+                version: this.Version,
                 author: this.Author,
-                config: SV_Config.Extensions.find(extension => extension.name === this.name).config
+                config: SV_Config.Extensions.find(extension => extension.name === this.Name).config
             };
             SV_Config.Extensions = SV_Config.Extensions.map(extension => Config.name === extension.name ? Config : extension);
         } else {
             const Config = {
-                name: this.name,
-                description: this.description,
-                enabled: this.enabled,
-                dependencies: this.dependencies,
-                state: this.state,
+                name: this.Name,
+                description: this.Description,
+                enabled: this.Enabled,
+                dependencies: this.Dependencies,
+                state: this.State,
+                version: this.Version,
                 author: this.Author,
                 config: {}
             };
@@ -182,7 +189,7 @@ class Extensions {
     async Run() {
         await this.Delay(1000);
         this.Register(2);
-        this.PrintError(new Error(`${this.name} Extension doesn't have a Run() method.`));
+        this.PrintError(new Error(`${this.Name} Extension doesn't have a Run() method.`));
     }
 
     async Delay(WaitMS) {
@@ -202,6 +209,11 @@ class Extensions {
     }
 
 }
+
+const GetExtension = (ExtentionName) => {
+    if(!ExtentionName) return null;
+    return SV_Config.Extensions.find(extention => extention.name === ExtentionName);
+};
 
 const GetExtensionsCount = () => {
     const Enabled = SV_Config.Extensions.filter(Extension => Extension.state === 1);
@@ -230,6 +242,7 @@ global.Extensions = {
 module.exports = {
     // Extensions: Extensions,
     GetExtensionsCount: GetExtensionsCount,
-    TranslateState: TranslateState
+    TranslateState: TranslateState,
+    GetExtension: (extentionName) => GetExtension(extentionName)
 };
 
