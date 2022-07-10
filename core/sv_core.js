@@ -214,7 +214,7 @@ const CoreConsoleInterval = setInterval(async () => {
         }).sort((a, b) => { return a.state - b.state; }).join('\n');
 
         // Database information
-        const dbInfo = await MongoDB.Client.db(MongoDB.Config.databaseName).stats();
+        const dbInfo = await MongoDB.Client.db(GetCurrentResourceName()).stats();
         const dbCollections = dbInfo.collections;
         const dbDocuments = dbInfo.objects;
         const dbSize = dbInfo.dataSize;
@@ -223,7 +223,7 @@ const CoreConsoleInterval = setInterval(async () => {
         console.log('^3|================================[DISCORDFRAMEWORK]================================|^0');
         console.log('^3Discord API Client: ^4' + Discord.Client.user.tag + ' ^6(' + Discord.Client.user.id + ')');
         console.log('^3Discord Guilds: \n' + Discord.Client.guilds.cache.map(guild => `     ^4${guild.id} ^3| ^6${guild.name}`).join('\n'));
-        console.log('^3MongoDB Database Name: ^4' + MongoDB.Config.databaseName);
+        console.log('^3MongoDB Database Name: ^4' + GetCurrentResourceName());
         console.log('^3MongoDB Database Size: ^4' + `\n     Collections: ^6${dbCollections}^4\n     Documents: ^6${dbDocuments}^4\n     Size: ^6${Math.round(((dbSize / 1024) + Number.EPSILON) * 100) / 100} MB ^9(${dbSize} KB)`);
         console.log('^3Extensions: ^4\n' + ExtensionsLog);
         console.log('^3|================================[DISCORDFRAMEWORK]================================|^0');

@@ -1,6 +1,6 @@
 const Config = require(SV_Config.resourceDirectory + '/core/discord/config');
 const Discord = require('discord.js');
-const Client = new Discord.Client({ fetchAllMembers: true, intents: 131071 });
+const Client = new Discord.Client({ intents: 131071 });
 
 Client.on('ready', () => {
     emit('DiscordFramework:Client:Ready', 'Discord');
