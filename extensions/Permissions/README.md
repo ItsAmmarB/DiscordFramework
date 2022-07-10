@@ -1,5 +1,4 @@
 ### Permissions Extension 
-# DiscordFramework
 
 > Made by ItsAmmarB (ItsAmmarB#7897) 
 
