@@ -1,7 +1,8 @@
 on('DiscordFramework:Core:Ready', () => {
-    console.log('Blacklist started loading..');
 
-    new class Blacklist extends global.Extensions.Extension {
+    const { Extension } = require(SV_Config.resourceDirectory + '/core/extensions/index');
+
+    new class Blacklist extends Extension {
         constructor() {
             super({
                 Name: 'Blacklist', // Change to extension name
@@ -11,14 +12,6 @@ on('DiscordFramework:Core:Ready', () => {
                 Version: '1.0', // The current version of the extension if available
                 Author: 'ItsAmmarB' // The person(s) who have made the extension and deserved credits
             });
-        }
-
-        /**
-             * This is used to access the extension's "Server" side config with ease
-             * to access the config just use "this.Config()" and you're game.. :P
-             */
-        Config() {
-            return SV_Config.Extensions.find(extension => extension.name === this.constructor.name).config;
         }
 
         /**
@@ -34,14 +27,14 @@ on('DiscordFramework:Core:Ready', () => {
                 emit(`DiscordFramework:Extensions:RunClientSide:${this.constructor.name}`, this.constructor.name, PlayerId);
                 await this.Delay(100);
                 emitNet('DiscordFramework:Extensions:Blacklist:Initialize', PlayerId, {
-                    AllWeapons: this.Config().Weapons,
-                    Weapons: this.Config().weapons.enabled ? this.Config().weapons.groups : null,
-                    Vehicles: this.Config().vehicles.enabled ? this.Config().vehicles.groups : null
+                    AllWeapons: this.Config.Weapons,
+                    Weapons: this.Config.weapons.enabled ? this.Config.weapons.groups : null,
+                    Vehicles: this.Config.vehicles.enabled ? this.Config.vehicles.groups : null
                 });
             });
 
         }
-    }().Initialize();
+    };
 
     /**
          *      MAKE SURE TO CHANGE THE ({CHANGE_ME}) OF THE CLASS WITH THE EXTENSION NAME ELSE AN ERROR WILL BE THROWN IN THE CONSOLE

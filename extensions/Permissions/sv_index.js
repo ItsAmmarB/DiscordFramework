@@ -1,7 +1,8 @@
 on('DiscordFramework:Core:Ready', () => {
-    console.log('Permissions started loading..');
 
-    new class Permissions extends global.Extensions.Extension {
+    const { Extension } = require(SV_Config.resourceDirectory + '/core/extensions/index');
+
+    new class Permissions extends Extension {
         constructor() {
             super({
                 Name: 'Permissions', // Change to extension name
@@ -12,10 +13,6 @@ on('DiscordFramework:Core:Ready', () => {
                 Author: 'ItsAmmarB'
             });
             this.players = [];
-        }
-
-        Config() {
-            return SV_Config.Extensions.find(extension => extension.name === this.constructor.name).config;
         }
 
         Run() {
@@ -37,9 +34,9 @@ on('DiscordFramework:Core:Ready', () => {
                     const Member = [];
                     for (let i = 0; i < this.GetAllowedGuilds().length; i++) {
                         const guild = this.GetAllowedGuilds()[i];
-                        if(!guild) return;
+                        if (!guild) return;
                         const member = await GetMember(Player.discordId, guild.id);
-                        if(!member) return;
+                        if (!member) return;
                         Member.push(member);
                     }
 
@@ -52,11 +49,11 @@ on('DiscordFramework:Core:Ready', () => {
 
                 // The client config was made here as a security measure
                 const config = {
-                    mainGuildOnly: this.Config().mainGuildOnly,
-                    allowEveryone: this.Config().allowEveryone,
-                    discordAdmin: this.Config().discordAdmin,
-                    selfPermission: this.Config().selfPermission,
-                    guilds: this.Config().guilds
+                    mainGuildOnly: this.Config.mainGuildOnly,
+                    allowEveryone: this.Config.allowEveryone,
+                    discordAdmin: this.Config.discordAdmin,
+                    selfPermission: this.Config.selfPermission,
+                    guilds: this.Config.guilds
                 };
 
                 emitNet('DiscordFramework:Permissions:Initialize', PlayerId, config);
@@ -75,7 +72,7 @@ on('DiscordFramework:Core:Ready', () => {
                 const Player = SV_Config.Core.Players.Connected.find(player => player.discordId === newMember.id);
                 if (Player) {
 
-                    if(this.GetAllowedGuilds().find(guild => guild.id === newMember.guild.id)) {
+                    if (this.GetAllowedGuilds().find(guild => guild.id === newMember.guild.id)) {
 
                         this.UpdatePermissions(Player, [newMember]);
 
@@ -88,8 +85,8 @@ on('DiscordFramework:Core:Ready', () => {
             exports('Permissions.CheckPermission', (PlayerId, Roles, Guild = null) => this.CheckPermission(PlayerId, Roles, Guild));
             exports('Permissions.GetGuilds', (PlayerId, Guild = null) => {
                 const LocalPlayer = this.players.find(player => player.serverId === PlayerId || player.discordId === PlayerId);
-                if(!LocalPlayer) return null;
-                if(Guild) {
+                if (!LocalPlayer) return null;
+                if (Guild) {
                     return LocalPlayer.guilds.filter(guild => guild.id === guild);
                 } else {
                     return LocalPlayer.guilds;
@@ -98,12 +95,12 @@ on('DiscordFramework:Core:Ready', () => {
             exports('Permissions.GetAllowedGuilds', (Guild = null) => this.GetAllowedGuilds(Guild));
             exports('Permissions.GetDiscordID', PlayerId => {
                 const LocalPlayer = this.players.find(player => player.serverId === PlayerId || player.discordId === PlayerId);
-                if(!LocalPlayer) return null;
+                if (!LocalPlayer) return null;
                 return LocalPlayer.discordId;
             });
             exports('Permissions.GetServerID', PlayerId => {
                 const LocalPlayer = this.players.find(player => player.serverId === PlayerId || player.discordId === PlayerId);
-                if(!LocalPlayer) return null;
+                if (!LocalPlayer) return null;
                 return LocalPlayer.serverId;
             });
 
@@ -119,7 +116,7 @@ on('DiscordFramework:Core:Ready', () => {
         CheckPermission(PlayerId, Roles, Guild = null) {
 
             // if "allowEveryone" then just save the time and just return true; otherwise keep going... :P
-            if (this.Config().allowEveryone || PlayerId === 0) return true;
+            if (this.Config.allowEveryone || PlayerId === 0) return true;
 
             // Get and check of the player has a network object store in the Core
             const Player = SV_Config.Core.Players.Connected.find(player => player.serverId === PlayerId || player.discordId === PlayerId);
@@ -137,7 +134,7 @@ on('DiscordFramework:Core:Ready', () => {
              * The returned guild(s) are the "AllowedGuilds"; which means they can be looked into; AKA. *allowed*
              */
                 let AllowedGuilds = this.GetAllowedGuilds(Guild);
-                if(AllowedGuilds.length < 1) return false;
+                if (AllowedGuilds.length < 1) return false;
                 AllowedGuilds = AllowedGuilds.map(guild => guild.id);
 
                 /**
@@ -152,8 +149,8 @@ on('DiscordFramework:Core:Ready', () => {
              * and the same goes for "selfPermission", if the member's ID was present within the provided "Roles"; then also just return
              * true to save time and ... you know it; CPU usage :D
              */
-                if (this.Config().discordAdmin && IsMemberAdministrator) return true;
-                if (this.Config().selfPermission && Roles.includes(Player.discordId)) return true;
+                if (this.Config.discordAdmin && IsMemberAdministrator) return true;
+                if (this.Config.selfPermission && Roles.includes(Player.discordId)) return true;
 
                 /**
              * This is very confusing as I don't even how I did it myself
@@ -190,7 +187,7 @@ on('DiscordFramework:Core:Ready', () => {
         UpdatePermissions(Player, Member) {
 
             let LocalPlayer = this.players.find(player => player.discordId === Player.discordId);
-            if(LocalPlayer) {
+            if (LocalPlayer) {
                 const _Player = this.players.find(player => player.discordId === Player.discordId);
 
                 for (let i = 0; i < Member.length; i++) {
@@ -222,7 +219,7 @@ on('DiscordFramework:Core:Ready', () => {
                         roles: []
                     };
 
-                    if(member.permissions.has('ADMINISTRATOR')) guild.administrator = true;
+                    if (member.permissions.has('ADMINISTRATOR')) guild.administrator = true;
                     member.roles.cache.forEach(role => guild.roles.push(({ name: role.name, id: role.id })));
                     player.guilds.push(guild);
                 }
@@ -241,11 +238,11 @@ on('DiscordFramework:Core:Ready', () => {
      * @return object
      */
         GetAllowedGuilds(GuildID = null) {
-            if(GuildID) {
+            if (GuildID) {
                 return this.GetAllowedGuilds().filter(guild => guild.id === GuildID);
             } else {
-                return this.Config().guilds.filter(guild => {
-                    if(this.Config().mainGuildOnly) {
+                return this.Config.guilds.filter(guild => {
+                    if (this.Config.mainGuildOnly) {
                         return guild.main;
                     } else {
                         return guild;
@@ -256,17 +253,17 @@ on('DiscordFramework:Core:Ready', () => {
 
         async AcePermissionsAdd(Player) {
 
-            if (this.Config().AcePermissions.enabled) {
+            if (this.Config.AcePermissions.enabled) {
                 if (Player.discordId) {
 
-                    for (let i = 0; i < this.Config().AcePermissions.roles.length; i++) {
+                    for (let i = 0; i < this.Config.AcePermissions.roles.length; i++) {
 
-                        const Role = this.Config().AcePermissions.roles[i];
+                        const Role = this.Config.AcePermissions.roles[i];
                         const IsAllowed = this.CheckPermission(Player.discordId, [Role]);
 
                         await this.Delay(25); // Delay is present in the parent class as a method
 
-                        if(IsAllowed) {
+                        if (IsAllowed) {
                             Role.group ? ExecuteCommand('add_principal identifier.discord:' + Player.discordId + ' ' + Role.group) : undefined;
                             Role.ace ? ExecuteCommand('add_ace identifier.discord:' + Player.discordId + ' ' + Role.ace) : undefined;
                             Role.group || Role.ace ? ExecuteCommand('refresh') : undefined;
@@ -281,17 +278,17 @@ on('DiscordFramework:Core:Ready', () => {
 
         async AcePermissionsRemove(Player) {
 
-            if (this.Config().AcePermissions.enabled) {
+            if (this.Config.AcePermissions.enabled) {
                 if (Player.discordId) {
 
-                    for (let i = 0; i < this.Config().AcePermissions.roles.length; i++) {
+                    for (let i = 0; i < this.Config.AcePermissions.roles.length; i++) {
 
-                        const Role = this.Config().AcePermissions.roles[i];
+                        const Role = this.Config.AcePermissions.roles[i];
                         const IsAllowed = this.CheckPermission(Player.discordId, [Role]);
 
                         await this.Delay(25); // Delay is present in the parent class as a method
 
-                        if(IsAllowed) {
+                        if (IsAllowed) {
                             Role.group ? ExecuteCommand('remove_principal identifier.discord:' + Player.discordId + ' ' + Role.group) : undefined;
                             Role.ace ? ExecuteCommand('remove_ace identifier.discord:' + Player.discordId + ' ' + Role.ace) : undefined;
                             Role.group || Role.ace ? ExecuteCommand('refresh') : undefined;
@@ -304,6 +301,6 @@ on('DiscordFramework:Core:Ready', () => {
 
         }
 
-    }().Initialize();
+    };
 
 });

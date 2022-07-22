@@ -1,7 +1,8 @@
 on('DiscordFramework:Core:Ready', () => {
-    console.log('Template started loading..');
 
-    new class Template extends global.Extensions.Extension {
+    const { Extension } = require(SV_Config.resourceDirectory + '/core/extensions/index');
+
+    new class Template extends Extension {
         constructor() {
             super({
                 Name: 'Template', // Change to extension name
@@ -14,20 +15,12 @@ on('DiscordFramework:Core:Ready', () => {
         }
 
         /**
-         * This is used to access the extension's "Server" side config with ease
-         * to access the config just use "this.Config()" and you're game.. :P
-         */
-        Config() {
-            return SV_Config.Extensions.find(extension => extension.name === this.constructor.name).config;
-        }
-
-        /**
          * The main thread of the extension, if this is not present, and error will be thrown and the extension will be disabled and marked as error
          */
         Run() {
             // CODE HERE
         }
-    }().Initialize();
+    };
 
     /**
      *      MAKE SURE TO CHANGE THE NAME OF THE CLASS WITH THE EXTENSION NAME ELSE AN ERROR WILL BE THROWN IN THE CONSOLE
