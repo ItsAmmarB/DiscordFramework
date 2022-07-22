@@ -276,4 +276,5 @@ on('playerDropped', (Reason) => {
 
 exports('Ready', () => IsCoreReady);
 exports('GetPlayerInfo', (PlayerId) => SV_Config.Core.Players.Network.find(p => p.serverId === PlayerId) || null);
+exports('GetPlayerIdentifiers', (PlayerId) => GetPlayerIdentifiers(PlayerId));
 exports('GetConnectedPlayers', () => SV_Config.Core.Players.Connected);
