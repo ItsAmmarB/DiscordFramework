@@ -16,14 +16,14 @@ Config.token = null; // nullify token
  */
 const GetGuild = async (DiscordGuildId) => {
 
-    if(!DiscordGuildId) return new Error('DiscordFramework: Discord --> GetGuild() No guild ID provided');
-    if(isNaN(DiscordGuildId)) return new Error('DiscordFramework: Discord --> GetGuild() Invalid guild ID provided');
+    if (!DiscordGuildId) return new Error('DiscordFramework: Discord --> GetGuild() No guild ID provided');
+    if (isNaN(DiscordGuildId)) return new Error('DiscordFramework: Discord --> GetGuild() Invalid guild ID provided');
 
     let Guild;
 
     try {
         Guild = await Client.guilds.fetch(DiscordGuildId);
-    } catch(err) {
+    } catch (err) {
         Guild = null;
     }
 
@@ -38,26 +38,26 @@ const GetGuild = async (DiscordGuildId) => {
  */
 const GetMember = async (PlayerId, DiscordGuildId = Config.guildId) => {
 
-    if(!PlayerId) return new Error('DiscordFramework: Discord --> GetMember() No player ID provided');
-    if(isNaN(PlayerId)) return new Error('DiscordFramework: Discord --> GetMember() Invalid player ID provided');
+    if (!PlayerId) return new Error('DiscordFramework: Discord --> GetMember() No player ID provided');
+    if (isNaN(PlayerId)) return new Error('DiscordFramework: Discord --> GetMember() Invalid player ID provided');
 
     let MemberId;
-    if(PlayerId.length > 10) {
+    if (PlayerId.length > 10) { // Check whether the provided ID is a Discord ID or just a normal FiveM Player ID
         MemberId = PlayerId;
     } else {
         const Player = SV_Config.Core.Players.Connected.find(player => player.server.id) || SV_Config.Core.Players.Network.find(player => player.server.id);
-        if(!Player) return new Error('DiscordFramework: Discord --> GetMember() Player does not have a player network object');
+        if (!Player) return new Error('DiscordFramework: Discord --> GetMember() Player does not have a player network object');
         MemberId.discord.id;
     }
 
     const Guild = await GetGuild(DiscordGuildId);
-    if(!Guild) return new Error('DiscordFramework: Discord --> GetMember() Client is not a member of provided guild\'s ID or guild does not exist');
+    if (!Guild) return new Error('DiscordFramework: Discord --> GetMember() Client is not a member of provided guild\'s ID or guild does not exist');
 
     let Member;
 
     try {
         Member = await Guild.members.fetch(MemberId);
-    } catch(err) {
+    } catch (err) {
         Member = null;
     }
 
@@ -72,18 +72,18 @@ const GetMember = async (PlayerId, DiscordGuildId = Config.guildId) => {
  */
 const GetRole = async (RoleId, DiscordGuildId = Config.guildId) => {
 
-    if(!RoleId) return new Error('DiscordFramework: Discord --> GetRole() No role ID provided');
-    if(isNaN(RoleId)) return new Error('DiscordFramework: Discord --> GetRole() Invalid role ID provided');
+    if (!RoleId) return new Error('DiscordFramework: Discord --> GetRole() No role ID provided');
+    if (isNaN(RoleId)) return new Error('DiscordFramework: Discord --> GetRole() Invalid role ID provided');
 
     const Guild = await GetGuild(DiscordGuildId);
-    if(!Guild) return new Error('DiscordFramework: Discord --> GetRole() Client is not a member of provided guild\'s ID or guild does not exist');
+    if (!Guild) return new Error('DiscordFramework: Discord --> GetRole() Client is not a member of provided guild\'s ID or guild does not exist');
 
 
     let Role;
 
     try {
         Role = await Guild.roles.fetch(DiscordGuildId);
-    } catch(err) {
+    } catch (err) {
         Role = null;
     }
 
