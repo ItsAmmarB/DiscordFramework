@@ -14,22 +14,24 @@ let IsCoreReady = false;
 // ------------------------------------------------------------------------------------------------------------------------------------------------------
 
 const ClientReady = Client => {
-    if(Client.toLowerCase() === 'discord') {
-        IsDiscordReady = true;
-    } else if(Client.toLowerCase() === 'mongodb') {
-        IsMongoDBReady = true;
-    }
-    console.log(Client + ' client is ready!');
-    if(IsDiscordReady && IsMongoDBReady) {
-        IsCoreReady = true;
-        console.log('Core is now ready!');
-        emit('DiscordFramework:Core:Ready');
-        PlaytimeInterval(); // commented out for development
+    switch (Client.toLowerCase()) {
+        case 'discord':
+            IsDiscordReady = true;
+        case 'mongodb':
+            IsMongoDBReady = true;
+        default:
+            console.log(Client + ' client is ready!');
+            if (IsDiscordReady && IsMongoDBReady) {
+                IsCoreReady = true;
+                console.log('Core is now ready!');
+                emit('DiscordFramework:Core:Ready');
+                PlaytimeInterval();
+            }
     }
 };
 
 const PlayerConnecting = async (PlayerConnId, Deferrals) => {
-    if(!IsCoreReady) { // if core not ready then don't allow connections
+    if (!IsCoreReady) { // if core not ready then don't allow connections
         Deferrals.done('[DiscordFramework] Core is not ready yet, please try again in a few seconds!');
     } else {
 
@@ -41,12 +43,12 @@ const PlayerConnecting = async (PlayerConnId, Deferrals) => {
 
         // Check if discord id is present within the identifiers if not then don't allow connection
         await Delay(200);
-        if(!DiscordID) return Deferrals.done('[DiscordFramework] Discord ID could be detected!');
+        if (!DiscordID) return Deferrals.done('[DiscordFramework] Discord ID could be detected!');
 
         Deferrals.update('[DiscordFramework] Checking community membership...');
         await Delay(300);
         const Member = Discord.GetMember(DiscordID);
-        if(!Member) Deferrals.update('[DiscordFramework] You are not a member of the community!');
+        if (!Member) Deferrals.update('[DiscordFramework] You are not a member of the community!');
 
         await Delay(3000); // yes; I know, waiting 3 seconds to start connecting is just absurd but it should be enough time for extensions to check and do stuff
         Deferrals.done();
@@ -74,7 +76,7 @@ const PlayerConnected = (PlayerId) => {
 
     // Database
     MongoDB.DatabaseFindOne('Players', { 'details.discordId': DiscordID }, async Player => {
-        if(Player) {
+        if (Player) {
 
             // Match current player information with database information
             const Query = {};
@@ -87,25 +89,25 @@ const PlayerConnected = (PlayerId) => {
 
             // Check for new Identifiers and update
             const NewIdentifiers = Identifiers.filter(identifier => !Player.details.identifiers.includes(identifier));
-            if(NewIdentifiers.length > 0) {
-                if(!Query.$push) Query.$push = {};
+            if (NewIdentifiers.length > 0) {
+                if (!Query.$push) Query.$push = {};
                 Query.$push['details.identifiers'] = { $each: NewIdentifiers };
             }
 
             // Check for a new name change and update
             const NewName = GetPlayerName(PlayerId);
-            if(NewName !== Player.details.names[Player.details.names.length - 1]) {
-                if(!Query.$push) Query.$push = {};
+            if (NewName !== Player.details.names[Player.details.names.length - 1]) {
+                if (!Query.$push) Query.$push = {};
                 Query.$push['details.names'] = NewName;
             }
 
             // Check Location
-            if(Player.details.location === 'Unknown') {
+            if (Player.details.location === 'Unknown') {
                 const fetch = require('node-fetch');
 
                 let GeoIP = await fetch('http://ip-api.com/json/51.36.218.78');
                 GeoIP = await GeoIP.json();
-                if(GeoIP.status.toLowerCase() === 'success') {
+                if (GeoIP.status.toLowerCase() === 'success') {
                     Query.$set['details.location'] = `${GeoIP.country}, ${GeoIP.regionName}, ${GeoIP.city}`;
                 }
             }
@@ -124,7 +126,7 @@ const PlayerConnected = (PlayerId) => {
                     playtime: 0,
                     lastSeenTimestamp: Date.now(),
                     identifiers: Identifiers,
-                    names: [ GetPlayerName(PlayerId) ],
+                    names: [GetPlayerName(PlayerId)],
                     location: null
                 }
             };
@@ -134,7 +136,7 @@ const PlayerConnected = (PlayerId) => {
 
             let GeoIP = await fetch('http://ip-api.com/json/24.48.0.1');
             GeoIP = await GeoIP.json();
-            if(GeoIP.status.toLowerCase() === 'success') {
+            if (GeoIP.status.toLowerCase() === 'success') {
                 NewPlayer.details.location = `${GeoIP.country}, ${GeoIP.regionName}, ${GeoIP.city}`;
             } else {
                 NewPlayer.details.location = 'Unknown';
@@ -150,13 +152,12 @@ const PlayerConnected = (PlayerId) => {
     }, 200);
 };
 
-
 const PlayerDisconnected = (PlayerId, Reason) => {
 
-    if(SV_Config.Core.Players.Connected.find(player => player.serverId === PlayerId)) {
+    if (SV_Config.Core.Players.Connected.find(player => player.serverId === PlayerId)) {
         SV_Config.Core.Players.Connected = SV_Config.Core.Players.Connected.filter(player => player.serverId !== PlayerId);
     }
-    if(SV_Config.Core.Players.Network.find(player => player.serverId === PlayerId)) {
+    if (SV_Config.Core.Players.Network.find(player => player.serverId === PlayerId)) {
         SV_Config.Core.Players.Network.find(player => player.serverId === PlayerId).connection.disconnectedAt = Date.now();
         SV_Config.Core.Players.Network.find(player => player.serverId === PlayerId).connection.disconnectReason = Reason;
     }
@@ -164,7 +165,7 @@ const PlayerDisconnected = (PlayerId, Reason) => {
 };
 
 const PlaytimeInterval = () => setInterval(async () => {
-    if(IsCoreReady) {
+    if (IsCoreReady) {
         for (let i = 0; i < SV_Config.Core.Players.Connected.length; i++) {
             const Player = SV_Config.Core.Players.Connected[i];
             await Delay(250);
@@ -180,6 +181,14 @@ const PlaytimeInterval = () => setInterval(async () => {
 
 const Delay = async (MS) => await new Promise(resolve => setTimeout(resolve, MS));
 
+const GetPlayerIdentifiers = PlayerId => {
+    const Identifiers = [];
+    for (let i = 0; i < GetNumPlayerIdentifiers(PlayerId); i++) {
+        const Identifier = GetPlayerIdentifier(PlayerId, i);
+        Identifiers.push(Identifier);
+    }
+    return Identifiers;
+};
 
 // ------------------------------------------------------------------------------------------------------------------------------------------------------
 // ---------------------------------------------------------------------- CONSOLE -----------------------------------------------------------------------
@@ -187,7 +196,7 @@ const Delay = async (MS) => await new Promise(resolve => setTimeout(resolve, MS)
 
 
 const CoreConsoleInterval = setInterval(async () => {
-    if(IsCoreReady) {
+    if (IsCoreReady) {
         clearInterval(CoreConsoleInterval);
 
         // This loop makes sure all extensions are registered
@@ -195,7 +204,7 @@ const CoreConsoleInterval = setInterval(async () => {
         while (SV_Config.Extensions.length !== SV_Config.Extensions.filter(exten => exten.state).length) {
             await Delay(500);
             counter++;
-            if(counter === 40) { // A fail-safe to not crash the server
+            if (counter === 40) { // A fail-safe to not crash the server
                 console.warn('Some extensions failed to load!');
                 break;
             }
@@ -249,7 +258,7 @@ on('playerConnecting', (name, setKickReason, deferral) => {
 
 onNet('playerConnected', async (PlayerId) => {
 
-    while(!IsCoreReady) {
+    while (!IsCoreReady) {
         await Delay(1000);
     }
 

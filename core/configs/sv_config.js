@@ -16,7 +16,7 @@ const SV_Config = {
                 //     }
                 // }
             ],
-            Session: [
+            Network: [
                 // {
                 //     serverId: PlayerId,
                 //     discordId: DiscordId,
