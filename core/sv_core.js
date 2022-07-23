@@ -50,13 +50,15 @@ const PlayerConnecting = async (PlayerConnId, Deferrals) => {
         const Member = Discord.GetMember(DiscordID);
         if (!Member) Deferrals.update('[DiscordFramework] You are not a member of the community!');
 
+        emit('DiscordFramework:Player:Connecting', PlayerConnId, Deferrals);
         await Delay(3000); // yes; I know, waiting 3 seconds to start connecting is just absurd but it should be enough time for extensions to check and do stuff
+
         Deferrals.done();
 
     }
 };
 
-const PlayerConnected = (PlayerId) => {
+const PlayerConnected = async (PlayerId) => {
 
     const Identifiers = GetPlayerIdentifiers(PlayerId);
     const DiscordID = Identifiers.find(identifier => identifier.includes('discord:')).split(':')[1];
@@ -96,20 +98,21 @@ const PlayerConnected = (PlayerId) => {
 
             // Check for a new name change and update
             const NewName = GetPlayerName(PlayerId);
-            if (NewName !== Player.details.names[Player.details.names.length - 1]) {
+            if (NewName !== Player.details.names[0].name) {
                 if (!Query.$push) Query.$push = {};
-                Query.$push['details.names'] = NewName;
+                Query.$push['details.names'] = {
+                    $each: [{ name: NewName, timestamp: Date.now() }],
+                    $position: 0
+                };
             }
 
             // Check Location
-            if (Player.details.location === 'Unknown') {
-                const fetch = require('node-fetch');
+            const fetch = require('node-fetch');
 
-                let GeoIP = await fetch('http://ip-api.com/json/51.36.218.78');
-                GeoIP = await GeoIP.json();
-                if (GeoIP.status.toLowerCase() === 'success') {
-                    Query.$set['details.location'] = `${GeoIP.country}, ${GeoIP.regionName}, ${GeoIP.city}`;
-                }
+            let GeoIP = await fetch('http://ip-api.com/json/51.36.218.78');
+            GeoIP = await GeoIP.json();
+            if (GeoIP.status.toLowerCase() === 'success') {
+                Query.$set['details.location'] = `${GeoIP.country}, ${GeoIP.regionName}, ${GeoIP.city}`;
             }
 
             await MongoDB.DatabaseUpdateOne('Players', { 'details.discordId': DiscordID }, Query, err => {
@@ -126,7 +129,7 @@ const PlayerConnected = (PlayerId) => {
                     playtime: 0,
                     lastSeenTimestamp: Date.now(),
                     identifiers: Identifiers,
-                    names: [GetPlayerName(PlayerId)],
+                    names: [{ name: GetPlayerName(PlayerId), timestamp: Date.now() }],
                     location: null
                 }
             };
@@ -137,7 +140,7 @@ const PlayerConnected = (PlayerId) => {
             let GeoIP = await fetch('http://ip-api.com/json/24.48.0.1');
             GeoIP = await GeoIP.json();
             if (GeoIP.status.toLowerCase() === 'success') {
-                NewPlayer.details.location = `${GeoIP.country}, ${GeoIP.regionName}, ${GeoIP.city}`;
+                NewPlayer.details.location = `${GeoIP.country}, ${GeoIP.regionName}`;
             } else {
                 NewPlayer.details.location = 'Unknown';
             }
@@ -147,9 +150,8 @@ const PlayerConnected = (PlayerId) => {
         }
     });
 
-    setTimeout(() => {
-        emit('DiscordFramework:Player:Connected', PlayerId);
-    }, 200);
+    await Delay(150)
+    emit('DiscordFramework:Player:Connected', PlayerId);
 };
 
 const PlayerDisconnected = (PlayerId, Reason) => {
@@ -162,6 +164,8 @@ const PlayerDisconnected = (PlayerId, Reason) => {
         SV_Config.Core.Players.Network.find(player => player.serverId === PlayerId).connection.disconnectReason = Reason;
     }
 
+    emit('DiscordFramework:Player:Disconnected', global.source, Reason);
+
 };
 
 const PlaytimeInterval = () => setInterval(async () => {
@@ -170,11 +174,12 @@ const PlaytimeInterval = () => setInterval(async () => {
             const Player = SV_Config.Core.Players.Connected[i];
             await Delay(250);
             MongoDB.DatabaseUpdateOne('Players', { 'details.discordId': Player.discordId }, {
-                $inc: { 'playtime': 1 },
-                $set: { 'lastSeenTimestmap': Date.now() }
+                $inc: { 'details.playtime': 1 },
+                $set: { 'details.lastSeenTimestmap': Date.now() }
             }, err => {
                 if (err) new Error(err);
             });
+
         }
     }
 }, 60000);
@@ -252,7 +257,6 @@ on('DiscordFramework:Client:Ready', (Client) => {
 
 on('playerConnecting', (name, setKickReason, deferral) => {
     deferral.defer();
-    emit('DiscordFramework:Player:Connecting', global.source, deferral);
     PlayerConnecting(global.source, deferral);
 });
 
@@ -262,11 +266,10 @@ onNet('playerConnected', async (PlayerId) => {
         await Delay(1000);
     }
 
-    PlayerConnected(PlayerId);
+    await PlayerConnected(PlayerId);
 });
 
 on('playerDropped', (Reason) => {
-    emit('DiscordFramework:Player:Disconnected', global.source, Reason);
     PlayerDisconnected(global.source, Reason);
 });
 
@@ -275,6 +278,7 @@ on('playerDropped', (Reason) => {
 // ------------------------------------------------------------------------------------------------------------------------------------------------------
 
 exports('Ready', () => IsCoreReady);
-exports('GetPlayerInfo', (PlayerId) => SV_Config.Core.Players.Network.find(p => p.serverId === PlayerId) || null);
+exports('GetPlayerInfo', (PlayerId, fromNetwork = false) => fromNetwork ? SV_Config.Core.Players.Network.find(p => p.serverId === PlayerId) : SV_Config.Core.Players.Connected.find(p => p.serverId === PlayerId) || null);
 exports('GetPlayerIdentifiers', (PlayerId) => GetPlayerIdentifiers(PlayerId));
 exports('GetConnectedPlayers', () => SV_Config.Core.Players.Connected);
+exports('GetNetworkPlayers', () => SV_Config.Core.Players.Network);

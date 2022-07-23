@@ -153,7 +153,7 @@ class Extensions {
             SV_Config.Extensions.push(Config);
         }
         if (SV_Config.Extensions.find(extension => extension === null)) SV_Config.Extensions = SV_Config.Extensions.filter(extension => extension !== null);
-
+        emit('DiscordFramework:Extensions:Registered', this.Name, this.State)
     }
 
     #CheckDependency(Dependency) {
@@ -184,6 +184,11 @@ class Extensions {
         });
     }
 
+    /**
+     * This method was discontinued due to possible inconsistencies
+     * acroess extensions, thus; leaving the extensions to handle player connections
+     * on it's own for the better
+     */
     // PlayerConnected() {
     //     on('DiscordFramework:Player:Connected', async PlayerId => {
     //         for (let i = 0; i < SV_Config.Extensions.length; i++) {
@@ -197,7 +202,6 @@ class Extensions {
     //         }
     //     });
     // }
-
 
     async Run() {
         await this.Delay(1000);
