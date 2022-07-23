@@ -120,3 +120,5 @@ yarn.lock
 /extensions/Playerlist
 
 /utils/EventCallback
+
+/core/discord/config.js
