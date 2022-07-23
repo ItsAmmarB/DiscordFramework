@@ -114,3 +114,9 @@ yarn.lock
 
 # FiveM CFX DATA Resouce Cache folder 
 /cache
+
+# Indev
+/extensions/Session
+/extensions/Playerlist
+
+/utils/EventCallback
