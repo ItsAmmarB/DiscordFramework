@@ -10,7 +10,7 @@
 -   Server & Client side exports for external use.
 -   Fast and lightweight.
 -   Ability to use users' IDs as a permission. 
--   AcePermission Supported[^3]
+-   AcePermission Supported [^3]
 
 ## Exports (Server)
 
