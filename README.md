@@ -1,4 +1,4 @@
-# DiscordFramework
+# DiscordFramework - Indev
 
 A modular and customizable framework that utilizes Discord for player identification and MongoDB as a database.
 
