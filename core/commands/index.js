@@ -1,6 +1,0 @@
-// class Commands {
-//     constructor(Command) {
-
-
-//     }
-// }
