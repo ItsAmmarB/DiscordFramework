@@ -263,7 +263,6 @@ _None_
 
 
 </details>
-<<<<<<< HEAD
 
 
 [^1]: Meaning, if new identifiers were to appear, those will also be added to the pre-existing identifiers.
@@ -271,5 +270,3 @@ _None_
 [^2]: Meaning, if the player were to join using a different name, it will be added to the pre-existing names.
 
 [^3]: Geo location will only output the country and the region of the player using their IP address for web usage, such as languages and webpanels
-=======
->>>>>>> fb83a70ac8b859586e27ee6d3f7085ce47e01a09
