@@ -1,17 +1,18 @@
 {
   "name": "discordframework",
-  "version": "4.0-indev",
-  "description": "A FiveM custom framework build specifically for JCRP",
+  "version": "0.0.1-indev",
+  "description": "A feature-rich, customizable, and modular framework that utilizes Discord and MongoDB",
   "dependencies": {
-    "@babel/plugin-proposal-class-properties": "^7.18.6",
     "discord.js": "^13.8.0",
-    "moment-timezone": "^0.5.34",
-    "mongodb": "^4.7.0",
-    "ms": "^2.1.3",
-    "pretty-ms": "7.0.1"
+    "mongodb": "^4.7.0"
   },
   "devDependencies": {
-    "eslint": "^8.17.0"
+    "@babel/core": "^7.18.9",
+    "@babel/eslint-parser": "^7.18.9",
+    "@babel/eslint-plugin": "^7.17.7",
+    "@babel/preset-env": "^7.18.9",
+    "babel-eslint": "^10.1.0",
+    "eslint": "^8.20.0"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"

@@ -14,11 +14,13 @@ A modular and customizable framework that utilizes Discord for player identifica
 
 ## How does it works?
 
-The framework will start logging basic player information such as player ID, discord ID, connection timestamp and disconnection timestmap the second it starts and store it as an element in a array for an easy and fast access by the extensions or external resources.
+The framework was designed to provide a simple yet comprehensive evniornment with added functions, method, variables, and more.
 
-It will also log even more information about the player and store it in a MongoDB database; such as discord ID, last server ID, playtime, last seen timestamp, all identifiers, all names, and geo location for better identification, some detail are updated constantly to improve identification such as names, identifiers, and geo location are updated every time the player connects to the server, also playtime and last seen timestamp are updated every minute.
+Upon starting the resource, the framework will immediatelly start logging basic player information such as player ID, discord ID, connection timestamp and disconnection timestmap and store it as an element in a array for an easy and fast access to be utilized by the extensions or external resources.
 
-_(NOTE: Geo location will only output the country and the region for web usage, such as languages and webpanels)_
+It will also log even more information about the player and store it in a MongoDB database; such as discord ID, last server ID, playtime, last seen timestamp, all identifiers [^1], all names [^2], and geo location [^3] for better identification, some detail are updated constantly to improve identification such as names, identifiers, and geo location are updated every time the player connects to the server, also playtime and last seen timestamp are updated every minute.
+
+_NOTE: The resource will require players to have discord linked with their game, otherwise it will reject their connection_
 
 
 ## Why Discord and MongoDB?
@@ -78,12 +80,9 @@ exports('GetPlayerInfo', (PlayerId, fromNetwork = false) => fromNetwork ? SV_Con
 ```js
 exports('GetPlayerIdentifiers', (PlayerId) => GetPlayerIdentifiers(PlayerId));
 ```
-```js 
-exports('GetConnectedPlayers', () => SV_Config.Core.Players.Connected);
-```
 
 ```js 
-exports('GetConnectedPlayers', () => SV_Config.Core.Players.Network);
+exports('GetPlayers', () => SV_Config.Core.Players);
 ```
 
 ---
@@ -264,3 +263,10 @@ _None_
 
 
 </details>
+
+
+[^1]: Meaning, if new identifiers were to appear, those will also be added to the pre-existing identifiers.
+
+[^2]: Meaning, if the player were to join using a different name, it will be added to the pre-existing names.
+
+[^3]: Geo location will only output the country and the region of the player using their IP address for web usage, such as languages and webpanels
