@@ -41,7 +41,10 @@ otherwise, report the bug to the respective extension author.
 
 I'm glad you're intersted, first off; you would need some basic knowledge in JavaScript, then head over to the [Template](https://github.com/ItsAmmarB/DiscordFramework/tree/master/extensions/Template) folder located in the extensions folder, there you will find a decently detailed guide on how to create your own extension, with all the functions, method, event, and export the framework provides to make it easier for you to navigate.
 
-Am I allowed to share or publish the extension I created? you might ask, the short answer is; Yes, you have all the right to do whatever you want with it, as long as you do not start to cause harm/damage otherwise; the extension will be blocked
+
+## License
+Am I allowed to share or publish the extension I created? We knew you might ask, and the short answer is; Yes, you have all the rights to do whatever you want with it, as long as you do not start to cause harm/damage otherwise; the extension will be blocked.
+
 ---
 
 <details>
