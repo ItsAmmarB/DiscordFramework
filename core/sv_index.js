@@ -1,7 +1,7 @@
 const Core = require(GetResourcePath(GetCurrentResourceName()) + '/core/core');
-const Discord = require(GetResourcePath(GetCurrentResourceName()) + '/core/modules/discord');
-const MongoDB = require(GetResourcePath(GetCurrentResourceName()) + '/core/modules/mongo');
 
+// const Discord = require(GetResourcePath(GetCurrentResourceName()) + '/core/modules/discord');
+// const MongoDB = require(GetResourcePath(GetCurrentResourceName()) + '/core/modules/mongo');
 
 // --------------------------------------
 //               TESTINGS

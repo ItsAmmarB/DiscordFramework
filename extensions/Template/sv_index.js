@@ -2,12 +2,12 @@
 (() => {
 
     // Always keep your code inside this event listener to prevent an uncontrolled code execution and to prevent cross-declaration from another scope
-    const { Extension: Extensions } = require('../../core/handlers/extensions');
+    const { Extension: Extensions } = require('../../core/modules/extensions/index');
 
     const Extension = new class Extension extends Extensions {
         constructor() {
             super({
-                name: 'Test', // Change to extension name
+                name: 'Template', // Change to extension name
                 description: 'A mere template for future extensions', // A brief decription of what does the extension do
                 toggle: true, // Whether the extension is supposed to be enabled or disabled by default
                 dependencies: [], // The dependencies/other extensions needed for this extension to be working correctly

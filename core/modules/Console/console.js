@@ -3,9 +3,9 @@ const Delay = async (MS) => await new Promise(resolve => setTimeout(resolve, MS)
 
 module.exports = {
     Core: async () => {
-        const { Client: DiscordClient } = require('./discord');
-        const { Client: MongoClient } = require('./mongo');
-        const { Extensions } = require('../core');
+        const { Client: DiscordClient } = require('../discord');
+        const { Client: MongoClient } = require('../MongoDB');
+        const { Extensions } = require('../../core');
 
         // This loop makes sure all extensions are registered
         let counter = 0;
@@ -20,10 +20,10 @@ module.exports = {
 
         if(global.DebugMode) console.debug(`Extensions took ${counter / 2} second(s) to load!`); // just for debuging
 
-        const ExtensionsLog = Extensions.toArray().sort((a, b) => a.state.localeCompare(b.state)).map((e, i) => ({
+        const ExtensionsLog = Extensions.toArray().sort((a, b) => a.status.localeCompare(b.status)).map((e, i) => ({
             ' ^3# ': ` ^9${i + 1} `,
             ' ^3NAME ': ` ^4${e.name} `,
-            ' ^3STATE ': ` ${e.state !== 'Enabled' ? e.state === 'Template' ? `^9${e.state}` : `^1${e.state}` : `^2${e.state}`} `,
+            ' ^3STATE ': ` ${e.status !== 'Enabled' ? e.status === 'Template' ? `^9${e.status}` : `^1${e.status}` : `^2${e.status}`} `,
             ' ^3VERSION ': ` ^4${e.version} `,
             ' ^3AUTHOR ':  ` ^6${e.author} `
         }));

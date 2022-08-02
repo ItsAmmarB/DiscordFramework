@@ -1,5 +1,6 @@
 // Globalizing DebugMode for debugging functions
 global.DebugMode = String(GetResourceMetadata(GetCurrentResourceName(), 'debug_mode', 0)).toLowerCase() === 'true' ? true : false;
+
 /**
  * Check current local version with the GitHub version
  * if version do not match then console log a warning
@@ -14,80 +15,6 @@ global.DebugMode = String(GetResourceMetadata(GetCurrentResourceName(), 'debug_m
 //         }
 //     }
 // });
-
-// --------------------------------------
-//               MODULES
-// --------------------------------------
-
-const Modules = {
-    Discord: require('./modules/discord'),
-    MongoDB: require('./modules/mongo'),
-    Console: require('./modules/console'),
-    Extensions: require('./modules/extensions')
-};
-
-
-// Just a temporary variable to check whether all modules are loaded or not
-let Status = false;
-let _discordReady = false;
-let _mongoReady = false;
-on('DiscordFramework:Module:Ready', async Client => {
-    if(Status) return;
-    switch (Client.toLowerCase()) {
-    case 'discord':
-        _discordReady = true;
-    case 'mongodb':
-        _mongoReady = true;
-    default:
-        if(global.DebugMode) console.debug(`---> ${Client} is Ready!`);
-        if (_discordReady && _mongoReady) {
-            if(global.DebugMode) console.debug('---> Core is Ready!');
-            Status = true;
-            emit('DiscordFramework:Core:Ready');
-            await Delay(2000);
-            Modules.Extensions.Load();
-
-            Modules.Console.Core();
-            CountPlaytime();
-        }
-    }
-});
-
-
-// --------------------------------------
-//              EXTENSIONS
-// --------------------------------------
-
-
-const { Extensions: ExtensionsSet, Extension: ExtensionClass } = require('./handlers/extensions');
-const Extensions = new ExtensionsSet();
-on('DiscordFramework:Extension:Register', Extension => {
-    if(Extensions.get(Extension.name)) {
-        console.log(Extensions.get(Extension.name));
-        console.log(Extension);
-        return Console.PrintError(new Error(`EXTEN_DUPLIC: Duplicate extension config names were found "${Extension.name}"`));
-    }
-    if(Extension.dependencies.length > 0) {
-        let dependencies = ExtensionClass.CheckDependencies(Extensions, Extension.dependencies);
-        if(dependencies.find(d => d.state === 'Template')) {
-            dependencies = dependencies.filter(d => d.state !== 'Template');
-            console.warn(`Template cannot be a dependency for an extension; Dependency was ignored in the "${Extension.name}" extension`);
-        }
-        if(dependencies.find(d => d.name === Extension.name)) {
-            dependencies = dependencies.filter(d => d.name !== Extension.name);
-            console.warn(`An extension cannot be a dependency for itself; Dependency was ignored in the "${Extension.name}" extension`);
-        }
-        dependencies = dependencies.find(d => d.state !== 'Enabled');
-        if(dependencies) {
-            emit('DiscordFramework:Extension:Register:Return', Extension.name, dependencies.state);
-            Extension.state = dependencies.state;
-            Extensions.add(Extension);
-        }
-    }
-    emit('DiscordFramework:Extension:Run', Extension.name);
-    Extensions.add(Extension);
-});
-
 
 // --------------------------------------
 //       PLAYERS/DISCORD/MONGODB
@@ -250,6 +177,30 @@ on('playerDropped', (Reason) => {
 const Delay = async (MS) => await new Promise(resolve => setTimeout(resolve, MS));
 
 // --------------------------------------
+//               MODULES
+// --------------------------------------
+
+const Modules = require('./modules');
+
+// Just a temporary variable to check whether all modules are loaded or not
+let Status = false;
+on('DiscordFramework:Module:Ready', Module => {
+    if(global.DebugMode) console.debug(`---> ${Module} is Ready!`);
+});
+
+setTimeout(async () => {
+    while(!Modules.Ready()) {
+        await Delay(500);
+    }
+    if(global.DebugMode) console.debug('---> Core is Ready!');
+    Status = true;
+    emit('DiscordFramework:Core:Ready');
+    CountPlaytime();
+}, 500);
+
+Modules.Load();
+
+// --------------------------------------
 //                 EXPORTS
 // --------------------------------------
 
@@ -260,15 +211,10 @@ module.exports = {
      */
     Status: Status,
     /**
-     * Return all the players and their details
-     * @return {Set<PlayersSet>} A Set
+     * Returns all the players and their details
+     * @return {Set<PlayersSet>} A Set() of players
      */
     Players: Players,
-    /**
-     * Return all registered extensions
-     * @return {Set<ExtensionsSet>} A Set
-     */
-    Extensions: Extensions,
     /**
      * A pass-through from native JS export to CFX.re exports().
      *
