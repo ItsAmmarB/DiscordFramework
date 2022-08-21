@@ -21,8 +21,8 @@ global.DebugMode = String(GetResourceMetadata(GetCurrentResourceName(), 'debug_m
 // --------------------------------------
 
 
-let Discord = require('./modules/discord/index')
-let MongoDB = require('./modules/MongoDB/index')
+let Discord = require('./modules/discord/index');
+let MongoDB = require('./modules/MongoDB/index');
 
 const Modules = require('./modules');
 
@@ -40,8 +40,8 @@ setTimeout(async () => {
     Status = true;
     emit('DiscordFramework:Core:Ready');
     CountPlaytime();
-    if(String(Discord) === '{}') Discord = require('./modules/discord/index')
-    if(String(MongoDB) === '{}') MongoDB = require('./modules/MongoDB/index')
+    if(String(Discord) === '{}') Discord = require('./modules/discord/index');
+    if(String(MongoDB) === '{}') MongoDB = require('./modules/MongoDB/index');
 }, 500);
 
 Modules.Load();
@@ -67,7 +67,7 @@ const CountPlaytime = () => setInterval(async () => {
 
 // Triggered when the player's connected request is received by the server
 on('playerConnecting', async (Name, SetKickReason, Deferrals) => {
-    const PlayerId = global.source; 
+    const PlayerId = global.source;
 
     if(global.DebugMode) console.debug(`^9 ===> ${GetPlayerName(PlayerId)} is conencting^0`);
 
