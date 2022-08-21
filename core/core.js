@@ -17,6 +17,36 @@ global.DebugMode = String(GetResourceMetadata(GetCurrentResourceName(), 'debug_m
 // });
 
 // --------------------------------------
+//               MODULES
+// --------------------------------------
+
+
+let Discord = require('./modules/discord/index')
+let MongoDB = require('./modules/MongoDB/index')
+
+const Modules = require('./modules');
+
+// Just a temporary variable to check whether all modules are loaded or not
+let Status = false;
+on('DiscordFramework:Module:Ready', Module => {
+    if(global.DebugMode) console.debug(`---> ${Module} is Ready!`);
+});
+
+setTimeout(async () => {
+    while(!Modules.Ready()) {
+        await Delay(500);
+    }
+    if(global.DebugMode) console.debug('---> Core is Ready!');
+    Status = true;
+    emit('DiscordFramework:Core:Ready');
+    CountPlaytime();
+    if(String(Discord) === '{}') Discord = require('./modules/discord/index')
+    if(String(MongoDB) === '{}') MongoDB = require('./modules/MongoDB/index')
+}, 500);
+
+Modules.Load();
+
+// --------------------------------------
 //       PLAYERS/DISCORD/MONGODB
 // --------------------------------------
 
@@ -26,18 +56,18 @@ const Players = new PlayersSet();
 const CountPlaytime = () => setInterval(async () => {
     for (const player of Players) {
         await Delay(50);
-        Modules.MongoDB.DatabaseUpdateOne('Players', { 'details.discordId': player.getDiscordId() }, {
+        MongoDB.UpdateOne('Players', { 'details.discordId': player.getDiscordId() }, {
             $inc: { 'details.playtime': 1 },
             $set: { 'details.lastSeenTimestmap': Date.now() }
         }, err => {
             if (err) new Error(err);
         });
     }
-}, 200);
+}, 60000);
 
 // Triggered when the player's connected request is received by the server
 on('playerConnecting', async (Name, SetKickReason, Deferrals) => {
-    const PlayerId = global.source;
+    const PlayerId = global.source; 
 
     if(global.DebugMode) console.debug(`^9 ===> ${GetPlayerName(PlayerId)} is conencting^0`);
 
@@ -54,7 +84,7 @@ on('playerConnecting', async (Name, SetKickReason, Deferrals) => {
     if (!Identifiers.discord) return Deferrals.done('[DiscordFramework] Discord ID could be detected!');
 
     Deferrals.update('[DiscordFramework] Checking community membership...');
-    const Member = await Modules.Discord.GetMember(Identifiers.discord);
+    const Member = await Discord.GetMember(Identifiers.discord);
     if (!Member) Deferrals.update('[DiscordFramework] You are not a member of the community!');
 
     emit('DiscordFramework:Player:Connecting', PlayerId, Deferrals);
@@ -87,7 +117,7 @@ onNet('playerJoined', async (PlayerId) => {
     }
 
     // Database
-    Modules.MongoDB.DatabaseFindOne('Players', { 'details.discordId': player.getDiscordId() }, async _Player => {
+    MongoDB.FindOne('Players', { 'details.discordId': player.getDiscordId() }, async _Player => {
         if (_Player) {
             // Match current player information with database information
             const Query = {};
@@ -124,7 +154,7 @@ onNet('playerJoined', async (PlayerId) => {
                 Query.$set['details.location'] = `${GeoIP.country}, ${GeoIP.regionName}, ${GeoIP.city}`;
             }
 
-            Modules.MongoDB.DatabaseUpdateOne('Players', { 'details.discordId': player.getDiscordId() }, Query, err => {
+            MongoDB.UpdateOne('Players', { 'details.discordId': player.getDiscordId() }, Query, err => {
                 if (err) new Error(err);
             });
         } else {
@@ -152,7 +182,7 @@ onNet('playerJoined', async (PlayerId) => {
                 NewPlayer.details.location = 'Unknown';
             }
 
-            Modules.MongoDB.DatabaseInsertOne('Players', NewPlayer);
+            MongoDB.InsertOne('Players', NewPlayer);
         }
     });
 
@@ -175,30 +205,6 @@ on('playerDropped', (Reason) => {
 // --------------------------------------
 
 const Delay = async (MS) => await new Promise(resolve => setTimeout(resolve, MS));
-
-// --------------------------------------
-//               MODULES
-// --------------------------------------
-
-const Modules = require('./modules');
-
-// Just a temporary variable to check whether all modules are loaded or not
-let Status = false;
-on('DiscordFramework:Module:Ready', Module => {
-    if(global.DebugMode) console.debug(`---> ${Module} is Ready!`);
-});
-
-setTimeout(async () => {
-    while(!Modules.Ready()) {
-        await Delay(500);
-    }
-    if(global.DebugMode) console.debug('---> Core is Ready!');
-    Status = true;
-    emit('DiscordFramework:Core:Ready');
-    CountPlaytime();
-}, 500);
-
-Modules.Load();
 
 // --------------------------------------
 //                 EXPORTS

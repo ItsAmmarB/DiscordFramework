@@ -36,12 +36,16 @@ exports('Core', () => {
         /**
          *
          * @param {number} PlayerId Player server ID
-         * @param {number} Gategory 0 = Network | 1 = Connected | 2 = Connecting
          * @returns player cached information
          */
         GetPlayer: PlayerId => {
             return Core.Players.get(PlayerId);
         },
+        /**
+         *
+         * @param {string} IP the IP Identifier of the player
+         * @returns player's Geo Location
+         */
         GetGeoLocation: async IP => {
             // Get the player's country AKA. GeoIP
             const fetch = require('node-fetch');

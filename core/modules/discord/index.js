@@ -16,11 +16,11 @@ module.exports.Module = class Discord extends Modules {
                      * the function will look for that GuildId
                      * and if not present and error will be throw
                  */
-                GuildId: '572195755922685962' // The main discord server
+                GuildId: '354062777737936896' // The main discord server
             }
         });
 
-        this.Token = 'ODQ2MzQyMjQ5ODUxMTI1Nzgx.Gjy7eg.txFlHQxlgkRoH3OoTMRaM9x77s8og1fY0WfrVw';
+        this.Token = 'OTg1NzAzMjA3MDM4NzYzMDI4.GbgCei.6Vc4rE4Yl8EK2kleChxCuWMP3cSL3Doc1bbxSQ';
 
         const { Client } = require('discord.js');
         this.client = new Client({ intents: 131071 });
@@ -147,17 +147,15 @@ module.exports.Module = class Discord extends Modules {
     }
 
     #Exports() {
-        module.exports = {
-            Client: this.client,
-            GetGuild: async (GuildId) => {
-                return await this.GetGuild(GuildId);
-            },
-            GetMember: async (MemberId, GuildId) => {
-                return await this.GetMember(MemberId, GuildId);
-            },
-            GetRole: async (RoleId, GuildId) => {
-                return await this.GetRole(RoleId, GuildId);
-            }
-        };
+        module.exports.Client = this.client,
+        module.exports.GetGuild = async (GuildId) => {
+            return await this.GetGuild(GuildId);
+        },
+        module.exports.GetMember = async (MemberId, GuildId) => {
+            return await this.GetMember(MemberId, GuildId);
+        },
+        module.exports.GetRole = async (RoleId, GuildId) => {
+            return await this.GetRole(RoleId, GuildId);
+        }
     }
 };
