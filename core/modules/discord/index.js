@@ -1,6 +1,23 @@
 const { Module: Modules } = require('../../modules');
 
 module.exports.Module = class Discord extends Modules {
+
+    /**
+     * Put your Discord bot token here and make sure to never share it with anyone
+     * keep in mind, the framework does not need any permissions to work out of the box,
+     * extensions may require certain permissions, be careful of what they require and
+     * use your own judgement.
+     *
+     * The token was put here as a security measure to prevent outside sources from
+     * obtaining it, thought it still CAN be obtained, again, use your judgement!
+     *
+     * DISCLAIMER:
+     * I am not responsible for anything that could or would happen if an extension that was
+     * not made by me, Ammar B. AKA. ItsAmmarB that caused harm or damage in any capacity to your
+     * FiveM server, Discord server, or anything in any way, share, or form.
+     */
+    #Token = 'TOKEN HERE';
+
     constructor(modules) {
         super(modules, {
             name: 'Discord',
@@ -13,13 +30,11 @@ module.exports.Module = class Discord extends Modules {
                      * Change GuildId to your main/primary discord server
                      * in the functions below if no guild ID is provided
                      * the function will look for that GuildId
-                     * and if not present and error will be throw
+                     * and if not present an error will be throw
                  */
-                GuildId: '354062777737936896' // The main discord server
+                GuildId: '354062777737936896' // JusticeCommunityRP
             }
         });
-
-        this.Token = 'MTAxMasdTM2ODcwMDMzMjQ4MjU3MQ.GULvkY.AC_E1ODiI7h-mWQWA8iIMA7-y2oG25zxNl1JWw';
 
         const { Client } = require('discord.js');
         this.client = new Client({ intents: 131071 });
@@ -27,7 +42,7 @@ module.exports.Module = class Discord extends Modules {
     }
 
     Run() {
-        this.client.login(this.Token);
+        this.client.login(this.#Token);
         this.client.on('ready', () => {
             this.Ready();
             this.#Exports();
