@@ -15,12 +15,10 @@ dependency 'yarn'
 server_script {
 
     -- CORE
-    'core/sv_index.js',
+    'core/sv_*.js',
    
     -- EXTENSIONS
-    -- 'extensions/**/sv_**.js',
-
-
+    'extensions/**/sv_*.js',
 
     -- -- UTILS
     -- 'utils/**/sv_**.js'
@@ -30,10 +28,10 @@ server_script {
 client_script {
 
     -- CORE
-    'core/cl_index.js',
+    'core/cl_*.js',
 
     -- EXTENSIONS
-    -- 'extensions/**/cl_**.js',
+    'extensions/**/cl_*.js',
 
     -- -- UTILS
     -- 'utils/**/cl_**.js'
@@ -42,18 +40,8 @@ client_script {
 
 shared_script {
 
-    -- CORE
-    -- 'core/configs/sh_**.js',
-    -- 'core/sh_core.js',
-
-    -- -- MODULES
-    -- 'modules/**/sh_**.js',
-
-    -- -- Functions
-    -- 'modules/functions.js',
-
     -- -- EXTENSIONS
-    -- 'extensions/**/sh_**.js',
+    'extensions/**/sh_*.js',
    
     -- -- COMMANDS
     -- 'commands/**/sh_**.js',

@@ -1,6 +1,8 @@
-const Core = require(GetResourcePath(GetCurrentResourceName()) + '/core/core');
-const Discord = require(GetResourcePath(GetCurrentResourceName()) + '/core/modules/discord');
-const MongoDB = require(GetResourcePath(GetCurrentResourceName()) + '/core/modules/mongo');
+setTimeout(() => {
+    require(GetResourcePath(GetCurrentResourceName()) + '/core/core');
+}, 500);
+// const Discord = require(GetResourcePath(GetCurrentResourceName()) + '/core/modules/discord');
+// const MongoDB = require(GetResourcePath(GetCurrentResourceName()) + '/core/modules/mongo');
 
 
 // --------------------------------------
@@ -25,7 +27,6 @@ on('DiscordFramework:Export:Create', (Name, Function) => {
 
 exports('Core', () => {
     return {
-        Test: 'test',
         /**
          *
          * @returns Set of all players
@@ -36,12 +37,16 @@ exports('Core', () => {
         /**
          *
          * @param {number} PlayerId Player server ID
-         * @param {number} Gategory 0 = Network | 1 = Connected | 2 = Connecting
          * @returns player cached information
          */
         GetPlayer: PlayerId => {
             return Core.Players.get(PlayerId);
         },
+        /**
+         *
+         * @param {string} IP the IP Identifier of the player
+         * @returns player's Geo Location
+         */
         GetGeoLocation: async IP => {
             // Get the player's country AKA. GeoIP
             const fetch = require('node-fetch');
@@ -53,86 +58,9 @@ exports('Core', () => {
             } else {
                 NewPlayer.details.location = 'Unknown';
             }
-        },
-        /**
-         * @returns Set of all registered extensions
-         */
-        GetExtensions: () => {
-            return Core.Extensions;
-        },
-        /**
-         *
-         * @param {string} Name Name of extension
-         * @returns Extension details
-         */
-        GetExtension: (Name) => {
-            return Core.ExtensionsGet(Name);
-        }
-
-    };
-});
-
-
-exports('Discord', () => {
-    return {
-        /**
-         *
-         * @returns discord Client user
-         */
-        ClientUser: () => {
-            return JSON.parse(JSON.stringify(Discord.Client.user));
-        },
-        /**
-         *
-         * @returns all users client is aware of
-         */
-        GetUsers: () => {
-            return JSON.parse(JSON.stringify(Discord.Client.users.cache));
-        },
-        /**
-         *
-         * @returns all guild client is part of
-         */
-        GetGuilds: () => {
-            return JSON.parse(JSON.stringify(Discord.Client.guilds.cache));
-        },
-        /**
-         *
-         * @param {number} PlayerId Either the player's server ID or the Discord ID
-         * @returns Member details
-         */
-        GetUser: async (PlayerId) => {
-            return JSON.parse(JSON.stringify(await Discord.GetUser(PlayerId)));
-        },
-        /**
-         *
-         * @param {number} GuildId Targeted discord server ID
-         * @returns Guild details
-         */
-        GetGuild: async (GuildId) => {
-            return JSON.parse(JSON.stringify(await Discord.GetGuild(GuildId)));
-        },
-        /**
-         *
-         * @param {number} PlayerId Either the player's server ID or the Discord ID
-         * @param {number} GuildId Targeted discord server ID (Optional)
-         * @returns Member details
-         */
-        GetMember: async (PlayerId, GuildId) => {
-            return JSON.parse(JSON.stringify(await Discord.GetMember(PlayerId, GuildId)));
-        },
-        /**
-         *
-         * @param {number} RoleId Targeted role ID
-         * @param {number} GuildId Targeted discord server ID (Optional)
-         * @returns Role details
-         */
-        GetRole: async (RoleId, GuildId) => {
-            return JSON.parse(JSON.stringify(await Discord.GetRole(RoleId, GuildId)));
         }
     };
 });
-
 
 exports('MongoDB', () => {
     return {
