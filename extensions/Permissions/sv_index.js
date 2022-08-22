@@ -1,19 +1,30 @@
-on('DiscordFramework:Core:Ready', () => {
+on('DiscordFramework:Extensions:Extension:Load', () => {
 
-    const { Extension } = require(GetResourcePath(GetCurrentResourceName()) + '/core/modules/extensions');
-    const Config = require(GetResourcePath(GetCurrentResourceName()) + '/extensions/Permissions/config');
-    const { Client, GetMember } = require(GetResourcePath(GetCurrentResourceName()) + '/core/modules/discord');
+    const { Extension } = require(GetResourcePath(GetCurrentResourceName()) + '/core/modules/extensions/index');
+    const { Client, GetMember } = require(GetResourcePath(GetCurrentResourceName()) + '/core/modules/discord/index');
+    const { Players } = require(GetResourcePath(GetCurrentResourceName()) + '/core/core');
 
     new class Permissions extends Extension {
         constructor() {
             super({
-                Name: 'Permissions', // Change to extension name
-                Description: 'Provides permissions checking using Discord roles', // Add a brief decription of what does the extension do
-                Enabled: true, // Whether the extension is supposed to be enabled or disabled
-                Dependencies: [], // Add the dependencies/other extensions needed for this extension to be usable
-                Version: '1.0', // The current version of the extension if available
-                Author: 'ItsAmmarB',
-                Config: Config
+                name: 'Permissions', // Change to extension name
+                description: 'Provides permissions checking using Discord roles', // Add a brief decription of what does the extension do
+                toggle: true, // Whether the extension is supposed to be enabled or disabled
+                dependencies: [], // Add the dependencies/other extensions needed for this extension to be usable
+                version: '1.0', // The current version of the extension if available
+                author: 'ItsAmmarB',
+                config: {
+                    mainGuildOnly: true,
+                    allowEveryone: false,
+                    discordAdmin: true,
+                    selfPermission: true,
+                    guilds: [
+                        {
+                            id: 354062777737936896,
+                            name: 'JusticeCommunityRP'
+                        }
+                    ]
+                }
             });
 
             this.players = [];
@@ -33,7 +44,7 @@ on('DiscordFramework:Core:Ready', () => {
                  * Get the player roles and discord information and store it for the first time
                  * Then send the server side constructed config to the client
                  */
-                const Player = exports.DiscordFramework.Core().GetPlayer(PlayerId);
+                const Player = Players.get(PlayerId);
                 if (Player.discordId) {
 
                     const Member = [];
@@ -66,7 +77,7 @@ on('DiscordFramework:Core:Ready', () => {
 
             on('DiscordFramework:Player:Disconnected', async (PlayerId) => {
 
-                const Player = exports.DiscordFramework.Core().GetPlayer(PlayerId);
+                const Player = Players.get(PlayerId);
                 if (Player.discordId) await this.AcePermissionsRemove(Player);
 
                 this.players = this.players.filter(player => player.id !== PlayerId);
@@ -124,7 +135,7 @@ on('DiscordFramework:Core:Ready', () => {
             if (this.Config.allowEveryone || PlayerId === 0) return true;
 
             // Get and check of the player has a network object store in the Core
-            const Player = exports.DiscordFramework.Core().GetPlayer(PlayerId) || Array.from(exports.DiscordFramework.Core().GetPlayers(), ([, value]) => value).find(p => p.discordId === PlayerId);
+            const Player = Players.get(PlayerId) || Array.from(Playerss(), ([, value]) => value).find(p => p.discordId === PlayerId);
             if (Player && Player.discordId) {
 
                 /**

@@ -6,7 +6,6 @@ module.exports.Module = class MongoDB extends Module {
             name: 'MongoDB',
             description: 'MongoDB integration module',
             toggle: true,
-            quickStart: false,
             version: '1.0',
             author: 'ItsAmmarB',
             config: {
@@ -24,7 +23,7 @@ module.exports.Module = class MongoDB extends Module {
     Run() {
         this.client.connect(err => {
             if(err) throw new Error(err);
-            this.client.db(this.Config.nameOfDatabase).collection('Players').findOne({ _id: 0 }, (_err, Server) => {
+            this.client.db(this.Config.nameOfDatabase).collection('Players').findOne({ _id: 0 }, async (_err, Server) => {
                 if(_err) throw new Error(_err);
                 if(Server) {
                     this.client.db(this.Config.nameOfDatabase).collection('Players').updateOne({ _id: 0 }, {
@@ -39,7 +38,20 @@ module.exports.Module = class MongoDB extends Module {
                     };
                     this.client.db(this.Config.nameOfDatabase).collection('Players').insertOne(server);
                 }
+
+                const { AddPrint } = require('../Console/index');
+
+                const dbInfo = await this.client.db(this.Config.nameOfDatabase).stats();
+
+                AddPrint('MongoDB', `
+    ^3Datebase Name: ^4${this.Config.nameOfDatabase}
+    ^3MongoDB Collections: ^4${dbInfo.collections}
+    ^3MongoDB Documents: ^4${dbInfo.objects}
+    ^3MongoDB Size: ^4${Math.round(((dbInfo.dataSize / 1024) + Number.EPSILON) * 100) / 100} MB ^9(${dbInfo.dataSize} KB)
+                `);
+
             });
+
             this.#Exports();
             this.Ready();
         });
@@ -127,32 +139,61 @@ module.exports.Module = class MongoDB extends Module {
     }
 
     #Exports() {
-        module.exports.Client = () => {
-            return this.client;
-        }
+        // JS Module Exports
+        module.exports.Client = this.client;
         module.exports.InsertOne = (Collection, Data, Callback) => {
             return this.InsertOne(Collection, Data, _Callback => _Callback ? Callback(_Callback) : undefined);
-        }
+        };
         module.exports.InserMany = (Collection, Data, Callback) => {
             return this.InserMany(Collection, Data, _Callback => _Callback ? Callback(_Callback) : undefined);
-        }
+        };
         module.exports.FindOne = (Collection, Query, Callback) => {
             return this.FindOne(Collection, Query, _Callback => _Callback ? Callback(_Callback) : undefined);
-        }
+        };
         module.exports.Find = (Collection, Query, Callback) => {
             return this.Find(Collection, Query, _Callback => _Callback ? Callback(_Callback) : undefined);
-        }
+        };
         module.exports.DeleteOne = (Collection, Query, Callback) => {
             return this.DeleteOne(Collection, Query, _Callback => _Callback ? Callback(_Callback) : undefined);
-        }
+        };
         module.exports.DeleteMany = (Collection, Query, Callback) => {
             return this.DeleteMany(Collection, Query, _Callback => _Callback ? Callback(_Callback) : undefined);
-        }
+        };
         module.exports.UpdateOne = (Collection, Query, Data, Callback) => {
             return this.UpdateOne(Collection, Query, Data, _Callback => _Callback ? Callback(_Callback) : undefined);
-        }
+        };
         module.exports.UpdateMany = (Collection, Query, Data, Callback) => {
             return this.UpdateMany(Collection, Query, Data, _Callback => _Callback ? Callback(_Callback) : undefined);
-        }
+        };
+
+        // CFX Exports
+        emit('DiscordFramework:Export:Create', 'MongoDB', () => {
+            return {
+                InsertOne: (Collection, Data, Callback) => {
+                    return this.InsertOne(Collection, Data, _Callback => _Callback ? Callback(_Callback) : undefined);
+                },
+                InserMany: (Collection, Data, Callback) => {
+                    return this.InserMany(Collection, Data, _Callback => _Callback ? Callback(_Callback) : undefined);
+                },
+                FindOne: (Collection, Query, Callback) => {
+                    return this.FindOne(Collection, Query, _Callback => _Callback ? Callback(_Callback) : undefined);
+                },
+                Find: (Collection, Query, Callback) => {
+                    return this.Find(Collection, Query, _Callback => _Callback ? Callback(_Callback) : undefined);
+                },
+                DeleteOne: (Collection, Query, Callback) => {
+                    return this.DeleteOne(Collection, Query, _Callback => _Callback ? Callback(_Callback) : undefined);
+                },
+                DeleteMany: (Collection, Query, Callback) => {
+                    return this.DeleteMany(Collection, Query, _Callback => _Callback ? Callback(_Callback) : undefined);
+                },
+                UpdateOne: (Collection, Query, Data, Callback) => {
+                    return this.UpdateOne(Collection, Query, Data, _Callback => _Callback ? Callback(_Callback) : undefined);
+                },
+                UpdateMany: (Collection, Query, Data, Callback) => {
+                    return this.UpdateMany(Collection, Query, Data, _Callback => _Callback ? Callback(_Callback) : undefined);
+                }
+            };
+        });
     }
 };

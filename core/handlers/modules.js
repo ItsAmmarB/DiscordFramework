@@ -85,12 +85,6 @@ module.exports = {
                 throw new Error('REG_MODULE: attempted to register an module without a toggle "Enabled"');
             }
 
-            // Check Module toggle
-            if (module.quickStart && typeof module.quickStart !== 'undefined') {
-                if (typeof module.quickStart !== 'boolean') throw new Error('REG_MODULE: Module "quickStart" must be typeof Boolean');
-                this.quickStart = module.quickStart;
-            }
-
             // Check Module author if available
             if (module.author) {
                 if (typeof module.author !== 'string') throw new Error('REG_MODULE: Module "Author" must be typeof string');
@@ -137,15 +131,6 @@ module.exports = {
                 }
 
                 this.#Register('Ready', modules);
-
-                if(this.quickStart) {
-                    try {
-                        this.Run(this.quickStart);
-                    } catch(err) {
-                        this.#Register('Error', modules);
-                        throw new Error(err);
-                    }
-                }
 
             } catch (err) {
                 this.#Register('Error', modules);

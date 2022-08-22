@@ -1,10 +1,10 @@
 // Always keep your code inside this anonymous function to prevent an uncontrolled code execution and to prevent cross-declaration from other scopes
-(() => {
+on('DiscordFramework:Extensions:Extension:Load', () => {
 
     // Always keep your code inside this event listener to prevent an uncontrolled code execution and to prevent cross-declaration from another scope
-    const { Extension: Extensions } = require('../../core/modules/extensions/index');
+    const { Extension } = require(GetResourcePath(GetCurrentResourceName()) + '/core/modules/extensions/index');
 
-    const Extension = new class Extension extends Extensions {
+    new class Template extends Extension {
         constructor() {
             super({
                 name: 'Template', // Change to extension name
@@ -37,7 +37,7 @@
         Extension: Extension // keep this here if you have a server side code to execute
     };
 
-})();
+});
 
 
 /**

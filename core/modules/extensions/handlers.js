@@ -189,6 +189,7 @@ module.exports = {
             } else {
                 Extensions.add(extension);
             }
+            emit('DiscordFramework:Extensions:Extension:Loaded', extension);
         }
 
         /**
