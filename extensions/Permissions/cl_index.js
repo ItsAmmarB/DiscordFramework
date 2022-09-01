@@ -23,9 +23,9 @@ onNet('DiscordFramework:Extensions:RunClientSide:Permissions', () => {
         console.log('^2[^0Extensions^2:^0Permissions^2]^6: ^3Received client config!');
 
         onNet('DiscordFramework:Permissions:UpdatePermissions', Player => {
-            ServerID = Player.serverId;
-            DiscordID = Player.discordId;
-            Guilds = Player.guilds;
+            ServerID = Player.ServerId;
+            DiscordID = Player.DiscordId;
+            Guilds = Player.Guilds;
 
             console.log('^2[^0Extensions^2:^0Permissions^2]^6: ^3Permissions updated!');
         });

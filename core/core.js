@@ -64,11 +64,11 @@ const Core = () => {
         }
     }, 60000);
 
-    // Triggered when the player's connected request is received by the server
+    // Triggered when the player's connection request is received by the server
     on('playerConnecting', async (Name, SetKickReason, Deferrals) => {
         const PlayerId = global.source;
 
-        if(global.DebugMode) console.debug(`^9 ===> ${GetPlayerName(PlayerId)} is conencting^0`);
+        console.log(`^9 ===> ${GetPlayerName(PlayerId)} is conencting^0`);
 
         Deferrals.defer();
 
@@ -96,11 +96,12 @@ const Core = () => {
     on('playerJoining', () => {
         const player = new Player(global.source);
         Players.add(player);
-        if(global.DebugMode) console.debug(`^4 ===> ${player.getName()} is joining^0`);
+        console.log(`^4 ===> ${player.getName()} is joining^0`);
+        emit('DiscordFramework:Player:Joining', player);
     });
 
     // Triggered when the player is fully connected and is about to spawn
-    onNet('playerJoined', async (PlayerId) => {
+    onNet('playerJoined', async PlayerId => {
 
         while (!Status) {
             await Delay(1000);
@@ -188,14 +189,14 @@ const Core = () => {
         await Delay(150);
 
         emit('DiscordFramework:Player:Joined', player);
-        if(global.DebugMode) console.debug(`^2 ===> ${GetPlayerName(PlayerId)} joined^0`);
+        console.log(`^2 ===> ${GetPlayerName(PlayerId)} joined^0`);
     });
 
     // Triggered when a player leaves the server for whatever reason
-    on('playerDropped', (Reason) => {
+    on('playerDropped', Reason => {
         const player = Players.get(global.source);
         emit('DiscordFramework:Player:Disconnected', player, Reason);
-        if(global.DebugMode) console.debug(`^1 ===> ${player.Name} left^0`);
+        console.log(`^1 ===> ${player.Name} ${Reason === 'Exiting' ? 'left' : Reason}^0`);
     });
 
 
@@ -203,7 +204,7 @@ const Core = () => {
     //           AIDING FUNCTIONS
     // --------------------------------------
 
-    const Delay = async (MS) => await new Promise(resolve => setTimeout(resolve, MS));
+    const Delay = async MS => await new Promise(resolve => setTimeout(resolve, MS));
 
     // --------------------------------------
     //                 EXPORTS

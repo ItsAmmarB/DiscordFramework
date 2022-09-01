@@ -19,7 +19,10 @@ module.exports.Module = class Console extends Module {
         this.#Exports();
 
         // eslint-disable-next-line max-statements-per-line
-        on('DiscordFramework:Core:Ready', () => { this.coreReady = true; this.Run();});
+        on('DiscordFramework:Core:Ready', () => {
+            this.coreReady = true;
+            setTimeout(() => this.Run(), 3000);
+        });
     }
 
     Run() {
@@ -88,13 +91,23 @@ module.exports.Module = class Console extends Module {
         // JS Module Exports
         module.exports.AddPrint = (module, text) => {
             return this.AddPrint(module, text);
-        };
+        },
         module.exports.PrintError = async (Err) => {
             return await this.PrintError(Err);
-        };
+        },
         module.exports.Table = (Data) => {
             return this.Table(Data);
         };
+
+        // CFX Export
+        emit('DiscordFramework:Export:Create', 'Console', () => {
+            return {
+                Table:  (Data) => {
+                    return this.Table(Data);
+                }
+            };
+        });
+
     }
 };
 

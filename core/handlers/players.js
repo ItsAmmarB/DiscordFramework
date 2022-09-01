@@ -95,8 +95,6 @@ const Player = class Player {
         };
 
         this.Cache = {
-            Frozen: false,
-            CanRagdoll: true
         }; // extensions and different resources can store things here and use it
 
         if (this.Identifiers.find(identifier => identifier.includes('discord:')).split(':')[1]) {

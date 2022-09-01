@@ -141,6 +141,8 @@ module.exports = {
                     return this.#Register('Disabled');
                 }
 
+
+                on('DiscordFramework:Core:Ready', () => this.Run());
                 this.#Register('Enabled');
 
             } catch (err) {
@@ -189,6 +191,7 @@ module.exports = {
             } else {
                 Extensions.add(extension);
             }
+
             emit('DiscordFramework:Extensions:Extension:Loaded', extension);
         }
 
@@ -226,6 +229,10 @@ module.exports = {
         Run(Errorable = false) {
             if(Errorable) console.error(new Error(`${this.name} Extension doesn't have a Run() method.`));
             if(global.DebugMode) {console.debug(`${this.name} Extension has an empty Run() method.`);} // this isn't an error or a warning but a mere console log for debugging reasons
+        }
+
+        RunClient(PlayerId) {
+            emitNet('DiscordFramework:Extensions:RunClientSide:' + this.name, PlayerId ? PlayerId : -1);
         }
 
         /**

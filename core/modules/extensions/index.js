@@ -19,6 +19,7 @@ module.exports.Module = class Exetnsions extends Module {
         this.ExtensionsFiles = this.CountExtensions();
 
         this.Run();
+        setTimeout(() => this.Ready(), 500);
     }
 
     Run() {
@@ -36,7 +37,7 @@ module.exports.Module = class Exetnsions extends Module {
         i === 1 ? i++ : i--;
         const color = (i === 1 ? '^4' : '^9');
         const returnal = {};
-        returnal['^3Index'] = (color) + index;
+        returnal['^3Index'] = (color) + (index + 1);
         returnal['^3Name'] = (color) + extension.name;
         // returnal['^3Description'] = (color) + (extension.description ?? 'None');
         returnal['^3Status'] = extension.status === 'Template' ? '^6' + extension.status : extension.status !== 'Enabled' ? '^8' + extension.status : '^2' + extension.status;
@@ -46,13 +47,9 @@ module.exports.Module = class Exetnsions extends Module {
     }))}
     `);
 
-
-            this.Ready();
-
         });
 
         emit('DiscordFramework:Extensions:Extension:Load');
-
 
     }
 
@@ -76,11 +73,17 @@ module.exports.Module = class Exetnsions extends Module {
         // CFX Exports
         emit('DiscordFramework:Export:Create', 'Extensions', () => {
             return {
-                Extension: () => {
-                    return Handlers.Extension;
-                },
+                /**
+                 * This export won't work
+                 * because CFX only exports mutual data types, ex; numbers, functions, objects, arrays, and etc.
+                 * language specific data types aren't allowed, ex; classes, sets, collections, maps
+                 * because those wouldn't work in LUA, blame LUA
+                 */
+                // Extension: () => {
+                //     return Handlers.Extension;
+                // },
                 Extensions: () => {
-                    return Extensions;
+                    return Extensions.toArray();
                 }
             };
         });

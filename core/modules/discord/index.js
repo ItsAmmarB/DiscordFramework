@@ -52,7 +52,7 @@ module.exports.Module = class Discord extends Modules {
             AddPrint('Discord', `
     ^3Discord API Client: ^4${this.client.user.tag + ' ^6(' + this.client.user.id + ')'}
     ^3Discord Users: ^4${this.client.users.cache.size + (this.client.users.cache.size === 1 ? ' User' : ' Users')}
-    ^3Discord Guilds: \n${Table(this.client.guilds.cache.map(guild => {i === 1 ? i++ : i--; return ({ '^3ID': (i === 1 ? '^4' : '^9') + guild.id, '^3Name': (i === 1 ? '^4' : '^9') + guild.name, '^3Members Count': (i === 1 ? '^4' : '^9') + guild.members.cache.size, '^3Roles Count': (i === 1 ? '^4' : '^9') + guild.roles.cache.size });}))}
+    ^3Discord Guilds: \n${Table(this.client.guilds.cache.map(guild => {i === 1 ? i++ : i--; return ({ '^3ID': (i === 1 ? '^4' : '^9') + guild.id, '^3Name': (i === 1 ? '^4' : '^9') + guild.name, '^3Members Count': (i === 1 ? '^4' : '^9') + guild.members.cache.size + (guild.members.cache.size === 1 ? ' Member' : ' Members'), '^3Roles Count': (i === 1 ? '^4' : '^9') + guild.roles.cache.size + (guild.roles.cache.size === 1 ? ' Role' : ' Roles') });}))}
             `);
         });
     }
