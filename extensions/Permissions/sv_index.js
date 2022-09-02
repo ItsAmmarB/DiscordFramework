@@ -100,7 +100,6 @@ on('DiscordFramework:Extensions:Extension:Load', () => {
 
             this.Discord.Client.on('guildMemberUpdate', (oldMember, newMember) => {
                 const Player = this.Players.find(p => p.DiscordId === newMember.id);
-                console.log(Player);
                 if (Player) {
                     if (this.GetAllowedGuilds().find(guild => guild.id === newMember.guild.id)) {
                         this.UpdatePermissions(Player, [newMember]);
@@ -127,7 +126,6 @@ on('DiscordFramework:Extensions:Extension:Load', () => {
             // Get and check of the player has a network object store in the Core
             const { Players } = require(GetResourcePath(GetCurrentResourceName()) + '/core/core');
             const Player = Players.get(PlayerId);
-            console.log(Player);
             if (Player && Player.DiscordId) {
 
                 /**
@@ -254,34 +252,37 @@ on('DiscordFramework:Extensions:Extension:Load', () => {
         }
 
         async AcePermissionsAdd(Player) {
-
-            if (this.Config.AcePermissions.enabled) {
+            if (this.Config.acePermissions.enabled) {
                 if (Player.DiscordId) {
-
-                    for (let i = 0; i < this.Config.AcePermissions.roles.length; i++) {
-
-                        const Role = this.Config.AcePermissions.roles[i];
-                        const IsAllowed = this.CheckPermission(Player.DiscordId, [Role]);
-
-                        await this.Delay(25); // Delay is present in the parent class as a method
-
-                        if (IsAllowed) {
-                            Role.group ? ExecuteCommand('add_principal identifier.discord:' + Player.DiscordId + ' ' + Role.group) : undefined;
-                            Role.ace ? ExecuteCommand('add_ace identifier.discord:' + Player.DiscordId + ' ' + Role.ace) : undefined;
-                            Role.group || Role.ace ? ExecuteCommand('refresh') : undefined;
+                    for (const Permission of this.Config.acePermissions.permissions) {
+                        if(Permission.enabled) {
+                            const IsAllowed = this.CheckPermission(Player.DiscordId, [Permission.roles]);
+                            await this.Delay(25); // Delay is present in the parent class as a method
+                            if (IsAllowed) {
+                                // Assign groups
+                                if(Permission.groups.length > 0) {
+                                    for (const Group of Permission.groups) {
+                                        ExecuteCommand('add_principal identifier.discord:' + Player.DiscordId + ' ' + Group);
+                                    }
+                                }
+                                // Assign aces
+                                if(Permission.aces.length > 0) {
+                                    for (const Ace of Permission.aces) {
+                                        ExecuteCommand('add_ace identifier.discord:' + Player.DiscordId + ' ' + Ace);
+                                    }
+                                }
+                                ExecuteCommand('refresh');
+                            }
                         }
-
                     }
-
                 }
             }
-
         }
 
         async AcePermissionsRemove(Player) {
-            if (this.Config.AcePermissions.enabled) {
+            if (this.Config.acePermissions.enabled) {
                 if (Player.DiscordId) {
-                    for (const Permission of this.Config.AcePermissions.permissions) {
+                    for (const Permission of this.Config.acePermissions.permissions) {
                         if(Permission.enabled) {
                             const IsAllowed = this.CheckPermission(Player.DiscordId, [Permission.roles]);
                             await this.Delay(25); // Delay is present in the parent class as a method
