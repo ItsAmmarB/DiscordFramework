@@ -1,4 +1,4 @@
-const Collection = class Players extends Set {
+const Players = class Players extends Set {
     /**
      *
      * @param {String} Identifier A value that identifies a player, it can a sever id, discord id, or an identifier such as license or ip.
@@ -6,7 +6,7 @@ const Collection = class Players extends Set {
      */
     get(Identifier) {
         // Check if Queries is not an instance of object/array
-        if (!Identifier) return new Error('Collection.prototype.get(Identifier) ---> Unknown Identifier');
+        if (!Identifier) return new Error('Players.prototype.get(Identifier) ---> Unknown Identifier');
         if (typeof Identifier === 'object' && Array.isArray(Identifier)) {
             const returnable = [];
             for (let i = 0; i < Identifier.length; i++) {
@@ -19,7 +19,7 @@ const Collection = class Players extends Set {
             const ValIden = this.#ValidateIdentifier(Identifier);
             if (ValIden === 'Server') {
                 const _Players = this.toArray();
-                const Player = _Players.find(player => String(player.ServerId) === Identifier);
+                const Player = _Players.find(player => String(player.Server.ID) === Identifier);
                 if (Player) {
                     return Player;
                 } else {
@@ -27,7 +27,7 @@ const Collection = class Players extends Set {
                 }
             } else if (ValIden === 'Discord') {
                 const _Players = this.toArray();
-                const Player = _Players.find(player => String(player.DiscordId) === Identifier);
+                const Player = _Players.find(player => String(player.Discord.ID) === Identifier);
                 if (Player) {
                     return Player;
                 } else {
@@ -35,21 +35,21 @@ const Collection = class Players extends Set {
                 }
             } else if (ValIden === 'Identifier') {
                 const _Players = this.toArray();
-                const Player = _Players.find(player => player.Identifiers.map(iden => String(iden).toLowerCase()).find(iden => iden === Identifier));
+                const Player = _Players.find(player => player.Server.Identifiers.map(iden => String(iden).toLowerCase()).find(iden => iden === Identifier));
                 if (Player) {
                     return Player;
                 } else {
                     return undefined;
                 }
             } else {
-                return new Error('Collection.prototype.get(Identifier) ---> Unknown Identifier');
+                return new Error('Players.prototype.get(Identifier) ---> Unknown Identifier');
             }
         }
 
     }
 
     /**
-     * Returns the players Collection as an array
+     * Returns the Players Collection as an array
      * @returns {(Array<object>)} Array of players objects
      */
     toArray() {
@@ -81,27 +81,50 @@ const Collection = class Players extends Set {
  * @param {number} PlayerId The player server ID
  */
 const Player = class Player {
-    constructor(PlayerId) {
+    constructor(PlayerId, resourceRestarted = false) {
         this.Name = GetPlayerName(PlayerId);
-        this.ServerId = PlayerId;
-        this.DiscordId = null;
-        this.Identifiers = Player.GetIdentifiers(PlayerId, true);
-        this.Connections = {
-            Status: 'Joining',
-            ConnectingAt: Date.now(),
-            JoinedAt: null,
-            DisconnectedAt: null,
-            DisconnectReason: null
+        this.Server = {
+            ID: PlayerId,
+            Identifiers: Player.GetIdentifiers(PlayerId, true),
+            Connections: {
+                Status: 'Joining',
+                ConnectingAt: Date.now(),
+                JoinedAt: null,
+                DisconnectedAt: null,
+                DisconnectReason: null
+            }
         };
-
+        this.Discord = {
+            ID: null,
+            Guilds: null
+        };
         this.Cache = {
         }; // extensions and different resources can store things here and use it
 
-        if (this.Identifiers.find(identifier => identifier.includes('discord:')).split(':')[1]) {
-            this.DiscordId = this.Identifiers.find(identifier => identifier.includes('discord:')).split(':')[1];
+        if (this.Server.Identifiers.find(identifier => identifier.includes('discord:')).split(':')[1]) {
+
+            this.Discord.ID = this.Server.Identifiers.find(identifier => identifier.includes('discord:')).split(':')[1];
+
+            const Discord = require('../modules/Discord/index');
+            const SharedGuilds = Discord.SharedGuilds(this.Discord.ID);
+
+            const Guilds = SharedGuilds.map(guild => {
+                const Member = guild.members.resolve(this.Discord.ID);
+                return {
+                    ID: guild.id,
+                    Name: guild.name,
+                    Administrator: Member.permissions.has('ADMINISTRATOR'),
+                    Permissions: Member.permissions.toArray(),
+                    Roles: Member.roles.cache.map(role => ({ ID: role.id, Name: role.name }))
+                };
+            });
+
+            this.Discord.Guilds = Guilds;
+
+            this.#DiscordGuildsUpdate(Discord);
         }
 
-        this.#Events();
+        this.#Events(resourceRestarted);
 
     }
 
@@ -118,7 +141,7 @@ const Player = class Player {
      * @return {string}
      */
     getServerId() {
-        return this.ServerId;
+        return this.Server.ID;
     }
 
     /**
@@ -126,7 +149,7 @@ const Player = class Player {
      * @return {(string|undefined)}
      */
     getDiscordId() {
-        return this.DiscordId;
+        return this.Discord.ID;
     }
 
     /**
@@ -134,7 +157,7 @@ const Player = class Player {
      * @return {Array<string>}
      */
     getIdentifiers() {
-        return this.Identifiers;
+        return this.Server.Identifiers;
     }
 
     /**
@@ -142,7 +165,7 @@ const Player = class Player {
      * @return {Array<string>}
      */
     getStatus() {
-        return this.Connections.Status;
+        return this.Server.Connections.Status;
     }
 
     /**
@@ -150,7 +173,7 @@ const Player = class Player {
      * @param {string} Status The new player status
      */
     setStatus(Status) {
-        this.Connections.Status = Status;
+        this.Server.Connections.Status = Status;
     }
 
     /**
@@ -158,7 +181,7 @@ const Player = class Player {
      * @return {object}
      */
     getConnections() {
-        return this.Connections;
+        return this.Server.Connections;
     }
 
     /**
@@ -166,7 +189,7 @@ const Player = class Player {
      * @param {number} timestamp A Unix timestamp
      */
     setConnectingAt(timestamp) {
-        this.Connections.ConnectingAt = timestamp;
+        this.Server.Connections.ConnectingAt = timestamp;
     }
 
     /**
@@ -174,7 +197,7 @@ const Player = class Player {
      * @param {number} timestamp A Unix timestamp
      */
     setConnectedAt(timestamp) {
-        this.Connections.ConnectedAt = timestamp;
+        this.Server.Connections.ConnectedAt = timestamp;
     }
 
     /**
@@ -182,7 +205,7 @@ const Player = class Player {
      * @param {number} timestamp A Unix timestamp
      */
     setDisconnectedAt(timestamp) {
-        this.Connections.DisconnectedAt = timestamp;
+        this.Server.Connections.DisconnectedAt = timestamp;
     }
 
     /**
@@ -190,7 +213,7 @@ const Player = class Player {
      * @param {string} reason Why the player disconnected
      */
     setDisconnectReason(reason) {
-        this.Connections.DisconnectReason = reason;
+        this.Server.Connections.DisconnectReason = reason;
     }
 
     /**
@@ -198,7 +221,7 @@ const Player = class Player {
      * @return {any}
      */
     getPed() {
-        return GetPlayerPed(this.ServerId);
+        return GetPlayerPed(this.Server.ID);
     }
 
     /**
@@ -206,7 +229,7 @@ const Player = class Player {
      * @param {hash} model
      */
     setPed(model) {
-        SetPlayerModel(this.ServerId, model);
+        SetPlayerModel(this.Server.ID, model);
     }
 
     /**
@@ -214,7 +237,7 @@ const Player = class Player {
      * @return {boolean}
      */
     getInvincible() {
-        return GetPlayerInvincible(this.ServerId);
+        return GetPlayerInvincible(this.Server.ID);
     }
 
     /**
@@ -222,7 +245,7 @@ const Player = class Player {
      * @param {boolean} bool
      */
     setInvincible(bool) {
-        SetPlayerInvincible(this.ServerId, bool);
+        SetPlayerInvincible(this.Server.ID, bool);
     }
 
     /**
@@ -230,7 +253,7 @@ const Player = class Player {
      * @return {boolean}
      */
     getIsEvadingWantedLevel() {
-        return IsPlayerEvadingWantedLevel(this.ServerId);
+        return IsPlayerEvadingWantedLevel(this.Server.ID);
     }
 
     /**
@@ -238,7 +261,7 @@ const Player = class Player {
      * @return {number}
      */
     getWantedLevel() {
-        return GetPlayerWantedLevel(this.ServerId);
+        return GetPlayerWantedLevel(this.Server.ID);
     }
 
     /**
@@ -246,7 +269,7 @@ const Player = class Player {
      * @param {number} level 0 - 5 representing the stars
      */
     setWantedLevel(level) {
-        SetPlayerWantedLevel(this.ServerId, level, false);
+        SetPlayerWantedLevel(this.Server.ID, level, false);
     }
 
     /**
@@ -254,7 +277,7 @@ const Player = class Player {
      * @return {Array<number>} [X, Y, Z]
      */
     getCoordinates() {
-        return GetEntityCoords(this.ped);
+        return GetEntityCoords(this.getPed());
     }
 
     /**
@@ -262,7 +285,7 @@ const Player = class Player {
      * @param {Array<number>} coords [X, Y, Z]
      */
     setCoordinates(coords) {
-        SetEntityCoords(this.ped, ...coords, false, false, false, false);
+        SetEntityCoords(this.getPed(), ...coords, false, false, false, false);
     }
 
     /**
@@ -270,7 +293,7 @@ const Player = class Player {
      * @return {number}
      */
     getSpeed() {
-        return GetEntitySpeed(this.ped);
+        return GetEntitySpeed(this.getPed());
     }
 
     /**
@@ -278,7 +301,7 @@ const Player = class Player {
      * @return {boolean}
      */
     getFreezePosition() {
-        return this.Cache.Frozen;
+        return this.Cache.Frozen || null;
     }
 
     /**
@@ -286,7 +309,7 @@ const Player = class Player {
      * @param {boolean} bool True or False
      */
     setFreezePosition(bool) {
-        FreezeEntityPosition(this.ped, bool);
+        FreezeEntityPosition(this.getPed(), bool);
         this.Cache.Frozen = bool;
     }
 
@@ -295,7 +318,7 @@ const Player = class Player {
      * @return {boolean}
      */
     getArmour() {
-        return GetPedArmour(this.ped);
+        return GetPedArmour(this.getPed());
     }
 
     /**
@@ -303,7 +326,7 @@ const Player = class Player {
      * @param {number} armour 0 - 100 indicating the value to set the Ped's armor to
      */
     setArmour(armour) {
-        SetPedArmour(this.ped, armour);
+        SetPedArmour(this.getPed(), armour);
     }
 
     /**
@@ -311,7 +334,7 @@ const Player = class Player {
      * @return {number} 0 - 200 indicating the value of the player's health
      */
     getHealth() {
-        return GetEntityHealth(this.ped);
+        return GetEntityHealth(this.getPed());
     }
 
     /**
@@ -319,7 +342,7 @@ const Player = class Player {
      * @return {hash} hash of weapon in hand
      */
     getWeaponInHand() {
-        return GetSelectedPedWeapon(this.ped);
+        return GetSelectedPedWeapon(this.getPed());
     }
 
     /**
@@ -327,7 +350,7 @@ const Player = class Player {
      * @return {entitiy} Vehicle
      */
     getVehicle() {
-        const vehicle = GetVehiclePedIsIn(this.ped, false);
+        const vehicle = GetVehiclePedIsIn(this.getPed(), false);
         if(vehicle) {
             return vehicle;
         } else {
@@ -343,12 +366,12 @@ const Player = class Player {
         // set the player in an empty seat if available
         if(GetPedInVehicleSeat(vehicle, -1)) {
             if(GetPedInVehicleSeat(vehicle, 0)) {
-                SetPedIntoVehicle(this.ped, vehicle, 1);
+                SetPedIntoVehicle(this.getPed(), vehicle, 1);
             } else {
-                SetPedIntoVehicle(this.ped, vehicle, 0);
+                SetPedIntoVehicle(this.getPed(), vehicle, 0);
             }
         } else {
-            SetPedIntoVehicle(this.ped, vehicle, -1);
+            SetPedIntoVehicle(this.getPed(), vehicle, -1);
         }
     }
 
@@ -357,7 +380,7 @@ const Player = class Player {
      * @param {boolean} bool True or False
      */
     setRagdoll(bool) {
-        SetPedCanRagdoll(this.ped, bool);
+        SetPedCanRagdoll(this.getPed(), bool);
         this.Cache.CanRagdoll = bool;
     }
 
@@ -366,7 +389,7 @@ const Player = class Player {
      * @return {boolean}
      */
     getRagdoll() {
-        return this.Cache.CanRagdoll = bool;
+        return this.Cache.CanRagdoll || null;
     }
 
     /**
@@ -374,8 +397,8 @@ const Player = class Player {
      * @param {number} bucket 0 - 63
      */
     setRoutingBucket(bucket) {
-        SetPlayerRoutingBucket(this.ServerId, bucket);
-        SetEntityRoutingBucket(this.ped, bucket);
+        SetPlayerRoutingBucket(this.Server.ID, bucket);
+        SetEntityRoutingBucket(this.getPed(), bucket);
     }
 
     /**
@@ -383,7 +406,7 @@ const Player = class Player {
      * @return {boolean}
      */
     getRoutingBucket() {
-        return GetPlayerRoutingBucket(this.serverId);
+        return GetPlayerRoutingBucket(this.Server.ID);
     }
 
 
@@ -393,7 +416,7 @@ const Player = class Player {
      * @param {number} ammo number of bullets to give
      */
     giveWeapon(weapon, ammo = 120) {
-        GiveWeaponToPed(this.ped, weapon, ammo, false, false);
+        GiveWeaponToPed(this.getPed(), weapon, ammo, false, false);
     }
 
     /**
@@ -402,7 +425,7 @@ const Player = class Player {
      * @param {number} ammo number of bullets to give
      */
     setWeaponAmmo(weapon, ammo = 120) {
-        SetPedAmmo(this.ped, weapon, ammo);
+        SetPedAmmo(this.getPed(), weapon, ammo);
     }
 
     /**
@@ -410,14 +433,14 @@ const Player = class Player {
      * @param {hash} weapon weapon hash
      */
     removeWeapon(weapon) {
-        RemoveWeaponFromPed(this.ped, weapon);
+        RemoveWeaponFromPed(this.getPed(), weapon);
     }
 
     /**
      * Removed all the player's weapons
      */
     removeWeapons() {
-        RemoveAllPedWeapons(this.ped, false);
+        RemoveAllPedWeapons(this.getPed(), false);
     }
 
 
@@ -426,7 +449,7 @@ const Player = class Player {
      */
     clearWantedLevel() {
         if(this.wantedLevel) {
-            ClearPlayerWantedLevel(this.ServerId);
+            ClearPlayerWantedLevel(this.Server.ID);
         }
     }
 
@@ -435,27 +458,27 @@ const Player = class Player {
      * @param {string} reason the reason for the kick
      */
     kick(reason = 'No reason provided') {
-        DropPlayer(this.ServerId, reason);
+        DropPlayer(this.Server.ID, reason);
     }
 
     /**
      * Clears the player's ped tasks
      */
     clearTasks() {
-        ClearPedTasks(this.ped);
+        ClearPedTasks(this.getPed());
     }
     /**
      * Clears the player's ped tasks immediately
      */
     clearTasksImmediately() {
-        ClearPedTasksImmediately(this.ped);
+        ClearPedTasksImmediately(this.getPed());
     }
 
     /**
      * Gets wether the player has certain permission
      */
     isAceAllowed(ace) {
-        return IsPlayerAceAllowed(this.ServerId, ace);
+        return IsPlayerAceAllowed(this.Server.ID, ace);
     }
 
     static GetIdentifiers(PlayerId, forConstructor = false) {
@@ -479,23 +502,48 @@ const Player = class Player {
 
     #Events() {
         on('DiscordFramework:Player:Joined', PlayerId => {
-            if(PlayerId.ServerId === this.ServerId) {
+            if(PlayerId.Server.ID === this.Server.ID) {
                 this.setStatus('Joined');
-                this.Connections.JoinedAt = Date.now();
+                this.Server.Connections.JoinedAt = Date.now();
             }
         });
 
         on('DiscordFramework:Player:Disconnected', (player, reason) => {
-            if(player.ServerId === this.ServerId) {
+            if(player.Server.ID === this.Server.ID) {
                 this.setStatus('Disconnected');
                 this.setDisconnectedAt(Date.now());
                 this.setDisconnectReason(reason);
             }
         });
     }
+
+    #DiscordGuildsUpdate(Discord) {
+        Discord.Client.on('guildMemberUpdate', (oldM, newM) => {
+            if(this.Discord.ID && newM.id === this.Discord.ID && !this.Server.Connections.DisconnectedAt) {
+                console.log(`(${this.getServerId()}) ${this.getName()}'s roles were updated!`);
+                if(this.Discord.Guilds.find(guild => guild.id === newM.guild.id)) {
+                    const prevGuild = this.Discord.Guilds.find(guild => guild.id === newM.guild.id);
+                    prevGuild.Name = newM.guild.name;
+                    prevGuild.Administrator = newM.permissions.has('ADMINISTRATOR');
+                    prevGuild.Permissions = newM.permissions.toArray();
+                    prevGuild.Roles = newM.roles.cache.map(role => ({ ID: role.id, Name: role.name }));
+                    return;
+                } else {
+                    this.Discord.Guilds.push({
+                        ID: newM.guild.id,
+                        Name: newM.guild.name,
+                        Administrator: newM.permissions.has('ADMINISTRATOR'),
+                        Permissions: newM.permissions.toArray(),
+                        Roles: newM.roles.cache.map(role => ({ ID: role.id, Name: role.name }))
+                    });
+                    return;
+                }
+            }
+        });
+    }
 };
 
 module.exports = {
-    Players: Collection,
+    Players: Players,
     Player: Player
 };
