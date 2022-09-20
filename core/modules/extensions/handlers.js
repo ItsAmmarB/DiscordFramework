@@ -141,7 +141,6 @@ module.exports = {
                     return this.#Register('Disabled');
                 }
 
-
                 on('DiscordFramework:Core:Ready', () => this.Run());
                 this.#Register('Enabled');
 

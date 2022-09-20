@@ -2,7 +2,7 @@
 on('DiscordFramework:Extensions:Extension:Load', () => {
 
     // Always keep your code inside this event listener to prevent an uncontrolled code execution and to prevent cross-declaration from another scope
-    const { Extension } = require(GetResourcePath(GetCurrentResourceName()) + '/core/modules/extensions/index');
+    const { Extension } = require(GetResourcePath(GetCurrentResourceName()) + '/core/modules/Extensions/index');
 
     new class Template extends Extension {
         constructor() {

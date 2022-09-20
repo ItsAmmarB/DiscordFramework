@@ -15,8 +15,11 @@ module.exports.Module = class Discord extends Modules {
      * I am not responsible for anything that could or would happen if an extension that was
      * not made by me, Ammar B. AKA. ItsAmmarB that caused harm or damage in any capacity to your
      * FiveM server, Discord server, or anything in any way, share, or form.
+     *
+     * you could make an environment variable with the "Discord_API" name, or just change it to your token;
+     * be cautious
      */
-    #Token = 'TOKEN HERE';
+    #Token = process.env['Discord_API'];
 
     constructor(modules) {
         super(modules, {
@@ -37,22 +40,25 @@ module.exports.Module = class Discord extends Modules {
         });
 
         const { Client } = require('discord.js');
-        this.client = new Client({ intents: 131071 });
+        this.Client = new Client({ intents: 131071, presence: { status: 'dnd', activities: [ { name: 'DiscordFramework', type: 3, url: 'https://github.com/ItsAmmarB/DiscordFramework/' }] } });
         this.Run();
+
     }
 
     Run() {
-        this.client.login(this.#Token);
-        this.client.on('ready', () => {
+        this.Client.login(this.#Token);
+        this.Client.on('ready', async () => {
             this.Ready();
             this.#Exports();
+
+            (await this.Client.guilds.fetch()).forEach(async guild => await this.Client.guilds.fetch(guild.id));
 
             const { AddPrint, Table } = require('../Console/index');
             let i = 1;
             AddPrint('Discord', `
-    ^3Discord API Client: ^4${this.client.user.tag + ' ^6(' + this.client.user.id + ')'}
-    ^3Discord Users: ^4${this.client.users.cache.size + (this.client.users.cache.size === 1 ? ' User' : ' Users')}
-    ^3Discord Guilds: \n${Table(this.client.guilds.cache.map(guild => {i === 1 ? i++ : i--; return ({ '^3ID': (i === 1 ? '^4' : '^9') + guild.id, '^3Name': (i === 1 ? '^4' : '^9') + guild.name, '^3Members Count': (i === 1 ? '^4' : '^9') + guild.members.cache.size + (guild.members.cache.size === 1 ? ' Member' : ' Members'), '^3Roles Count': (i === 1 ? '^4' : '^9') + guild.roles.cache.size + (guild.roles.cache.size === 1 ? ' Role' : ' Roles') });}))}
+    ^3Discord API Client: ^4${this.Client.user.tag + ' ^6(' + this.Client.user.id + ')'}
+    ^3Discord Users: ^4${this.Client.users.cache.size + (this.Client.users.cache.size === 1 ? ' User' : ' Users')}
+    ^3Discord Guilds: \n${Table(this.Client.guilds.cache.map(guild => {i === 1 ? i++ : i--; return ({ '^3ID': (i === 1 ? '^4' : '^9') + guild.id, '^3Name': (i === 1 ? '^4' : '^9') + guild.name, '^3Members Count': (i === 1 ? '^4' : '^9') + guild.members.cache.size + (guild.members.cache.size === 1 ? ' Member' : ' Members'), '^3Roles Count': (i === 1 ? '^4' : '^9') + guild.roles.cache.size + (guild.roles.cache.size === 1 ? ' Role' : ' Roles') });}))}
             `);
         });
     }
@@ -70,12 +76,45 @@ module.exports.Module = class Discord extends Modules {
         let Guild;
 
         try {
-            Guild = await this.client.guilds.fetch(DiscordGuildId);
+            Guild = await this.Client.guilds.fetch(DiscordGuildId);
         } catch (err) {
             Guild = null;
         }
 
         return Guild;
+    }
+
+    /**
+     * @description returns a list of all mutual/shared guild between the provided ID and the client
+     * @param {number} PlayerId The player server ID or the player discord ID or any player identifier
+     * @returns Array of Guilds
+     */
+    SharedGuilds(PlayerId) {
+
+        if (!PlayerId) throw new Error('DiscordFramework: Discord --> GetMember() No player ID provided');
+        if (isNaN(PlayerId)) throw new Error('DiscordFramework: Discord --> GetMember() Invalid player ID provided');
+
+        let UserId;
+        if (PlayerId.length > 10) { // Check whether the provided ID is a Discord ID or just a normal FiveM Player ID
+            UserId = PlayerId;
+        } else {
+            const Player = require('../..').Players.get(PlayerId);
+            if (!Player) throw new Error('DiscordFramework: Discord --> GetMember() Player does not have a player network object');
+            UserId = Player.discordId;
+        }
+
+        let Guilds = this.Client.guilds.cache;
+        Guilds = Guilds.map(guild => this.Client.guilds.resolve(guild.id));
+
+        let SharedGuilds;
+
+        try {
+            SharedGuilds = Guilds.filter(guild => guild.members.resolve(UserId));
+        } catch(err) {
+            SharedGuilds = [];
+        }
+
+        return SharedGuilds;
     }
 
     /**
@@ -93,12 +132,12 @@ module.exports.Module = class Discord extends Modules {
         if (PlayerId.length > 10) { // Check whether the provided ID is a Discord ID or just a normal FiveM Player ID
             MemberId = PlayerId;
         } else {
-            const Player = require('../../core').Players.get(PlayerId);
+            const Player = require('../..').Players.get(PlayerId);
             if (!Player) throw new Error('DiscordFramework: Discord --> GetMember() Player does not have a player network object');
             MemberId = Player.discordId;
         }
 
-        const Guild = await this.client.guilds.fetch(DiscordGuildId);
+        const Guild = await this.Client.guilds.fetch(DiscordGuildId);
         if (!Guild) throw new Error('DiscordFramework: Discord --> GetMember() Client is not a member of provided guild\'s ID or guild does not exist');
 
         let Member;
@@ -152,7 +191,7 @@ module.exports.Module = class Discord extends Modules {
         if (PlayerId.length > 10) { // Check whether the provided ID is a Discord ID or just a normal FiveM Player ID
             UserId = PlayerId;
         } else {
-            const Player = require('../../core').Players.get(PlayerId);
+            const Player = require('../..').Players.get(PlayerId);
             if (!Player) throw new Error('DiscordFramework: Discord --> GetMember() Player does not have a player network object');
             UserId = Player.discordId;
         }
@@ -160,7 +199,7 @@ module.exports.Module = class Discord extends Modules {
         let User;
 
         try {
-            User = await this.client.users.fetch(UserId);
+            User = await this.Client.users.fetch(UserId);
         } catch (err) {
             User = null;
         }
@@ -170,13 +209,16 @@ module.exports.Module = class Discord extends Modules {
 
     #Exports() {
         // JS Module Export
-        module.exports.Client = this.client,
+        module.exports.Client = this.Client,
         module.exports.GetGuild = async (GuildId) => {
             return await this.GetGuild(GuildId);
-        },
+        };
+        module.exports.SharedGuilds = (PlayerId) => {
+            return this.SharedGuilds(PlayerId);
+        };
         module.exports.GetMember = async (MemberId, GuildId) => {
             return await this.GetMember(MemberId, GuildId);
-        },
+        };
         module.exports.GetRole = async (RoleId, GuildId) => {
             return await this.GetRole(RoleId, GuildId);
         };
