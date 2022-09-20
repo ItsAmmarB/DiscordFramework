@@ -23,9 +23,17 @@ onNet('DiscordFramework:Extensions:RunClientSide:Permissions', () => {
         console.log('^2[^0Extensions^2:^0Permissions^2]^6: ^3Received client config!');
 
         onNet('DiscordFramework:Permissions:UpdatePermissions', Player => {
+
+            const _oldGuilds = Guilds;
+
             ServerID = Player.ServerId;
             DiscordID = Player.DiscordId;
             Guilds = Player.Guilds;
+
+            Player.Guilds.forEach(guild => {
+                console.log(guild);
+                // _oldGuilds.Roles.
+            });
 
             console.log('^2[^0Extensions^2:^0Permissions^2]^6: ^3Permissions updated!');
         });
@@ -56,7 +64,7 @@ onNet('DiscordFramework:Extensions:RunClientSide:Permissions', () => {
              * Get basic player/member information for easy access later;
              */
             const MemberGuilds = Guilds.filter(guild => AllowedGuilds.includes(guild.id));
-            const IsMemberAdministrator = MemberGuilds.find(guild => guild.administrator) ? true : false;
+            const IsMemberAdministrator = MemberGuilds.find(guild => guild.Administrator) ? true : false;
 
             /**
              * Check if member is an admin and the "discordAdmin"; if both are true, then just return true to save time and CPU usage
@@ -77,15 +85,13 @@ onNet('DiscordFramework:Extensions:RunClientSide:Permissions', () => {
              * but if not found it will return null in which it will falsely the if statement
              * and then return false
              */
-            const MatchingRole = Roles.find(roleID => {
+            if(Roles.find(roleID => {
                 return MemberGuilds.find(guild => {
-                    return guild.roles.find(_role => {
+                    return guild.Roles.find(_role => {
                         return _role.id === roleID;
                     });
                 });
-            });
-            console.log(MatchingRole);
-            if (MatchingRole) return true;
+            })) return true;
 
             return false;
 
@@ -106,11 +112,15 @@ onNet('DiscordFramework:Extensions:RunClientSide:Permissions', () => {
         };
 
         // FiveM Exports for external use
-        exports('Permissions.CheckPermission', (Roles, Guild = null) => CheckPermission(Roles, Guild));
-        exports('Permissions.GetGuilds', (Guild = null) => Guild ? Guilds.filter(guild => guild.id === Guild) : Guilds);
-        exports('Permissions.GetAllowedGuilds', (Guild = null) => GetAllowedGuilds(Guild));
-        exports('Permissions.GetDiscordID', () => DiscordID);
-        exports('Permissions.GetServerID', () => ServerID);
+        exports('Permissions', () => {
+            return {
+                CheckPermission: (Roles, Guild = null) => CheckPermission(Roles, Guild),
+                GetGuilds: (Guild = null) => Guild ? Guilds.filter(guild => guild.id === Guild) : Guilds,
+                GetAllowedGuilds: (Guild = null) => GetAllowedGuilds(Guild),
+                GetDiscordID:  DiscordID,
+                GetServerID: ServerID
+            };
+        });
     });
 
 });

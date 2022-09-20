@@ -1,6 +1,6 @@
 on('DiscordFramework:Extensions:Extension:Load', () => {
 
-    const { Extension } = require(GetResourcePath(GetCurrentResourceName()) + '/core/modules/extensions/index');
+    const { Extension } = require(GetResourcePath(GetCurrentResourceName()) + '/core/modules/Extensions/index');
 
     new class Permissions extends Extension {
         constructor() {
@@ -31,8 +31,9 @@ on('DiscordFramework:Extensions:Extension:Load', () => {
                     },
                     guilds: [
                         {
-                            id: 354062777737936896,
-                            name: 'JusticeCommunityRP'
+                            id: '354062777737936896',
+                            name: 'JusticeCommunityRP',
+                            main: true
                         }
                     ]
                 }
@@ -40,13 +41,11 @@ on('DiscordFramework:Extensions:Extension:Load', () => {
 
             this.Players = [];
 
-            on('DiscordFramework:Module:Ready', () => {
-                this.Discord = require(GetResourcePath(GetCurrentResourceName()) + '/core/modules/discord/index');
-                this.Core = require(GetResourcePath(GetCurrentResourceName()) + '/core/core');
-            });
         }
 
         Run() {
+
+            const Discord = require(GetResourcePath(GetCurrentResourceName()) + '/core/modules/Discord/index');
 
             // When a player connects do shizz
             on('DiscordFramework:Player:Joined', async Player => {
@@ -60,37 +59,31 @@ on('DiscordFramework:Extensions:Extension:Load', () => {
                  */
                 if (Player.DiscordId) {
 
-                    const Member = [];
+                    const Guilds = [];
                     for (let i = 0; i < this.GetAllowedGuilds().length; i++) {
                         const guild = this.GetAllowedGuilds()[i];
                         if (!guild) return;
-                        const member = await GetMember(Player.DiscordId, guild.id);
+                        const member = await Discord.GetMember(Player.DiscordId, guild.id);
                         if (!member) return;
-                        Member.push(member);
+                        Guilds.push(member);
                     }
-
                     setTimeout(async () => {
-                        this.UpdatePermissions(Player, Member);
+                        await this.UpdatePermissions(Player, Guilds);
                         await this.AcePermissionsAdd(Player);
                     }, 200);
 
                 }
 
-                // The client config was made here as a security measure
-                const config = {
-                    mainGuildOnly: this.Config.mainGuildOnly,
-                    allowEveryone: this.Config.allowEveryone,
-                    discordAdmin: this.Config.discordAdmin,
-                    selfPermission: this.Config.selfPermission,
-                    guilds: this.Config.guilds
-                };
+                // The client config is made here as a security measure
+                const config = { ... this.Config };
+                delete config.acePermissions;
 
-                emitNet('DiscordFramework:Permissions:Initialize', Player.ServerId, config);
+                // emitNet('DiscordFramework:Permissions:Initialize', Player.ServerId, config);
             });
 
             on('DiscordFramework:Player:Disconnected', async (PlayerId) => {
 
-                const { Players } = require(GetResourcePath(GetCurrentResourceName()) + '/core/core');
+                const { Players } = require(GetResourcePath(GetCurrentResourceName()) + '/core/index');
                 const Player = Players.get(PlayerId);
                 if (Player.DiscordId) await this.AcePermissionsRemove(Player);
 
@@ -98,11 +91,12 @@ on('DiscordFramework:Extensions:Extension:Load', () => {
 
             });
 
-            this.Discord.Client.on('guildMemberUpdate', (oldMember, newMember) => {
+
+            Discord.Client.on('guildMemberUpdate', async (oldMember, newMember) => {
                 const Player = this.Players.find(p => p.DiscordId === newMember.id);
                 if (Player) {
                     if (this.GetAllowedGuilds().find(guild => guild.id === newMember.guild.id)) {
-                        this.UpdatePermissions(Player, [newMember]);
+                        await this.UpdatePermissions(Player, [newMember]);
                     }
                 }
             });
@@ -124,8 +118,7 @@ on('DiscordFramework:Extensions:Extension:Load', () => {
             if (this.Config.allowEveryone || PlayerId === 0) return true;
 
             // Get and check of the player has a network object store in the Core
-            const { Players } = require(GetResourcePath(GetCurrentResourceName()) + '/core/core');
-            const Player = Players.get(PlayerId);
+            const Player = this.Players.find(player => PlayerId === player.ServerId || PlayerId === player.DiscordId);
             if (Player && Player.DiscordId) {
 
                 /**
@@ -147,8 +140,8 @@ on('DiscordFramework:Extensions:Extension:Load', () => {
                  * Get basic player/member information for easy access later;
                  */
                 const LocalPlayer = this.Players.find(player => player.DiscordId === Player.DiscordId);
-                const MemberGuilds = LocalPlayer.guilds.filter(guild => AllowedGuilds.includes(guild.id));
-                const IsMemberAdministrator = MemberGuilds.find(guild => guild.administrator) ? true : false;
+                const MemberGuilds = LocalPlayer.Guilds.filter(guild => AllowedGuilds.includes(guild.id));
+                const IsMemberAdministrator = MemberGuilds.find(guild => guild.Administrator) ? true : false;
 
                 /**
                  * Check if member is an admin and the "discordAdmin"; if both are true, then just return true to save time and CPU usage
@@ -169,19 +162,17 @@ on('DiscordFramework:Extensions:Extension:Load', () => {
                  * but if not found it will return null in which it will falsify the if statement
                  * and then return false
                  */
-                const MatchingRole = Roles.find(roleID => {
+                if (Roles.find(roleID => {
                     return MemberGuilds.find(guild => {
-                        return guild.roles.find(_role => {
+                        return guild.Roles.find(_role => {
                             return _role.id === roleID;
                         });
                     });
-                });
-
-                if (MatchingRole) return true;
+                })) return true;
 
                 return false;
             } else {
-                return null;
+                return false;
             }
         }
 
@@ -190,7 +181,7 @@ on('DiscordFramework:Extensions:Extension:Load', () => {
          * @param Player The player's network object stored in Core
          * @param Member An array of "GuildMember" objects related to the "Player"
          */
-        UpdatePermissions(Player, Member) {
+        async UpdatePermissions(Player, Member) {
 
             let LocalPlayer = this.Players.find(player => player.DiscordId === Player.DiscordId);
             if(!LocalPlayer) {
@@ -199,32 +190,36 @@ on('DiscordFramework:Extensions:Extension:Load', () => {
                     DiscordId: Player.DiscordId,
                     Guilds: []
                 };
+
                 this.Players.push(_player);
                 LocalPlayer = this.Players.find(player => player.DiscordId === Player.DiscordId);
             }
 
-            for (let i = 0; i < Member.length; i++) {
-                const member = Member[i];
-                const Roles = member.roles.cache.map(role => ({ Name: role.name, Id: role.id, guild: { Name: role.guild.name, Id: role.guild.id } }));
+            await this.Delay(25);
 
-                const PlayerGuild = LocalPlayer.Guilds.find(guild => guild.id === member.guild.id);
-                if(!PlayerGuild) {
+            for (let i = 0; i < Member.length; i++) {
+
+                const member = Member[i];
+                const Roles = member.roles.cache.map(role => ({ Name: role.name, Id: role.id }));
+
+                const _playerGuild = LocalPlayer.Guilds.find(guild => guild.id === member.guild.id);
+                if(!_playerGuild) {
                     const _guild = {
-                        Name: Member.guild.name,
-                        Id: Member.guild.id,
-                        Administrator: null,
-                        Roles: []
+                        Name: member.guild.name,
+                        Id: member.guild.id,
+                        Administrator: member.permissions.has('ADMINISTRATOR'),
+                        Roles: Roles
                     };
+
                     LocalPlayer.Guilds.push(_guild);
                     LocalPlayer = this.Players.find(player => player.DiscordId === Player.DiscordId);
+                } else {
+                    _playerGuild.Roles = Roles;
+                    _playerGuild.Administrator = member.permissions.has('ADMINISTRATOR');
                 }
-
-                PlayerGuild.Roles = Roles;
-
-                member.permissions.has('ADMINISTRATOR') ?
-                    LocalPlayer.Guilds.find(guild => guild.id === member.guild.id).Administrator = true :
-                    LocalPlayer.Guilds.find(guild => guild.id === member.guild.id).Administrator = false;
             }
+
+            await this.Delay(25);
 
             LocalPlayer = this.Players.find(player => player.DiscordId === Player.DiscordId);
 
@@ -234,20 +229,14 @@ on('DiscordFramework:Extensions:Extension:Load', () => {
 
         /**
          * @description Used to get all of the allowed guilds or search for one within the allowed guilds for the members' roles to be fetched from; guilds must be registered in the config
-         * @param GuildID The guild ID (Option)
+         * @param GuildID The guild ID (Optional)
          * @return object
          */
         GetAllowedGuilds(GuildID = null) {
             if (GuildID) {
                 return this.GetAllowedGuilds().filter(guild => guild.id === GuildID);
             } else {
-                return this.Config.guilds.filter(guild => {
-                    if (this.Config.mainGuildOnly) {
-                        return guild.main;
-                    } else {
-                        return guild;
-                    }
-                });
+                return this.Config.guilds.filter(guild => this.Config.mainGuildOnly ? guild.main : guild);
             }
         }
 
@@ -318,9 +307,9 @@ on('DiscordFramework:Extensions:Extension:Load', () => {
                         const LocalPlayer = this.Players.find(player => player.ServerId === PlayerId || player.DiscordId === PlayerId);
                         if (!LocalPlayer) return null;
                         if (Guild) {
-                            return LocalPlayer.guilds.filter(guild => guild.id === guild);
+                            return LocalPlayer.Guilds.filter(guild => guild.id === guild);
                         } else {
-                            return LocalPlayer.guilds;
+                            return LocalPlayer.Guilds;
                         }
                     },
                     GetDiscordID: PlayerId => {
