@@ -19,8 +19,7 @@ const Core = () => {
     //               MODULES
     // --------------------------------------
 
-
-    let Discord = require('./modules/discord/index');
+    let Discord = require('./modules/Discord/index');
     let MongoDB = require('./modules/MongoDB/index');
 
     const Modules = require('./modules');
@@ -32,15 +31,21 @@ const Core = () => {
     });
 
     setTimeout(async () => {
+
         while(!Modules.Ready()) {
             await Delay(500);
         }
+
         if(global.DebugMode) console.debug('---> Core is Ready!');
-        Status = true;
+
+        Discord = require('./modules/Discord/index');
+        MongoDB = require('./modules/MongoDB/index');
+
         emit('DiscordFramework:Core:Ready');
+        Status = true;
+
         CountPlaytime();
-        if(String(Discord) === '{}') Discord = require('./modules/discord/index');
-        if(String(MongoDB) === '{}') MongoDB = require('./modules/MongoDB/index');
+
     }, 500);
 
     Modules.Load();
@@ -75,16 +80,16 @@ const Core = () => {
         if (!Status) return Deferrals.done('[DiscordFramework] Core is not ready yet, please try again in a few seconds!');
 
         // Fetching identifiers
-        Deferrals.update('[DiscordFramework] Checking identifiers...');
+        Deferrals.update('Checking identifiers...');
 
         const Identifiers = Player.GetIdentifiers(PlayerId);
 
         // Check if discord id is present within the identifiers if not then don't allow connection
         if (!Identifiers.discord) return Deferrals.done('[DiscordFramework] Discord ID could be detected!');
 
-        Deferrals.update('[DiscordFramework] Checking community membership...');
+        Deferrals.update('Checking community membership...');
         const Member = await Discord.GetMember(Identifiers.discord);
-        if (!Member) Deferrals.update('[DiscordFramework] You are not a member of the community!');
+        if (!Member) Deferrals.update('You are not a member of the community!');
 
         emit('DiscordFramework:Player:Connecting', PlayerId, Deferrals);
         await Delay(3000); // yes; I know, waiting 3 seconds to start connecting is just absurd but it should be enough time for extensions to check and do stuff
@@ -103,9 +108,8 @@ const Core = () => {
     // Triggered when the player is fully connected and is about to spawn
     onNet('playerJoined', async PlayerId => {
 
-        while (!Status) {
-            await Delay(1000);
-        }
+        await AwaitCore();
+
 
         let player = Players.get(PlayerId);
         if(!player) {
@@ -186,7 +190,7 @@ const Core = () => {
             }
         });
 
-        await Delay(150);
+        await Delay(1000);
 
         emit('DiscordFramework:Player:Joined', player);
         console.log(`^2 ===> ${GetPlayerName(PlayerId)} joined^0`);
@@ -199,38 +203,44 @@ const Core = () => {
         console.log(`^1 ===> ${player.Name} ${Reason === 'Exiting' ? 'left' : Reason}^0`);
     });
 
-
     // --------------------------------------
     //           AIDING FUNCTIONS
     // --------------------------------------
 
     const Delay = async MS => await new Promise(resolve => setTimeout(resolve, MS));
+    const AwaitCore = async () => await new Promise(resolve => {
+        const interval = setInterval(() => {
+            if(Status) {
+                resolve(true);
+                clearInterval(interval);
+            }
+        }, 500);
+    });
 
     // --------------------------------------
     //                 EXPORTS
     // --------------------------------------
 
     module.exports = {
-    /**
-     * The current state of the core
-     * @return {boolean} True of False
-     */
+        /**
+         * The current state of the core
+         * @return {boolean} True of False
+         */
         Status: Status,
         /**
-     * Returns all the players and their details
-     * @return {Set<PlayersSet>} A Set() of players
-     */
+         * Returns all the players and their details
+         * @return {Set<PlayersSet>} A Set() of players
+         */
         Players: Players,
         /**
-     * A pass-through from native JS export to CFX.re exports().
-     *
-     * This was implemented because requiring a server side file will cause all CFX.re exports() to be nullified/undefined
-     * this is a mere workaround to which it provides the ability to use both native JS module.exports and CFX.re export()
-     * at the same time.
-     *
-     * @param {string} Name The desired name of the exports()
-     * @param {function} Function The function to be executed upon call
-     */
+         * A pass-through from native JS export to CFX.re exports().
+         * This was implemented because requiring a server side file will cause all CFX.re exports() to be nullified/undefined
+         * this is a mere workaround to which it provides the ability to use both native JS module.exports and CFX.re export()
+         * at the same time.
+         *
+         * @param {string} Name The desired name of the exports()
+         * @param {function} Function The function to be executed upon call
+         */
         Export: (Name, Function) => {
             emit('DiscordFramework:Export:Create', Name, Function);
         }
