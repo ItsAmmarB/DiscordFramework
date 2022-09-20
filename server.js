@@ -1,5 +1,5 @@
 setTimeout(() => {
-    require(GetResourcePath(GetCurrentResourceName()) + '/core/core');
+    require(GetResourcePath(GetCurrentResourceName()) + '/core/index');
 }, 500);
 // const Discord = require(GetResourcePath(GetCurrentResourceName()) + '/core/modules/discord');
 // const MongoDB = require(GetResourcePath(GetCurrentResourceName()) + '/core/modules/mongo');
