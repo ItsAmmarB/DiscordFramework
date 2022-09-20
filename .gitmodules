@@ -1,0 +1,3 @@
+[submodule "extensions/Permissions"]
+	path = extensions/Permissions
+	url = https://github.com/ItsAmmarB/Permissions
