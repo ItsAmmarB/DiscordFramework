@@ -1,3 +1,4 @@
 [submodule "extensions/Permissions"]
 	path = extensions/Permissions
-	url = https://github.com/ItsAmmarB/DF-Permissions
+	url = https://github.com/ItsAmmarB/DF-Permissions/tree/master
+
