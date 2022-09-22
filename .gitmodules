@@ -2,3 +2,6 @@
 	path = extensions/Permissions
 	url = https://github.com/ItsAmmarB/DF-Permissions/
 
+[submodule "extensions/Template"]
+	path = extensions/Template
+	url = https://github.com/ItsAmmarB/DF-Template
