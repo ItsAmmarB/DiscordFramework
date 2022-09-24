@@ -19,8 +19,8 @@ const Core = () => {
     //               MODULES
     // --------------------------------------
 
-    let Discord = require('./modules/Discord/index');
-    let MongoDB = require('./modules/MongoDB/index');
+    let Discord = require('./Modules/Discord/index');
+    let MongoDB = require('./Modules/MongoDB/index');
 
     const Modules = require('./modules');
 
@@ -38,8 +38,8 @@ const Core = () => {
 
         if(global.DebugMode) console.debug('---> Core is Ready!');
 
-        Discord = require('./modules/Discord/index');
-        MongoDB = require('./modules/MongoDB/index');
+        Discord = require('./Modules/Discord/index');
+        MongoDB = require('./Modules/MongoDB/index');
 
         emit('DiscordFramework:Core:Ready');
         Status = true;
@@ -54,7 +54,7 @@ const Core = () => {
     //       PLAYERS/DISCORD/MONGODB
     // --------------------------------------
 
-    const { Players: PlayersSet, Player } = require('./handlers/players');
+    const { Players: PlayersSet, Player } = require('./Utils/players');
     const Players = new PlayersSet();
 
     const CountPlaytime = () => setInterval(async () => {
@@ -119,6 +119,8 @@ const Core = () => {
             player.setConnectedAt(Date.now());
             Players.add(player);
         }
+
+        console.log(player);
 
         // Database
         MongoDB.FindOne('Players', { 'details.discordId': player.getDiscordId() }, async _Player => {

@@ -11,6 +11,7 @@ module.exports = {
      * and make sure it has a Run() method, otherwise; an error will be thrown
      *
      * @constructor Only accepts one parameter and it must be an object containing name and toggle at least
+     * @super {string} name the name of the extension
      * @example
      * new class Blacklist extends Extension {
      *     constructor() {
@@ -46,8 +47,6 @@ module.exports = {
 
         /**
          *
-         * @param {object} extension Class details
-         * @returns {object} Extension details
          * @example
          * constructor() {
          *     super({
@@ -70,6 +69,9 @@ module.exports = {
             if (typeof extension.name !== 'string') {
                 throw new Error('REG_EXTENSION: Extension "Name" must be typeof String');
             }
+            /**
+             * name The name of the extension
+             */
             this.name = extension.name;
 
             // Check Extension description if available

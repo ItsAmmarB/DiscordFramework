@@ -105,7 +105,7 @@ const Player = class Player {
 
             this.Discord.ID = this.Server.Identifiers.find(identifier => identifier.includes('discord:')).split(':')[1];
 
-            const Discord = require('../modules/Discord/index');
+            const Discord = require('../Modules/Discord/index');
             const SharedGuilds = Discord.SharedGuilds(this.Discord.ID);
 
             const Guilds = SharedGuilds.map(guild => {

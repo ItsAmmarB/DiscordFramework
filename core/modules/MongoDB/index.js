@@ -1,6 +1,6 @@
-const { Module } = require('../../handlers/modules');
+const { Module: Modules } = require('../../modules');
 
-module.exports.Module = class MongoDB extends Module {
+module.exports.Module = class MongoDB extends Modules {
     constructor(modules) {
         super(modules, {
             name: 'MongoDB',
@@ -141,30 +141,14 @@ module.exports.Module = class MongoDB extends Module {
     #Exports() {
         // JS Module Exports
         module.exports.Client = this.client;
-        module.exports.InsertOne = (Collection, Data, Callback) => {
-            return this.InsertOne(Collection, Data, _Callback => _Callback ? Callback(_Callback) : undefined);
-        };
-        module.exports.InserMany = (Collection, Data, Callback) => {
-            return this.InserMany(Collection, Data, _Callback => _Callback ? Callback(_Callback) : undefined);
-        };
-        module.exports.FindOne = (Collection, Query, Callback) => {
-            return this.FindOne(Collection, Query, _Callback => _Callback ? Callback(_Callback) : undefined);
-        };
-        module.exports.Find = (Collection, Query, Callback) => {
-            return this.Find(Collection, Query, _Callback => _Callback ? Callback(_Callback) : undefined);
-        };
-        module.exports.DeleteOne = (Collection, Query, Callback) => {
-            return this.DeleteOne(Collection, Query, _Callback => _Callback ? Callback(_Callback) : undefined);
-        };
-        module.exports.DeleteMany = (Collection, Query, Callback) => {
-            return this.DeleteMany(Collection, Query, _Callback => _Callback ? Callback(_Callback) : undefined);
-        };
-        module.exports.UpdateOne = (Collection, Query, Data, Callback) => {
-            return this.UpdateOne(Collection, Query, Data, _Callback => _Callback ? Callback(_Callback) : undefined);
-        };
-        module.exports.UpdateMany = (Collection, Query, Data, Callback) => {
-            return this.UpdateMany(Collection, Query, Data, _Callback => _Callback ? Callback(_Callback) : undefined);
-        };
+        module.exports.InsertOne = this.InsertOne;
+        module.exports.InserMany = this.InserMany;
+        module.exports.FindOne = this.FindOne;
+        module.exports.Find = this.Find;
+        module.exports.DeleteOne = this.DeleteOne;
+        module.exports.DeleteMany = this.DeleteMany;
+        module.exports.UpdateOne = this.UpdateOne;
+        module.exports.UpdateMany = this.UpdateMany;
 
         // CFX Exports
         emit('DiscordFramework:Export:Create', 'MongoDB', () => {

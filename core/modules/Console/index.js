@@ -1,9 +1,9 @@
 /* eslint-disable no-irregular-whitespace */
-const { Module } = require('../../modules');
+const { Module: Modules } = require('../../modules');
 
 const Printables = [];
 
-module.exports.Module = class Console extends Module {
+module.exports.Module = class Console extends Modules {
     constructor(modules) {
         super(modules, {
             name: 'Console',

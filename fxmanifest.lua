@@ -15,7 +15,7 @@ dependency 'yarn'
 server_script {
 
     -- CORE
-    'server.js',
+    'CFX/server.js',
    
     -- EXTENSIONS
     'extensions/**/sv_*.js',
@@ -28,7 +28,7 @@ server_script {
 client_script {
 
     -- CORE
-    'client.js',
+    'CFX/client.js',
 
     -- EXTENSIONS
     'extensions/**/cl_*.js',

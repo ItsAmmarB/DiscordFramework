@@ -1,12 +1,12 @@
-const { Module } = require('../../modules');
-const Handlers = require('./handlers');
+const { Module: Modules } = require('../../modules');
+const Classes = require('./classes');
 
 /**
  * A custom Set() containing all registered extensions
  */
-const Extensions = new Handlers.Extensions();
+const Extensions = new Classes.Extensions();
 
-module.exports.Module = class Exetnsions extends Module {
+module.exports.Module = class Exetnsions extends Modules {
     constructor(modules) {
         super(modules, {
             name: 'Extensions',
@@ -67,7 +67,7 @@ module.exports.Module = class Exetnsions extends Module {
 
     #Exports() {
         // JS Module Exports
-        module.exports.Extension = Handlers.Extension,
+        module.exports.Extension = Classes.Extension,
         module.exports.Extensions = Extensions;
 
         // CFX Exports
@@ -80,7 +80,7 @@ module.exports.Module = class Exetnsions extends Module {
                  * because those wouldn't work in LUA, blame LUA
                  */
                 // Extension: () => {
-                //     return Handlers.Extension;
+                //     return Classes.Extension;
                 // },
                 Extensions: () => {
                     return Extensions.toArray();

@@ -65,6 +65,7 @@ module.exports.Module = class Discord extends Modules {
 
     /**
      * @description Gets a discord guild information from a discord guild id
+     * @async
      * @param {number} DiscordGuildId The discord guild id
      * @return Discord Guild
      */
@@ -98,7 +99,7 @@ module.exports.Module = class Discord extends Modules {
         if (PlayerId.length > 10) { // Check whether the provided ID is a Discord ID or just a normal FiveM Player ID
             UserId = PlayerId;
         } else {
-            const Player = require('../..').Players.get(PlayerId);
+            const Player = require('../../index').Players.get(PlayerId);
             if (!Player) throw new Error('DiscordFramework: Discord --> GetMember() Player does not have a player network object');
             UserId = Player.discordId;
         }
@@ -119,6 +120,7 @@ module.exports.Module = class Discord extends Modules {
 
     /**
      * @description Checks a player exists in a discord guild
+     * @async
      * @param {number} PlayerId The player server ID or the player discord ID or any player identifier
      * @param {number} DiscordGuildId The discord guild id (optional)
      * @returns Discord GuildMember
@@ -132,7 +134,7 @@ module.exports.Module = class Discord extends Modules {
         if (PlayerId.length > 10) { // Check whether the provided ID is a Discord ID or just a normal FiveM Player ID
             MemberId = PlayerId;
         } else {
-            const Player = require('../..').Players.get(PlayerId);
+            const Player = require('../../index').Players.get(PlayerId);
             if (!Player) throw new Error('DiscordFramework: Discord --> GetMember() Player does not have a player network object');
             MemberId = Player.discordId;
         }
@@ -153,6 +155,7 @@ module.exports.Module = class Discord extends Modules {
 
     /**
      * @description Get a discord role information from a discord role id
+     * @async
      * @param {number} RoleId The discord role id
      * @param {number} DiscordGuildId The discord guild id (optional)
      * @return Discord Role
@@ -179,6 +182,7 @@ module.exports.Module = class Discord extends Modules {
 
     /**
      * @description Checks a player exists in a discord guild
+     * @async
      * @param {number} PlayerId The player server ID or the player discord ID or any player identifier
      * @returns Discord User
      */
@@ -191,7 +195,7 @@ module.exports.Module = class Discord extends Modules {
         if (PlayerId.length > 10) { // Check whether the provided ID is a Discord ID or just a normal FiveM Player ID
             UserId = PlayerId;
         } else {
-            const Player = require('../..').Players.get(PlayerId);
+            const Player = require('../../index').Players.get(PlayerId);
             if (!Player) throw new Error('DiscordFramework: Discord --> GetMember() Player does not have a player network object');
             UserId = Player.discordId;
         }
@@ -210,21 +214,11 @@ module.exports.Module = class Discord extends Modules {
     #Exports() {
         // JS Module Export
         module.exports.Client = this.Client,
-        module.exports.GetGuild = async (GuildId) => {
-            return await this.GetGuild(GuildId);
-        };
-        module.exports.SharedGuilds = (PlayerId) => {
-            return this.SharedGuilds(PlayerId);
-        };
-        module.exports.GetMember = async (MemberId, GuildId) => {
-            return await this.GetMember(MemberId, GuildId);
-        };
-        module.exports.GetRole = async (RoleId, GuildId) => {
-            return await this.GetRole(RoleId, GuildId);
-        };
-        module.exports.GetUser = async (PlayerId) => {
-            return await this.GetUser(PlayerId);
-        };
+        module.exports.GetGuild = this.GetGuild;
+        module.exports.SharedGuilds = this.SharedGuilds;
+        module.exports.GetMember = this.GetMember;
+        module.exports.GetRole = this.GetRole;
+        module.exports.GetUser = this.GetUser;
 
 
         // CFX Export
