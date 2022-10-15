@@ -1,7 +1,0 @@
-[submodule "Extensions/Permissions"]
-	path = Extensions/Permissions
-	url = https://github.com/ItsAmmarB/DF-Permissions/
-
-[submodule "Extensions/Template"]
-	path = Extensions/Template
-	url = https://github.com/ItsAmmarB/DF-Template
