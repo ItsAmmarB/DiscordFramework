@@ -103,7 +103,6 @@ module.exports = {
          *
          * @param {Set<Object>} modules Set() of all registered modules
          * @param {Object} module Class details
-         * @param {String} name the name of the module
          * @returns {Object} Module details
          * @example
          * constructor(modules) {
@@ -184,23 +183,23 @@ module.exports = {
         /**
          * Initializes the modules and start a series of checks to validate variables as much as possible
          */
-        #Initialize(modules) {
+        #Initialize() {
             try {
 
                 // Check if the module is a mere template and #register it as 'Template'
                 if (this.name === 'Template') {
-                    return this.#Register('Template', modules);
+                    return this.#Register('Template');
                 }
 
                 // Check if the module is supposed to be toggle and if not then #register it as disabled
                 if (!this.toggle) {
-                    return this.#Register('Disabled', modules);
+                    return this.#Register('Disabled');
                 }
 
-                this.#Register('Ready', modules);
+                this.#Register('Ready');
 
             } catch (err) {
-                this.#Register('Error', modules);
+                this.#Register('Error');
                 throw new Error(err);
             }
         }
@@ -209,7 +208,7 @@ module.exports = {
          * The registration step of making an modules
          * @param {String} status The status to register the module as
          */
-        #Register(status, modules) {
+        #Register(status) {
 
             this.status = status;
             const module = {
@@ -222,7 +221,7 @@ module.exports = {
                 config: this.config
             };
 
-            modules.add(module);
+            this.modules.add(module);
         }
 
         /**
@@ -274,7 +273,7 @@ module.exports = {
          * @example this.Config // output: {}
          */
         get Config() {
-            return this.config;
+            return this.modules.get(this.name).config;
         }
 
     }
