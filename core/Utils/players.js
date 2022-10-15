@@ -527,7 +527,6 @@ const Player = class Player {
                     prevGuild.Administrator = newM.permissions.has('ADMINISTRATOR');
                     prevGuild.Permissions = newM.permissions.toArray();
                     prevGuild.Roles = newM.roles.cache.map(role => ({ ID: role.id, Name: role.name }));
-                    return;
                 } else {
                     this.Discord.Guilds.push({
                         ID: newM.guild.id,
@@ -536,8 +535,8 @@ const Player = class Player {
                         Permissions: newM.permissions.toArray(),
                         Roles: newM.roles.cache.map(role => ({ ID: role.id, Name: role.name }))
                     });
-                    return;
                 }
+                return emit('DiscordFrameworK:Player:Roles:Updated', this);
             }
         });
     }
