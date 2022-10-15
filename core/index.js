@@ -120,8 +120,6 @@ const Core = () => {
             Players.add(player);
         }
 
-        console.log(player);
-
         // Database
         MongoDB.FindOne('Players', { 'details.discordId': player.getDiscordId() }, async _Player => {
             if (_Player) {
