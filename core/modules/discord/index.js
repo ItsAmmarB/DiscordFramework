@@ -9,12 +9,12 @@ module.exports.Module = class Discord extends Modules {
      * use your own judgement.
      *
      * The token was put here as a security measure to prevent outside sources from
-     * obtaining it, thought it still CAN be obtained, again, use your judgement!
+     * obtaining it, though it still CAN be obtained, again, use your judgement!
      *
      * DISCLAIMER:
      * I am not responsible for anything that could or would happen if an extension that was
      * not made by me, Ammar B. AKA. ItsAmmarB that caused harm or damage in any capacity to your
-     * FiveM server, Discord server, or anything in any way, share, or form.
+     * FiveM server, Discord server, or anything in any way, shape, or form.
      *
      * you could make an environment variable with the "Discord_API" name, or just change it to your token;
      * be cautious
@@ -42,7 +42,6 @@ module.exports.Module = class Discord extends Modules {
         const { Client } = require('discord.js');
         this.Client = new Client({ intents: 131071, presence: { status: 'dnd', activities: [ { name: 'DiscordFramework', type: 3, url: 'https://github.com/ItsAmmarB/DiscordFramework/' }] } });
         this.Run();
-
     }
 
     Run() {
@@ -61,6 +60,7 @@ module.exports.Module = class Discord extends Modules {
     ^3Discord Guilds: \n${Table(this.Client.guilds.cache.map(guild => {i === 1 ? i++ : i--; return ({ '^3ID': (i === 1 ? '^4' : '^9') + guild.id, '^3Name': (i === 1 ? '^4' : '^9') + guild.name, '^3Members Count': (i === 1 ? '^4' : '^9') + guild.members.cache.size + (guild.members.cache.size === 1 ? ' Member' : ' Members'), '^3Roles Count': (i === 1 ? '^4' : '^9') + guild.roles.cache.size + (guild.roles.cache.size === 1 ? ' Role' : ' Roles') });}))}
             `);
         });
+
     }
 
     /**
@@ -125,7 +125,7 @@ module.exports.Module = class Discord extends Modules {
      * @param {number} DiscordGuildId The discord guild id (optional)
      * @returns Discord GuildMember
      */
-    async GetMember(PlayerId, DiscordGuildId = this.config.GuildId) {
+    async GetMember(PlayerId, DiscordGuildId = this.Config.GuildId) {
 
         if (!PlayerId) throw new Error('DiscordFramework: Discord --> GetMember() No player ID provided');
         if (isNaN(PlayerId)) throw new Error('DiscordFramework: Discord --> GetMember() Invalid player ID provided');
@@ -160,7 +160,7 @@ module.exports.Module = class Discord extends Modules {
      * @param {number} DiscordGuildId The discord guild id (optional)
      * @return Discord Role
      */
-    async GetRole(RoleId, DiscordGuildId = this.config.GuildId) {
+    async GetRole(RoleId, DiscordGuildId = this.Config.GuildId) {
 
         if (!RoleId) throw new Error('DiscordFramework: Discord --> GetRole() No role ID provided');
         if (isNaN(RoleId)) throw new Error('DiscordFramework: Discord --> GetRole() Invalid role ID provided');
@@ -213,12 +213,48 @@ module.exports.Module = class Discord extends Modules {
 
     #Exports() {
         // JS Module Export
-        module.exports.Client = this.Client,
-        module.exports.GetGuild = this.GetGuild;
-        module.exports.SharedGuilds = this.SharedGuilds;
-        module.exports.GetMember = this.GetMember;
-        module.exports.GetRole = this.GetRole;
-        module.exports.GetUser = this.GetUser;
+        module.exports.Client = this.Client;
+
+        /**
+         * @description Gets a discord guild information from a discord guild id
+         * @async
+         * @param {number} DiscordGuildId The discord guild id
+         * @return Discord Guild
+         */
+        module.exports.GetGuild = async (...args) => await this.GetGuild(...args);
+
+        /**
+         * @description returns a list of all mutual/shared guild between the provided ID and the client
+         * @param {number} PlayerId The player server ID or the player discord ID or any player identifier
+         * @returns Array of Guilds
+         */
+        module.exports.SharedGuilds = (...args) => this.SharedGuilds(...args);
+
+        /**
+         * @description Checks a player exists in a discord guild
+         * @async
+         * @param {number} PlayerId The player server ID or the player discord ID or any player identifier
+         * @param {number} DiscordGuildId The discord guild id (optional)
+         * @returns Discord GuildMember
+         */
+        module.exports.GetMember = async (...args) => await this.GetMember(...args);
+
+        /**
+         * @description Get a discord role information from a discord role id
+         * @async
+         * @param {number} RoleId The discord role id
+         * @param {number} DiscordGuildId The discord guild id (optional)
+         * @return Discord Role
+         */
+        module.exports.GetRole = async (...args) => await this.GetRole(...args);
+
+        /**
+         * @description Checks a player exists in a discord guild
+         * @async
+         * @param {number} PlayerId The player server ID or the player discord ID or any player identifier
+         * @returns Discord User
+         */
+        module.exports.GetUser = async (...args) => await this.GetUser(...args);
 
 
         // CFX Export
