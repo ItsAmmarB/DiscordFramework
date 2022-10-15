@@ -68,9 +68,8 @@ module.exports.Module = class Discord extends Modules {
 
     /**
      * Gets a discord guild information from a discord guild id
-     * @async
      * @param {number} DiscordGuildId The discord guild id
-     * @return Discord Guild
+     * @return {Promise<any>} discord guild
      */
     async GetGuild(DiscordGuildId) {
 
@@ -82,6 +81,7 @@ module.exports.Module = class Discord extends Modules {
         try {
             Guild = await this.Client.guilds.fetch(DiscordGuildId);
         } catch (err) {
+            console.error(err);
             Guild = null;
         }
 
@@ -91,7 +91,7 @@ module.exports.Module = class Discord extends Modules {
     /**
      * returns a list of all mutual/shared guild between the provided ID and the client
      * @param {number} PlayerId The player server ID or the player discord ID or any player identifier
-     * @returns Array of Guilds
+     * @returns {Promise<any[]>} Array of Guilds
      */
     SharedGuilds(PlayerId) {
 
@@ -115,6 +115,7 @@ module.exports.Module = class Discord extends Modules {
         try {
             SharedGuilds = Guilds.filter(guild => guild.members.resolve(UserId));
         } catch(err) {
+            console.error(err);
             SharedGuilds = [];
         }
 
@@ -126,7 +127,7 @@ module.exports.Module = class Discord extends Modules {
      * @async
      * @param {number} PlayerId The player server ID or the player discord ID or any player identifier
      * @param {number} DiscordGuildId The discord guild id (optional)
-     * @returns Discord GuildMember
+     * @returns {Promise<any>} Discord GuildMember
      */
     async GetMember(PlayerId, DiscordGuildId = this.Config.MainGuild.ID) {
 
@@ -150,6 +151,7 @@ module.exports.Module = class Discord extends Modules {
         try {
             Member = await Guild.members.fetch(MemberId);
         } catch (err) {
+            console.error(err);
             Member = null;
         }
 
@@ -161,7 +163,7 @@ module.exports.Module = class Discord extends Modules {
      * @async
      * @param {number} RoleId The discord role id
      * @param {number} DiscordGuildId The discord guild id (optional)
-     * @return Discord Role
+     * @return {Promise<any>} Discord Role
      */
     async GetRole(RoleId, DiscordGuildId = this.Config.MainGuild.ID) {
 
@@ -177,6 +179,7 @@ module.exports.Module = class Discord extends Modules {
         try {
             Role = await Guild.roles.fetch(DiscordGuildId);
         } catch (err) {
+            console.error(err);
             Role = null;
         }
 
@@ -187,7 +190,7 @@ module.exports.Module = class Discord extends Modules {
      * Checks a player exists in a discord guild
      * @async
      * @param {number} PlayerId The player server ID or the player discord ID or any player identifier
-     * @returns Discord User
+     * @returns {Promise<any>} Discord User
      */
     async GetUser(PlayerId) {
 
@@ -208,6 +211,7 @@ module.exports.Module = class Discord extends Modules {
         try {
             User = await this.Client.users.fetch(UserId);
         } catch (err) {
+            console.error(err);
             User = null;
         }
 
@@ -222,14 +226,14 @@ module.exports.Module = class Discord extends Modules {
          * Gets a discord guild information from a discord guild id
          * @async
          * @param {number} DiscordGuildId The discord guild id
-         * @return Discord Guild
+         * @return {Promise<any>} Discord Guild
          */
         module.exports.GetGuild = async (...args) => await this.GetGuild(...args);
 
         /**
          * returns a list of all mutual/shared guild between the provided ID and the client
          * @param {number} PlayerId The player server ID or the player discord ID or any player identifier
-         * @returns Array of Guilds
+         * @returns {Promise<any[]>} Array of Guilds
          */
         module.exports.SharedGuilds = (...args) => this.SharedGuilds(...args);
 
@@ -238,7 +242,7 @@ module.exports.Module = class Discord extends Modules {
          * @async
          * @param {number} PlayerId The player server ID or the player discord ID or any player identifier
          * @param {number} DiscordGuildId The discord guild id (optional)
-         * @returns Discord GuildMember
+         * @returns {Promise<any>} Discord GuildMember
          */
         module.exports.GetMember = async (...args) => await this.GetMember(...args);
 
@@ -247,7 +251,7 @@ module.exports.Module = class Discord extends Modules {
          * @async
          * @param {number} RoleId The discord role id
          * @param {number} DiscordGuildId The discord guild id (optional)
-         * @return Discord Role
+         * @return {Promise<any>} Discord Role
          */
         module.exports.GetRole = async (...args) => await this.GetRole(...args);
 
@@ -255,7 +259,7 @@ module.exports.Module = class Discord extends Modules {
          * Checks a player exists in a discord guild
          * @async
          * @param {number} PlayerId The player server ID or the player discord ID or any player identifier
-         * @returns Discord User
+         * @returns {Promise<any>} Discord User
          */
         module.exports.GetUser = async (...args) => await this.GetUser(...args);
 
