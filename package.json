@@ -1,6 +1,6 @@
 {
   "name": "discordframework",
-  "version": "0.0.7-indev",
+  "version": "0.1.0-indev",
   "testedFxServerVersion": "5757",
   "description": "A feature-rich, customizable, and modular framework that utilizes Discord and MongoDB",
   "dependencies": {
