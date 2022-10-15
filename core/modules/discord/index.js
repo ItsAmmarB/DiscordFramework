@@ -30,12 +30,15 @@ module.exports.Module = class Discord extends Modules {
             author: 'ItsAmmarB',
             config: {
                 /**
-                     * Change GuildId to your main/primary discord server
+                     * Change MainGuild to your main/primary discord server
                      * in the functions below if no guild ID is provided
-                     * the function will look for that GuildId
+                     * the function will look for that MainGuild
                      * and if not present an error will be throw
                  */
-                GuildId: '354062777737936896' // JusticeCommunityRP
+                MainGuild: {
+                    ID: '354062777737936896',
+                    Name: 'JusticeCommunityRP'
+                }
             }
         });
 
@@ -64,7 +67,7 @@ module.exports.Module = class Discord extends Modules {
     }
 
     /**
-     * @description Gets a discord guild information from a discord guild id
+     * Gets a discord guild information from a discord guild id
      * @async
      * @param {number} DiscordGuildId The discord guild id
      * @return Discord Guild
@@ -86,7 +89,7 @@ module.exports.Module = class Discord extends Modules {
     }
 
     /**
-     * @description returns a list of all mutual/shared guild between the provided ID and the client
+     * returns a list of all mutual/shared guild between the provided ID and the client
      * @param {number} PlayerId The player server ID or the player discord ID or any player identifier
      * @returns Array of Guilds
      */
@@ -119,13 +122,13 @@ module.exports.Module = class Discord extends Modules {
     }
 
     /**
-     * @description Checks a player exists in a discord guild
+     * Checks a player exists in a discord guild
      * @async
      * @param {number} PlayerId The player server ID or the player discord ID or any player identifier
      * @param {number} DiscordGuildId The discord guild id (optional)
      * @returns Discord GuildMember
      */
-    async GetMember(PlayerId, DiscordGuildId = this.Config.GuildId) {
+    async GetMember(PlayerId, DiscordGuildId = this.Config.MainGuild.ID) {
 
         if (!PlayerId) throw new Error('DiscordFramework: Discord --> GetMember() No player ID provided');
         if (isNaN(PlayerId)) throw new Error('DiscordFramework: Discord --> GetMember() Invalid player ID provided');
@@ -154,13 +157,13 @@ module.exports.Module = class Discord extends Modules {
     }
 
     /**
-     * @description Get a discord role information from a discord role id
+     * Get a discord role information from a discord role id
      * @async
      * @param {number} RoleId The discord role id
      * @param {number} DiscordGuildId The discord guild id (optional)
      * @return Discord Role
      */
-    async GetRole(RoleId, DiscordGuildId = this.Config.GuildId) {
+    async GetRole(RoleId, DiscordGuildId = this.Config.MainGuild.ID) {
 
         if (!RoleId) throw new Error('DiscordFramework: Discord --> GetRole() No role ID provided');
         if (isNaN(RoleId)) throw new Error('DiscordFramework: Discord --> GetRole() Invalid role ID provided');
@@ -181,7 +184,7 @@ module.exports.Module = class Discord extends Modules {
     }
 
     /**
-     * @description Checks a player exists in a discord guild
+     * Checks a player exists in a discord guild
      * @async
      * @param {number} PlayerId The player server ID or the player discord ID or any player identifier
      * @returns Discord User
@@ -216,7 +219,7 @@ module.exports.Module = class Discord extends Modules {
         module.exports.Client = this.Client;
 
         /**
-         * @description Gets a discord guild information from a discord guild id
+         * Gets a discord guild information from a discord guild id
          * @async
          * @param {number} DiscordGuildId The discord guild id
          * @return Discord Guild
@@ -224,14 +227,14 @@ module.exports.Module = class Discord extends Modules {
         module.exports.GetGuild = async (...args) => await this.GetGuild(...args);
 
         /**
-         * @description returns a list of all mutual/shared guild between the provided ID and the client
+         * returns a list of all mutual/shared guild between the provided ID and the client
          * @param {number} PlayerId The player server ID or the player discord ID or any player identifier
          * @returns Array of Guilds
          */
         module.exports.SharedGuilds = (...args) => this.SharedGuilds(...args);
 
         /**
-         * @description Checks a player exists in a discord guild
+         * Checks a player exists in a discord guild
          * @async
          * @param {number} PlayerId The player server ID or the player discord ID or any player identifier
          * @param {number} DiscordGuildId The discord guild id (optional)
@@ -240,7 +243,7 @@ module.exports.Module = class Discord extends Modules {
         module.exports.GetMember = async (...args) => await this.GetMember(...args);
 
         /**
-         * @description Get a discord role information from a discord role id
+         * Get a discord role information from a discord role id
          * @async
          * @param {number} RoleId The discord role id
          * @param {number} DiscordGuildId The discord guild id (optional)
@@ -249,7 +252,7 @@ module.exports.Module = class Discord extends Modules {
         module.exports.GetRole = async (...args) => await this.GetRole(...args);
 
         /**
-         * @description Checks a player exists in a discord guild
+         * Checks a player exists in a discord guild
          * @async
          * @param {number} PlayerId The player server ID or the player discord ID or any player identifier
          * @returns Discord User
