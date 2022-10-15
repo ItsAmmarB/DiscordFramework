@@ -16,17 +16,17 @@ module.exports.Module = class MongoDB extends Modules {
         const { MongoClient } = require('mongodb');
         // const uri = 'mongodb+srv://ItsAmmarB:amooreksa@cluster0.wz7ij.mongodb.net/?retryWrites=true&w=majority';
         const uri = 'mongodb://localhost:27017';
-        this.client = new MongoClient(uri, { useUnifiedTopology: true, maxIdleTimeMS: 0, serverSelectionTimeoutMS: 0, socketTimeoutMS: 0, connectTimeoutMS: 0 });
+        this.Client = new MongoClient(uri, { useUnifiedTopology: true, maxIdleTimeMS: 0, serverSelectionTimeoutMS: 0, socketTimeoutMS: 0, connectTimeoutMS: 0 });
         this.Run();
     }
 
     Run() {
-        this.client.connect(err => {
+        this.Client.connect(err => {
             if(err) throw new Error(err);
-            this.client.db(this.Config.nameOfDatabase).collection('Players').findOne({ _id: 0 }, async (_err, Server) => {
+            this.Client.db(this.Config.nameOfDatabase).collection('Players').findOne({ _id: 0 }, async (_err, Server) => {
                 if(_err) throw new Error(_err);
                 if(Server) {
-                    this.client.db(this.Config.nameOfDatabase).collection('Players').updateOne({ _id: 0 }, {
+                    this.Client.db(this.Config.nameOfDatabase).collection('Players').updateOne({ _id: 0 }, {
                         $set: {
                             startedAt: Date.now()
                         }
@@ -36,12 +36,12 @@ module.exports.Module = class MongoDB extends Modules {
                         _id: 0,
                         startedAt: Date.now()
                     };
-                    this.client.db(this.Config.nameOfDatabase).collection('Players').insertOne(server);
+                    this.Client.db(this.Config.nameOfDatabase).collection('Players').insertOne(server);
                 }
 
                 const { AddPrint } = require('../Console/index');
 
-                const dbInfo = await this.client.db(this.Config.nameOfDatabase).stats();
+                const dbInfo = await this.Client.db(this.Config.nameOfDatabase).stats();
 
                 AddPrint('MongoDB', `
     ^3Datebase Name: ^4${this.Config.nameOfDatabase}
@@ -57,38 +57,62 @@ module.exports.Module = class MongoDB extends Modules {
         });
     }
 
+    /**
+     * Inserts a single document into MongoDB. If documents passed in do not contain the _id field, one will be added to each of the documents missing it by the driver.
+     * @param {String} Collection The name of the collection
+     * @param {Object} Data The data/document
+     * @param {*} Callback An optional callback
+     */
     InsertOne(Collection, Data, Callback) {
-        this.client.connect(err => {
+        this.Client.connect(err => {
             if(err) throw new Error(err);
             emit('DiscordFramework:MongoDB:DatabaseInsertOne', Collection, Data, Callback);
-            this.client.db(this.Config.nameOfDatabase).collection(Collection).insertOne(Data, Callback ? err => Callback(err) : undefined);
-            // this.client.close();
+            this.Client.db(this.Config.nameOfDatabase).collection(Collection).insertOne(Data, Callback ? err => Callback(err) : undefined);
+            // this.Client.close();
         });
     }
 
+    /**
+     * Inserts an array of documents into MongoDB. If documents passed in do not contain the _id field, one will be added to each of the documents missing it by the driver, mutating the document.
+     * @param {String} Collection The name of the collection
+     * @param {Array<Object>} Data The data/document
+     * @param {*} Callback An optional callback
+     */
     InserMany(Collection, Data, Callback) {
-        this.client.connect(err => {
+        this.Client.connect(err => {
             if(err) throw new Error(err);
             emit('DiscordFramework:MongoDB:DatabaseInserMany', Collection, Data, Callback);
-            this.client.db(this.Config.nameOfDatabase).collection(Collection).insertMany(Data, Callback ? err => Callback(err) : undefined);
-            // this.client.close();
+            this.Client.db(this.Config.nameOfDatabase).collection(Collection).insertMany(Data, Callback ? err => Callback(err) : undefined);
+            // this.Client.close();
         });
     }
 
-    FindOne(Collection, Query, Callback) {
-        this.client.connect(err => {
+    /**
+     * Fetches the first document that matches the filter
+     * @param {String} Collection The name of the collection
+     * @param {Object} Filter Query for find Operation
+     * @param {*} Callback An optional callback
+     */
+    FindOne(Collection, Filter, Callback) {
+        this.Client.connect(err => {
             if(err) throw new Error(err);
-            emit('DiscordFramework:MongoDB:DatabaseFindOne', Collection, Query, Callback);
-            this.client.db(this.Config.nameOfDatabase).collection(Collection).findOne(Query).then(Callback ? Result => Callback(Result) : undefined);
-            // this.client.close();
+            emit('DiscordFramework:MongoDB:DatabaseFindOne', Collection, Filter, Callback);
+            this.Client.db(this.Config.nameOfDatabase).collection(Collection).findOne(Filter).then(Callback ? Result => Callback(Result) : undefined);
+            // this.Client.close();
         });
     }
 
-    Find(Collection, Query, Callback) {
-        this.client.connect(err => {
+    /**
+     * Fetches multiple documents that matches the filter
+     * @param {String} Collection The name of the collection
+     * @param {Object} Filter Query for find Operation
+     * @param {*} Callback An optional callback
+     */
+    Find(Collection, Filter, Callback) {
+        this.Client.connect(err => {
             if(err) throw new Error(err);
-            emit('DiscordFramework:MongoDB:DatabaseFind', Collection, Query, Callback);
-            const cursor = Client.db(this.Config.nameOfDatabase).collection(Collection).find(Query);
+            emit('DiscordFramework:MongoDB:DatabaseFind', Collection, Filter, Callback);
+            const cursor = Client.db(this.Config.nameOfDatabase).collection(Collection).find(Filter);
             cursor.count().then(count => {
                 if (count > 0) {
                     cursor.toArray().then(arr => {
@@ -98,57 +122,141 @@ module.exports.Module = class MongoDB extends Modules {
                     Callback([]);
                 }
             });
-            // this.client.close();
+            // this.Client.close();
         });
     }
 
-    DeleteOne(Collection, Query, Callback) {
-        this.client.connect(err => {
+    /**
+     * Delete a document from a collection
+     * @param {String} Collection The name of the collection
+     * @param {Object} Filter Query for find Operation
+     * @param {*} Callback An optional callback
+     */
+    DeleteOne(Collection, Filter, Callback) {
+        this.Client.connect(err => {
             if(err) throw new Error(err);
-            emit('DiscordFramework:MongoDB:DatabaseDeleteOne', Collection, Query, Callback);
-            this.client.db(this.Config.nameOfDatabase).collection(Collection).deleteOne(Query, Callback ? err => Callback(err) : undefined);
-            // this.client.close();
+            emit('DiscordFramework:MongoDB:DatabaseDeleteOne', Collection, Filter, Callback);
+            this.Client.db(this.Config.nameOfDatabase).collection(Collection).deleteOne(Filter, Callback ? err => Callback(err) : undefined);
+            // this.Client.close();
         });
     }
 
-    DeleteMany(Collection, Query, Callback) {
-        this.client.connect(err => {
+    /**
+     * Delete multiple documents from a collection
+     * @param {String} Collection The name of the collection
+     * @param {Object} Filter Query for find Operation
+     * @param {*} Callback An optional callback
+     */
+    DeleteMany(Collection, Filter, Callback) {
+        this.Client.connect(err => {
             if(err) throw new Error(err);
-            emit('DiscordFramework:MongoDB:DatabaseDeleteMany', Collection, Query, Callback);
-            this.client.db(this.Config.nameOfDatabase).collection(Collection).deleteMany(Query, Callback ? err => Callback(err) : undefined);
-            // this.client.close();
+            emit('DiscordFramework:MongoDB:DatabaseDeleteMany', Collection, Filter, Callback);
+            this.Client.db(this.Config.nameOfDatabase).collection(Collection).deleteMany(Filter, Callback ? err => Callback(err) : undefined);
+            // this.Client.close();
         });
     }
 
-    UpdateOne(Collection, Query, Data, Callback) {
-        this.client.connect(err => {
+    /**
+     * Update a single document in a collection
+     * @param {String} Collection The name of the collection
+     * @param {Object} Filter Query for find Operation
+     * @param {Object} Update The update operations to be applied to the document
+     * @param {*} Callback An optional callback
+     */
+    UpdateOne(Collection, Filter, Update, Callback) {
+        this.Client.connect(err => {
             if(err) throw new Error(err);
-            emit('DiscordFramework:MongoDB:DatabaseUpdateOne', Collection, Query, Data, Callback);
-            this.client.db(this.Config.nameOfDatabase).collection(Collection).updateOne(Query, Data, Callback ? err => Callback(err) : undefined);
-            // this.client.close();
+            emit('DiscordFramework:MongoDB:DatabaseUpdateOne', Collection, Filter, Update, Callback);
+            this.Client.db(this.Config.nameOfDatabase).collection(Collection).updateOne(Filter, Update, Callback ? err => Callback(err) : undefined);
+            // this.Client.close();
         });
     }
 
-    UpdateMany(Collection, Query, Data, Callback) {
-        this.client.connect(err => {
+    /**
+     * Update multiple documents in a collection
+     * @param {String} Collection The name of the collection
+     * @param {Object} Filter Query for find Operation
+     * @param {Object} Update The update operations to be applied to the document
+     * @param {*} Callback An optional callback
+     */
+    UpdateMany(Collection, Filter, Update, Callback) {
+        this.Client.connect(err => {
             if(err) throw new Error(err);
-            emit('DiscordFramework:MongoDB:DatabaseUpdateMany', Collection, Query, Data, Callback);
-            this.client.db(this.Config.nameOfDatabase).collection(Collection).updateMany(Query, Data, Callback ? err => Callback(err) : undefined);
-            // this.client.close();
+            emit('DiscordFramework:MongoDB:DatabaseUpdateMany', Collection, Filter, Update, Callback);
+            this.Client.db(this.Config.nameOfDatabase).collection(Collection).updateMany(Filter, Update, Callback ? err => Callback(err) : undefined);
+            // this.Client.close();
         });
     }
 
     #Exports() {
         // JS Module Exports
-        module.exports.Client = this.client;
-        module.exports.InsertOne = this.InsertOne;
-        module.exports.InserMany = this.InserMany;
-        module.exports.FindOne = this.FindOne;
-        module.exports.Find = this.Find;
-        module.exports.DeleteOne = this.DeleteOne;
-        module.exports.DeleteMany = this.DeleteMany;
-        module.exports.UpdateOne = this.UpdateOne;
-        module.exports.UpdateMany = this.UpdateMany;
+        module.exports.Client = this.Client;
+
+        /**
+         * Inserts a single document into MongoDB. If documents passed in do not contain the _id field, one will be added to each of the documents missing it by the driver.
+         * @param {String} Collection The name of the collection
+         * @param {Object} Data The data/document
+         * @param {*} Callback An optional callback
+         */
+        module.exports.InsertOne = (Collection, Data, Callback) => this.InsertOne(Collection, Data, _Callback => _Callback ? Callback(_Callback) : undefined);
+
+        /**
+         * Inserts an array of documents into MongoDB. If documents passed in do not contain the _id field, one will be added to each of the documents missing it by the driver, mutating the document.
+         * @param {String} Collection The name of the collection
+         * @param {Array<Object>} Data The data/document
+         * @param {*} Callback An optional callback
+         */
+        module.exports.InserMany = (Collection, Data, Callback) => this.InserMany(Collection, Data, _Callback => _Callback ? Callback(_Callback) : undefined);
+
+        /**
+         * Fetches the first document that matches the filter
+         * @param {String} Collection The name of the collection
+         * @param {Object} Filter Query for find Operation
+         * @param {*} Callback An optional callback
+         */
+        module.exports.FindOne = (Collection, Filter, Callback) => this.FindOne(Collection, Filter, _Callback => _Callback ? Callback(_Callback) : undefined);
+
+        /**
+         * Fetches multiple documents that matches the filter
+         * @param {String} Collection The name of the collection
+         * @param {Object} Filter Query for find Operation
+         * @param {*} Callback An optional callback
+         */
+        module.exports.Find = (Collection, Filter, Callback) => this.Find(Collection, Filter, _Callback => _Callback ? Callback(_Callback) : undefined);
+
+        /**
+         * Delete a document from a collection
+         * @param {String} Collection The name of the collection
+         * @param {Object} Filter Query for find Operation
+         * @param {*} Callback An optional callback
+         */
+        module.exports.DeleteOne = (Collection, Filter, Callback) => this.DeleteOne(Collection, Filter, _Callback => _Callback ? Callback(_Callback) : undefined);
+
+        /**
+         * Delete multiple documents from a collection
+         * @param {String} Collection The name of the collection
+         * @param {Object} Filter Query for find Operation
+         * @param {*} Callback An optional callback
+         */
+        module.exports.DeleteMany = (Collection, Filter, Callback) => this.DeleteMany(Collection, Filter, _Callback => _Callback ? Callback(_Callback) : undefined);
+
+        /**
+         * Update a single document in a collection
+         * @param {String} Collection The name of the collection
+         * @param {Object} Filter Query for find Operation
+         * @param {Object} Update The update operations to be applied to the document
+         * @param {*} Callback An optional callback
+         */
+        module.exports.UpdateOne = (Collection, Filter, Data, Callback) => this.UpdateOne(Collection, Filter, Data, _Callback => _Callback ? Callback(_Callback) : undefined);
+
+        /**
+         * Update multiple documents in a collection
+         * @param {String} Collection The name of the collection
+         * @param {Object} Filter Query for find Operation
+         * @param {Object} Update The update operations to be applied to the document
+         * @param {*} Callback An optional callback
+         */
+        module.exports.UpdateMany = (Collection, Filter, Data, Callback) => this.UpdateMany(Collection, Filter, Data, _Callback => _Callback ? Callback(_Callback) : undefined);
 
         // CFX Exports
         emit('DiscordFramework:Export:Create', 'MongoDB', () => {
@@ -159,23 +267,23 @@ module.exports.Module = class MongoDB extends Modules {
                 InserMany: (Collection, Data, Callback) => {
                     return this.InserMany(Collection, Data, _Callback => _Callback ? Callback(_Callback) : undefined);
                 },
-                FindOne: (Collection, Query, Callback) => {
-                    return this.FindOne(Collection, Query, _Callback => _Callback ? Callback(_Callback) : undefined);
+                FindOne: (Collection, Filter, Callback) => {
+                    return this.FindOne(Collection, Filter, _Callback => _Callback ? Callback(_Callback) : undefined);
                 },
-                Find: (Collection, Query, Callback) => {
-                    return this.Find(Collection, Query, _Callback => _Callback ? Callback(_Callback) : undefined);
+                Find: (Collection, Filter, Callback) => {
+                    return this.Find(Collection, Filter, _Callback => _Callback ? Callback(_Callback) : undefined);
                 },
-                DeleteOne: (Collection, Query, Callback) => {
-                    return this.DeleteOne(Collection, Query, _Callback => _Callback ? Callback(_Callback) : undefined);
+                DeleteOne: (Collection, Filter, Callback) => {
+                    return this.DeleteOne(Collection, Filter, _Callback => _Callback ? Callback(_Callback) : undefined);
                 },
-                DeleteMany: (Collection, Query, Callback) => {
-                    return this.DeleteMany(Collection, Query, _Callback => _Callback ? Callback(_Callback) : undefined);
+                DeleteMany: (Collection, Filter, Callback) => {
+                    return this.DeleteMany(Collection, Filter, _Callback => _Callback ? Callback(_Callback) : undefined);
                 },
-                UpdateOne: (Collection, Query, Data, Callback) => {
-                    return this.UpdateOne(Collection, Query, Data, _Callback => _Callback ? Callback(_Callback) : undefined);
+                UpdateOne: (Collection, Filter, Data, Callback) => {
+                    return this.UpdateOne(Collection, Filter, Data, _Callback => _Callback ? Callback(_Callback) : undefined);
                 },
-                UpdateMany: (Collection, Query, Data, Callback) => {
-                    return this.UpdateMany(Collection, Query, Data, _Callback => _Callback ? Callback(_Callback) : undefined);
+                UpdateMany: (Collection, Filter, Data, Callback) => {
+                    return this.UpdateMany(Collection, Filter, Data, _Callback => _Callback ? Callback(_Callback) : undefined);
                 }
             };
         });
