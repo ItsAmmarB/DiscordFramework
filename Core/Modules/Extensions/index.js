@@ -26,6 +26,8 @@ module.exports.Module = class Exetnsions extends Modules {
         this.#Exports();
 
         on('DiscordFramework:Extensions:Extension:Loaded', () => {
+            console.log(Extensions);
+            console.log(this.ExtensionsFiles);
             if(Extensions.size !== this.ExtensionsFiles.length) return;
 
             const { AddPrint, Table } = require('../Console/index');

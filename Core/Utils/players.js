@@ -130,7 +130,7 @@ const Player = class Player {
 
     /**
      * Returns the player name
-     * @return {string}
+     * @return {string} Player Name
      */
     getName() {
         return this.Name;
@@ -138,7 +138,7 @@ const Player = class Player {
 
     /**
      * Returns the player server ID
-     * @return {string}
+     * @return {string} Server ID
      */
     getServerId() {
         return this.Server.ID;
@@ -146,7 +146,7 @@ const Player = class Player {
 
     /**
      * Returns the player discord ID if available
-     * @return {(string|undefined)}
+     * @return {(void|string)} Discord ID
      */
     getDiscordId() {
         return this.Discord.ID;
@@ -154,7 +154,7 @@ const Player = class Player {
 
     /**
      * Returns an array of the player identifiers
-     * @return {Array<string>}
+     * @return {string[]} player identifiers
      */
     getIdentifiers() {
         return this.Server.Identifiers;
@@ -162,7 +162,7 @@ const Player = class Player {
 
     /**
      * Returns the current player status
-     * @return {Array<string>}
+     * @return {string[]} current status of the player
      */
     getStatus() {
         return this.Server.Connections.Status;
@@ -178,7 +178,7 @@ const Player = class Player {
 
     /**
      * Returns the player connections timestamps
-     * @return {object}
+     * @return {<{Status: string, ConnectingAt: number, JoinedAt: number, DisconnectedAt: number, DisconnectReason: (void|string)}>} Connections details
      */
     getConnections() {
         return this.Server.Connections;
@@ -218,7 +218,7 @@ const Player = class Player {
 
     /**
      * Return the player's current ped model
-     * @return {any}
+     * @return {hash} the player's ped
      */
     getPed() {
         return GetPlayerPed(this.Server.ID);
@@ -234,7 +234,7 @@ const Player = class Player {
 
     /**
      * Returns whether the player is invincible or not
-     * @return {boolean}
+     * @return {boolean} whether the player is invincible or not
      */
     getInvincible() {
         return GetPlayerInvincible(this.Server.ID);
@@ -250,7 +250,7 @@ const Player = class Player {
 
     /**
      * Returns whether the player is evading the wanted level, meaning that the wanted level stars are blink.
-     * @return {boolean}
+     * @return {boolean} whether player is trying to evade the cops
      */
     getIsEvadingWantedLevel() {
         return IsPlayerEvadingWantedLevel(this.Server.ID);
@@ -258,7 +258,7 @@ const Player = class Player {
 
     /**
      * Returns the player's current wanted level
-     * @return {number}
+     * @return {number} wanted level
      */
     getWantedLevel() {
         return GetPlayerWantedLevel(this.Server.ID);
@@ -274,7 +274,7 @@ const Player = class Player {
 
     /**
      * Returns the player's current coordinates
-     * @return {Array<number>} [X, Y, Z]
+     * @return {number[]} coordinates [X, Y, Z]
      */
     getCoordinates() {
         return GetEntityCoords(this.getPed());
@@ -282,7 +282,7 @@ const Player = class Player {
 
     /**
      * Returns the player's current coordinates
-     * @param {Array<number>} coords [X, Y, Z]
+     * @param {number[]} coords [X, Y, Z]
      */
     setCoordinates(coords) {
         SetEntityCoords(this.getPed(), ...coords, false, false, false, false);
@@ -290,7 +290,7 @@ const Player = class Player {
 
     /**
      * Returns the player's current speed
-     * @return {number}
+     * @return {number} Velocity in GTA V units
      */
     getSpeed() {
         return GetEntitySpeed(this.getPed());
@@ -298,7 +298,7 @@ const Player = class Player {
 
     /**
      * Returns whether the player is frozen in place or not
-     * @return {boolean}
+     * @return {boolean} Whether ped is frozen or not
      */
     getFreezePosition() {
         return this.Cache.Frozen || null;
@@ -347,7 +347,7 @@ const Player = class Player {
 
     /**
      * Returns the vehicle if the player is in a vehicle; otherwise undefined
-     * @return {entitiy} Vehicle
+     * @return {hash} Vehicle
      */
     getVehicle() {
         const vehicle = GetVehiclePedIsIn(this.getPed(), false);
@@ -360,7 +360,7 @@ const Player = class Player {
 
     /**
      * Sets the player inside a specified vehicle
-     * @param {entitiy} Vehicle
+     * @param {hash} Vehicle
      */
     setVehicle(vehicle) {
         // set the player in an empty seat if available
@@ -386,7 +386,7 @@ const Player = class Player {
 
     /**
      * Returns whether the player can ragdoll or not
-     * @return {boolean}
+     * @return {boolean} Ragdoll state
      */
     getRagdoll() {
         return this.Cache.CanRagdoll || null;
@@ -403,7 +403,7 @@ const Player = class Player {
 
     /**
      * Returns the player's routing bucket
-     * @return {boolean}
+     * @return {boolean} Routing bucket ID
      */
     getRoutingBucket() {
         return GetPlayerRoutingBucket(this.Server.ID);
@@ -476,9 +476,10 @@ const Player = class Player {
 
     /**
      * Gets wether the player has certain permission
+     * @return {boolean} whether player is ace allowed or not
      */
     isAceAllowed(ace) {
-        return IsPlayerAceAllowed(this.Server.ID, ace);
+        return IsPlayerAceAllowed(this.Server.ID, ace) ? true : false;
     }
 
     static GetIdentifiers(PlayerId, forConstructor = false) {

@@ -59,9 +59,9 @@ module.exports.Module = class MongoDB extends Modules {
 
     /**
      * Inserts a single document into MongoDB. If documents passed in do not contain the _id field, one will be added to each of the documents missing it by the driver.
-     * @param {String} Collection The name of the collection
-     * @param {Object} Data The data/document
-     * @param {*} Callback An optional callback
+     * @param {string} Collection The name of the collection
+     * @param {object} Data The data/document
+     * @param {(void|any)} Callback An optional callback
      */
     InsertOne(Collection, Data, Callback) {
         this.Client.connect(err => {
@@ -74,9 +74,9 @@ module.exports.Module = class MongoDB extends Modules {
 
     /**
      * Inserts an array of documents into MongoDB. If documents passed in do not contain the _id field, one will be added to each of the documents missing it by the driver, mutating the document.
-     * @param {String} Collection The name of the collection
+     * @param {string} Collection The name of the collection
      * @param {Array<Object>} Data The data/document
-     * @param {*} Callback An optional callback
+     * @param {(void|any)} Callback An optional callback
      */
     InserMany(Collection, Data, Callback) {
         this.Client.connect(err => {
@@ -89,9 +89,9 @@ module.exports.Module = class MongoDB extends Modules {
 
     /**
      * Fetches the first document that matches the filter
-     * @param {String} Collection The name of the collection
-     * @param {Object} Filter Query for find Operation
-     * @param {*} Callback An optional callback
+     * @param {string} Collection The name of the collection
+     * @param {object} Filter Query for find Operation
+     * @param {(void|any)} Callback An optional callback
      */
     FindOne(Collection, Filter, Callback) {
         this.Client.connect(err => {
@@ -104,9 +104,9 @@ module.exports.Module = class MongoDB extends Modules {
 
     /**
      * Fetches multiple documents that matches the filter
-     * @param {String} Collection The name of the collection
-     * @param {Object} Filter Query for find Operation
-     * @param {*} Callback An optional callback
+     * @param {string} Collection The name of the collection
+     * @param {object} Filter Query for find Operation
+     * @param {(void|any)} Callback An optional callback
      */
     Find(Collection, Filter, Callback) {
         this.Client.connect(err => {
@@ -128,9 +128,9 @@ module.exports.Module = class MongoDB extends Modules {
 
     /**
      * Delete a document from a collection
-     * @param {String} Collection The name of the collection
-     * @param {Object} Filter Query for find Operation
-     * @param {*} Callback An optional callback
+     * @param {string} Collection The name of the collection
+     * @param {object} Filter Query for find Operation
+     * @param {(void|any)} Callback An optional callback
      */
     DeleteOne(Collection, Filter, Callback) {
         this.Client.connect(err => {
@@ -143,9 +143,9 @@ module.exports.Module = class MongoDB extends Modules {
 
     /**
      * Delete multiple documents from a collection
-     * @param {String} Collection The name of the collection
-     * @param {Object} Filter Query for find Operation
-     * @param {*} Callback An optional callback
+     * @param {string} Collection The name of the collection
+     * @param {object} Filter Query for find Operation
+     * @param {(void|any)} Callback An optional callback
      */
     DeleteMany(Collection, Filter, Callback) {
         this.Client.connect(err => {
@@ -158,10 +158,10 @@ module.exports.Module = class MongoDB extends Modules {
 
     /**
      * Update a single document in a collection
-     * @param {String} Collection The name of the collection
-     * @param {Object} Filter Query for find Operation
-     * @param {Object} Update The update operations to be applied to the document
-     * @param {*} Callback An optional callback
+     * @param {string} Collection The name of the collection
+     * @param {object} Filter Query for find Operation
+     * @param {object} Update The update operations to be applied to the document
+     * @param {(void|any)} Callback An optional callback
      */
     UpdateOne(Collection, Filter, Update, Callback) {
         this.Client.connect(err => {
@@ -174,10 +174,10 @@ module.exports.Module = class MongoDB extends Modules {
 
     /**
      * Update multiple documents in a collection
-     * @param {String} Collection The name of the collection
-     * @param {Object} Filter Query for find Operation
-     * @param {Object} Update The update operations to be applied to the document
-     * @param {*} Callback An optional callback
+     * @param {string} Collection The name of the collection
+     * @param {object} Filter Query for find Operation
+     * @param {object} Update The update operations to be applied to the document
+     * @param {(void|any)} Callback An optional callback
      */
     UpdateMany(Collection, Filter, Update, Callback) {
         this.Client.connect(err => {
@@ -194,67 +194,67 @@ module.exports.Module = class MongoDB extends Modules {
 
         /**
          * Inserts a single document into MongoDB. If documents passed in do not contain the _id field, one will be added to each of the documents missing it by the driver.
-         * @param {String} Collection The name of the collection
-         * @param {Object} Data The data/document
-         * @param {*} Callback An optional callback
+         * @param {string} Collection The name of the collection
+         * @param {object} Data The data/document
+         * @param {(void|any)} Callback An optional callback
          */
         module.exports.InsertOne = (Collection, Data, Callback) => this.InsertOne(Collection, Data, _Callback => _Callback ? Callback(_Callback) : undefined);
 
         /**
          * Inserts an array of documents into MongoDB. If documents passed in do not contain the _id field, one will be added to each of the documents missing it by the driver, mutating the document.
-         * @param {String} Collection The name of the collection
+         * @param {string} Collection The name of the collection
          * @param {Array<Object>} Data The data/document
-         * @param {*} Callback An optional callback
+         * @param {(void|any)} Callback An optional callback
          */
         module.exports.InserMany = (Collection, Data, Callback) => this.InserMany(Collection, Data, _Callback => _Callback ? Callback(_Callback) : undefined);
 
         /**
          * Fetches the first document that matches the filter
-         * @param {String} Collection The name of the collection
-         * @param {Object} Filter Query for find Operation
-         * @param {*} Callback An optional callback
+         * @param {string} Collection The name of the collection
+         * @param {object} Filter Query for find Operation
+         * @param {(void|any)} Callback An optional callback
          */
         module.exports.FindOne = (Collection, Filter, Callback) => this.FindOne(Collection, Filter, _Callback => _Callback ? Callback(_Callback) : undefined);
 
         /**
          * Fetches multiple documents that matches the filter
-         * @param {String} Collection The name of the collection
-         * @param {Object} Filter Query for find Operation
-         * @param {*} Callback An optional callback
+         * @param {string} Collection The name of the collection
+         * @param {object} Filter Query for find Operation
+         * @param {(void|any)} Callback An optional callback
          */
         module.exports.Find = (Collection, Filter, Callback) => this.Find(Collection, Filter, _Callback => _Callback ? Callback(_Callback) : undefined);
 
         /**
          * Delete a document from a collection
-         * @param {String} Collection The name of the collection
-         * @param {Object} Filter Query for find Operation
-         * @param {*} Callback An optional callback
+         * @param {string} Collection The name of the collection
+         * @param {object} Filter Query for find Operation
+         * @param {(void|any)} Callback An optional callback
          */
         module.exports.DeleteOne = (Collection, Filter, Callback) => this.DeleteOne(Collection, Filter, _Callback => _Callback ? Callback(_Callback) : undefined);
 
         /**
          * Delete multiple documents from a collection
-         * @param {String} Collection The name of the collection
-         * @param {Object} Filter Query for find Operation
-         * @param {*} Callback An optional callback
+         * @param {string} Collection The name of the collection
+         * @param {object} Filter Query for find Operation
+         * @param {(void|any)} Callback An optional callback
          */
         module.exports.DeleteMany = (Collection, Filter, Callback) => this.DeleteMany(Collection, Filter, _Callback => _Callback ? Callback(_Callback) : undefined);
 
         /**
          * Update a single document in a collection
-         * @param {String} Collection The name of the collection
-         * @param {Object} Filter Query for find Operation
-         * @param {Object} Update The update operations to be applied to the document
-         * @param {*} Callback An optional callback
+         * @param {string} Collection The name of the collection
+         * @param {object} Filter Query for find Operation
+         * @param {object} Update The update operations to be applied to the document
+         * @param {(void|any)} Callback An optional callback
          */
         module.exports.UpdateOne = (Collection, Filter, Data, Callback) => this.UpdateOne(Collection, Filter, Data, _Callback => _Callback ? Callback(_Callback) : undefined);
 
         /**
          * Update multiple documents in a collection
-         * @param {String} Collection The name of the collection
-         * @param {Object} Filter Query for find Operation
-         * @param {Object} Update The update operations to be applied to the document
-         * @param {*} Callback An optional callback
+         * @param {string} Collection The name of the collection
+         * @param {object} Filter Query for find Operation
+         * @param {object} Update The update operations to be applied to the document
+         * @param {(void|any)} Callback An optional callback
          */
         module.exports.UpdateMany = (Collection, Filter, Data, Callback) => this.UpdateMany(Collection, Filter, Data, _Callback => _Callback ? Callback(_Callback) : undefined);
 
