@@ -1,3 +1,5 @@
+require(GetResourcePath(GetCurrentResourceName()) + '/Core/Utils/prototypes');
+
 setTimeout(() => {
     require(GetResourcePath(GetCurrentResourceName()) + '/Core/index');
 }, 500);

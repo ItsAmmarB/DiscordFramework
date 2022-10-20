@@ -26,9 +26,7 @@ module.exports.Module = class Exetnsions extends Modules {
         this.#Exports();
 
         on('DiscordFramework:Extensions:Extension:Loaded', () => {
-            console.log(Extensions);
-            console.log(this.ExtensionsFiles);
-            if(Extensions.size !== this.ExtensionsFiles.length) return;
+            if(Extensions.size !== this.ExtensionsFiles.filter(e => e.files.length > 0).length) return;
 
             const { AddPrint, Table } = require('../Console/index');
 
@@ -38,14 +36,13 @@ module.exports.Module = class Exetnsions extends Modules {
     ^3Extensions: \n${Table(Extensions.toArray().map((extension, index) => {
         i === 1 ? i++ : i--;
         const color = (i === 1 ? '^4' : '^9');
-        const returnal = {};
-        returnal['^3Index'] = (color) + (index + 1);
-        returnal['^3Name'] = (color) + extension.name;
-        // returnal['^3Description'] = (color) + (extension.description ?? 'None');
-        returnal['^3Status'] = extension.status === 'Template' ? '^6' + extension.status : extension.status !== 'Enabled' ? '^8' + extension.status : '^2' + extension.status;
-        returnal['^3Author'] = (color) + (extension.author ?? 'Unknown');
-        returnal['^3Version'] = (color) + (extension.version ?? 'Unknown');
-        return (returnal);
+        const result = {};
+        result['^3Index'] = (extension.status === 'Template' ? '^6' : color) + (index + 1);
+        result['^3Name'] = (extension.status === 'Template' ? '^6' : color) + extension.name;
+        result['^3Status'] = extension.status === 'Template' ? '^6' + extension.status : extension.status !== 'Enabled' ? '^8' + extension.status : '^2' + extension.status;
+        result['^3Author'] = (extension.status === 'Template' ? '^6' : color) + (extension.author ?? 'Unknown');
+        result['^3Version'] = (extension.status === 'Template' ? '^6' : color) + (extension.version ?? 'Unknown');
+        return result;
     }))}
     `);
 

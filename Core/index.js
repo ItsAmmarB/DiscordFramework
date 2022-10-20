@@ -110,7 +110,6 @@ const Core = () => {
 
         await AwaitCore();
 
-
         let player = Players.get(PlayerId);
         if(!player) {
             player = new Player(PlayerId);

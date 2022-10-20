@@ -50,6 +50,7 @@ module.exports.Module = class Discord extends Modules {
     Run() {
         this.Client.login(this.#Token);
         this.Client.on('ready', async () => {
+
             this.Ready();
             this.#Exports();
 
@@ -58,7 +59,8 @@ module.exports.Module = class Discord extends Modules {
             const { AddPrint, Table } = require('../Console/index');
             let i = 1;
             AddPrint('Discord', `
-    ^3Discord API Client: ^4${this.Client.user.tag + ' ^6(' + this.Client.user.id + ')'}
+    ^3Client Details: ^4${this.Client.user.tag + ' ^6(' + this.Client.user.id + ')'}
+    ^3Client Invite: ^4${this.Client.generateInvite({ scopes: ['bot'] })}        
     ^3Discord Users: ^4${this.Client.users.cache.size + (this.Client.users.cache.size === 1 ? ' User' : ' Users')}
     ^3Discord Guilds: \n${Table(this.Client.guilds.cache.map(guild => {i === 1 ? i++ : i--; return ({ '^3ID': (i === 1 ? '^4' : '^9') + guild.id, '^3Name': (i === 1 ? '^4' : '^9') + guild.name, '^3Members Count': (i === 1 ? '^4' : '^9') + guild.members.cache.size + (guild.members.cache.size === 1 ? ' Member' : ' Members'), '^3Roles Count': (i === 1 ? '^4' : '^9') + guild.roles.cache.size + (guild.roles.cache.size === 1 ? ' Role' : ' Roles') });}))}
             `);

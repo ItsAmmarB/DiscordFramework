@@ -50,7 +50,7 @@ const Players = class Players extends Set {
 
     /**
      * Returns the Players Collection as an array
-     * @returns {(Array<object>)} Array of players objects
+     * @returns {object[]} Array of players objects
      */
     toArray() {
         return Array.from(this.values(), element => element);
@@ -81,7 +81,7 @@ const Players = class Players extends Set {
  * @param {number} PlayerId The player server ID
  */
 const Player = class Player {
-    constructor(PlayerId, resourceRestarted = false) {
+    constructor(PlayerId) {
         this.Name = GetPlayerName(PlayerId);
         this.Server = {
             ID: PlayerId,
@@ -124,7 +124,7 @@ const Player = class Player {
             this.#DiscordGuildsUpdate(Discord);
         }
 
-        this.#Events(resourceRestarted);
+        this.#Events();
 
     }
 
