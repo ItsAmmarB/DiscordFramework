@@ -17,7 +17,7 @@ module.exports.Module = class Discord extends Modules {
      * FiveM server, Discord server, or anything in any way, shape, or form.
      *
      * you could make an environment variable with the "Discord_API" name, or just change it to your token;
-     * be cautious
+     * again; be smart and be cautious
      */
     #Token = process.env['Discord_API'];
 
@@ -28,18 +28,7 @@ module.exports.Module = class Discord extends Modules {
             toggle: true,
             version: '1.0',
             author: 'ItsAmmarB',
-            config: {
-                /**
-                     * Change MainGuild to your main/primary discord server
-                     * in the functions below if no guild ID is provided
-                     * the function will look for that MainGuild
-                     * and if not present an error will be throw
-                 */
-                MainGuild: {
-                    ID: '354062777737936896',
-                    Name: 'JusticeCommunityRP'
-                }
-            }
+            config: require('../../config').Discord
         });
 
         const { Client } = require('discord.js');
