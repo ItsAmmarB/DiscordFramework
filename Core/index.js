@@ -14,6 +14,7 @@ const Core = () => {
 // Globalizing DebugMode for debugging functions
     global.DebugMode = String(GetResourceMetadata(GetCurrentResourceName(), 'debug_mode', 0)).toLowerCase() === 'true' ? true : false;
 
+    const Config = require('./config');
 
     // --------------------------------------
     //               MODULES
@@ -54,55 +55,71 @@ const Core = () => {
     //       PLAYERS/DISCORD/MONGODB
     // --------------------------------------
 
-    const { Players: PlayersSet, Player } = require('./Utils/players');
-    const Players = new PlayersSet();
 
-    const CountPlaytime = () => setInterval(async () => {
-        for (const player of Players) {
-            await Delay(50);
-            MongoDB.UpdateOne('Players', { 'details.discordId': player.getDiscordId() }, {
-                $inc: { 'details.playtime': 1 },
-                $set: { 'details.lastSeenTimestmap': Date.now() }
-            }, err => {
-                if (err) new Error(err);
-            });
-        }
+    const { Players, Player } = require('./players');
+
+    const CountPlaytime = () => setInterval(() => {
+        MongoDB.UpdateOne('Players', { '_id': { $in: Players.toArray().filter(p => !p.Server.Connections.DisconnectedAt).map(p => p.PUID) } }, {
+            $inc: { 'details.playtime': 1 },
+            $set: { 'details.lastSeenTimestmap': Date.now() }
+        });
     }, 60000);
+
+    setTimeout(() => {
+        MongoDB.Find('Players', {}, console.log);
+    }, 3000);
 
     // Triggered when the player's connection request is received by the server
     on('playerConnecting', async (Name, SetKickReason, Deferrals) => {
-        const PlayerId = global.source;
-
-        console.log(`^9 ===> ${GetPlayerName(PlayerId)} is conencting^0`);
 
         Deferrals.defer();
 
         if (!Status) return Deferrals.done('[DiscordFramework] Core is not ready yet, please try again in a few seconds!');
 
         // Fetching identifiers
-        Deferrals.update('Checking identifiers...');
+        Deferrals.update('fetching information...');
 
-        const Identifiers = Player.GetIdentifiers(PlayerId);
+        const PlayerId = global.source;
 
-        // Check if discord id is present within the identifiers if not then don't allow connection
-        if (!Identifiers.discord) return Deferrals.done('[DiscordFramework] Discord ID could be detected!');
+        const player = new Player(PlayerId)
+            .setStatus('Connecting')
+            .setConnectingAt(Date.now());
 
-        Deferrals.update('Checking community membership...');
-        const Member = await Discord.GetMember(Identifiers.discord);
-        if (!Member) Deferrals.update('You are not a member of the community!');
+        console.log(`^9 ===> ^0${player.getServerId()} ^9| ^0${player.getName()} ^9is conencting^0`);
+
+        if (Config.Players.RequireDiscord.Enabled && !player.Discord.ID) return Deferrals.done(Config.Players.RequireDiscord.Message);
+
+        if(Config.Players.RequireMember.Enabled) {
+            Deferrals.update('Checking community membership...');
+
+            const Member = await Discord.GetMember(player.Discord.ID, Config.Discord.MainGuild.ID);
+            if (!Member) Deferrals.update(Config.Players.RequireMember.Message);
+        }
 
         emit('DiscordFramework:Player:Connecting', PlayerId, Deferrals);
         await Delay(3000); // yes; I know, waiting 3 seconds to start connecting is just absurd but it should be enough time for extensions to check and do stuff
 
         Deferrals.done();
+
     });
 
     // Triggered when the player's connected request is received by the server
-    on('playerJoining', () => {
-        const player = new Player(global.source);
-        Players.add(player);
-        console.log(`^4 ===> ${player.getName()} is joining^0`);
+    on('playerJoining', (TempID) => {
+        const player = new Player(TempID)
+            .setServerId(global.source)
+            .setStatus('Joining')
+            .setConnectedAt(Date.now());
+
+        console.log(`^4 ===> ^0${player.getServerId()} ^4| ^0${player.getName()} ^4is joining^0`);
         emit('DiscordFramework:Player:Joining', player);
+    });
+
+    RegisterCommand('players', () => {
+        console.log(Players);
+    });
+
+    RegisterCommand('player', (source, args) => {
+        console.log(Player(args[0]));
     });
 
     // Triggered when the player is fully connected and is about to spawn
@@ -110,96 +127,30 @@ const Core = () => {
 
         await AwaitCore();
 
-        let player = Players.get(PlayerId);
-        if(!player) {
+        let player = new Player(PlayerId)
+            .setStatus('Joined')
+            .setJoinedAt(Date.now());
+
+        while(!player.PUID) {
             player = new Player(PlayerId);
-            player.setStatus('Joined');
-            player.setConnectingAt(Date.now());
-            player.setConnectedAt(Date.now());
-            Players.add(player);
+            await Delay(100);
         }
-
-        // Database
-        MongoDB.FindOne('Players', { 'details.discordId': player.getDiscordId() }, async _Player => {
-            if (_Player) {
-            // Match current player information with database information
-                const Query = {};
-
-                // Update serverId and lastSeenTimestamp
-                Query.$set = {
-                    'details.serverId': PlayerId,
-                    'details.lastSeenTimestamp': Date.now()
-                };
-
-                // Check for new Identifiers and update
-                const NewIdentifiers = player.getIdentifiers().filter(identifier => !_Player.details.identifiers.includes(identifier));
-                if (NewIdentifiers.length > 0) {
-                    if (!Query.$push) Query.$push = {};
-                    Query.$push['details.identifiers'] = { $each: NewIdentifiers };
-                }
-
-                // Check for a new name change and update
-                const NewName = player.getName();
-                if (NewName !== _Player.details.names[0].name) {
-                    if (!Query.$push) Query.$push = {};
-                    Query.$push['details.names'] = {
-                        $each: [{ name: NewName, timestamp: Date.now() }],
-                        $position: 0
-                    };
-                }
-
-                // Check Location
-                const fetch = require('node-fetch');
-
-                let GeoIP = await fetch('http://ip-api.com/json/' + player.getIdentifiers().find(iden => iden.includes('ip:')).split(':')[1]);
-                GeoIP = await GeoIP.json();
-                if (GeoIP.status.toLowerCase() === 'success') {
-                    Query.$set['details.location'] = `${GeoIP.country}, ${GeoIP.regionName}, ${GeoIP.city}`;
-                }
-
-                MongoDB.UpdateOne('Players', { 'details.discordId': player.getDiscordId() }, Query, err => {
-                    if (err) new Error(err);
-                });
-            } else {
-            // Database player object
-                const NewPlayer = {
-                    details: {
-                        discordId: player.getDiscordId(),
-                        serverId: player.getServerId(),
-                        playtime: 0,
-                        lastSeenTimestamp: Date.now(),
-                        identifiers: player.getIdentifiers(),
-                        names: [{ name: player.getName(), timestamp: Date.now() }],
-                        location: null
-                    }
-                };
-
-                // Get the player's country AKA. GeoIP
-                const fetch = require('node-fetch');
-
-                let GeoIP = await fetch('http://ip-api.com/json/' + player.getIdentifiers().find(iden => iden.includes('ip:')).split(':')[1]);
-                GeoIP = await GeoIP.json();
-                if (GeoIP.status.toLowerCase() === 'success') {
-                    NewPlayer.details.location = `${GeoIP.country}, ${GeoIP.regionName}`;
-                } else {
-                    NewPlayer.details.location = 'Unknown';
-                }
-
-                MongoDB.InsertOne('Players', NewPlayer);
-            }
-        });
 
         await Delay(1000);
 
         emit('DiscordFramework:Player:Joined', player);
-        console.log(`^2 ===> ${GetPlayerName(PlayerId)} joined^0`);
+        console.log(`^2 ===> ^0${player.getServerId()} ^2| ^0${player.getName()} ^2joined^0`);
     });
 
     // Triggered when a player leaves the server for whatever reason
     on('playerDropped', Reason => {
-        const player = Players.get(global.source);
+        const player = new Player(global.source)
+            .setStatus('Disconnected')
+            .setDisconnectedAt(Date.now())
+            .setDisconnectReason(Reason);
+
         emit('DiscordFramework:Player:Disconnected', player, Reason);
-        console.log(`^1 ===> ${player.Name} ${Reason === 'Exiting' ? 'left' : Reason}^0`);
+        console.log(`^1 ===> ^0${player.getServerId()} ^1| ^0${player.getName()} ^1 ${Reason === 'Exiting' ? 'left' : Reason}^0`);
     });
 
     // --------------------------------------
@@ -226,11 +177,6 @@ const Core = () => {
          * @return {boolean} True of False
          */
         Status: Status,
-        /**
-         * Returns all the players and their details
-         * @return {Set<PlayersSet>} A Set() of players
-         */
-        Players: Players,
         /**
          * A pass-through from native JS export to CFX.re exports().
          * This was implemented because requiring a server side file will cause all CFX.re exports() to be nullified/undefined
