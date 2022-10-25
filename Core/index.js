@@ -65,10 +65,6 @@ const Core = () => {
         });
     }, 60000);
 
-    setTimeout(() => {
-        MongoDB.Find('Players', {}, console.log);
-    }, 3000);
-
     // Triggered when the player's connection request is received by the server
     on('playerConnecting', async (Name, SetKickReason, Deferrals) => {
 
@@ -93,7 +89,7 @@ const Core = () => {
             Deferrals.update('Checking community membership...');
 
             const Member = await Discord.GetMember(player.Discord.ID, Config.Discord.MainGuild.ID);
-            if (!Member) Deferrals.update(Config.Players.RequireMember.Message);
+            if (!Member) return Deferrals.done(Config.Players.RequireMember.Message);
         }
 
         emit('DiscordFramework:Player:Connecting', PlayerId, Deferrals);

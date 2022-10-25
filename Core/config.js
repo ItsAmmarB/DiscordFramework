@@ -34,9 +34,8 @@ module.exports = {
         },
         RequireMember: {
             Enabled: true, // Whether the player is required to be in the discord server provided in line 21 { Discord.MainGuild }
-            Message: ` 
-            [DiscordFramework] You are not a member of the community!
-            Join today! discord.gg/invite
+            Message: `[DiscordFramework] You are not a member of the community!
+            Join us today! discord.gg/invite
             ` // The connection rejection message to be shown to the player
         }
     }
