@@ -122,7 +122,7 @@ module.exports = {
                 this.Config = {};
             }
 
-            this.status = null;
+            this.Status = null;
             this.#Initialize();
 
         }
@@ -158,61 +158,57 @@ module.exports = {
          */
         async #Register(status) {
 
-            this.status = status;
-
-            const extension = {
-                Name: this.Name,
-                Description: this.Description,
-                Enabled: this.Enabled,
-                Dependencies: this.Dependencies,
-                Status: this.status,
-                Version: this.Version,
-                Author: this.Author,
-                Config: this.Config
-            };
+            this.Status = status;
 
             const Extensions = require('./index').Extensions;
 
             if(this.Dependencies.length > 0) {
 
                 let dependencies = this.#CheckDependencies(Extensions);
-
-                if(dependencies.filter(d => d.status !== 'Enabled').length > 0) {
+                if(dependencies.filter(d => d.Status !== 'Enabled').length > 0) {
 
                     let counter = 0;
-                    while(dependencies.filter(d => d.status !== 'Enabled').length > 0) {
+                    while(dependencies.filter(d => d.Status !== 'Enabled').length > 0) {
                         dependencies = this.#CheckDependencies(Extensions);
 
-                        if(dependencies.find(d => d.status === 'Template')) {
-                            dependencies = dependencies.filter(d => d.status !== 'Template');
+                        if(dependencies.find(d => d.Status === 'Template')) {
+                            dependencies = dependencies.filter(d => d.Status !== 'Template');
                             console.warn(`Template cannot be a dependency for an extension; Dependency was ignored in the "${this.Name}" extension`);
+                        }
+                        if(dependencies.find(d => d.Status === 'Disabled')) {
+                            emit('DiscordFramework:Extension:Registered', this);
+                            this.Status = 'Dependency Disabled';
+                            break;
                         }
                         if(dependencies.find(d => d.Name === this.Name)) {
                             dependencies = dependencies.filter(d => d.Name !== this.Name);
                             console.warn(`An extension cannot be a dependency for itself; Dependency was ignored in the "${this.Name}" extension`);
                         }
-                        // if(dependencies.find(d => d.status !== 'Enabled')) {
-                        //     emit('DiscordFramework:Extension:Registered', this);
-                        //     this.status = dependencies.status;
-                        //     Extensions.add(extension);
-                        // }
-                        console.log(this.Name);
 
                         if(counter === 20) {
-                            this.status = dependencies[0].status;
-                            Extensions.add(extension);
+                            this.Status = dependencies[0].Status;
+                            break;
                         }
                         await this.Delay(100);
                         counter++;
                     }
 
-                } else {
-                    Extensions.add(extension);
                 }
 
-            } else {
-                Extensions.add(extension);
             }
+
+            const extension = {
+                Name: this.Name,
+                Description: this.Description,
+                Enabled: this.Enabled,
+                Dependencies: this.Dependencies,
+                Status: this.Status,
+                Version: this.Version,
+                Author: this.Author,
+                Config: this.Config
+            };
+
+            Extensions.add(extension);
 
             emit('DiscordFramework:Extensions:Extension:Loaded', extension);
         }
@@ -229,15 +225,15 @@ module.exports = {
             this.Dependencies.map(Dependency => {
                 const dependency = Extensions.get(Dependency);
                 if (!dependency) {
-                    returnable.push({ name: Dependency, status: 'Dependency Missing' });
-                } else if (dependency.status === 'Disabled') {
-                    returnable.push({ name: Dependency, status: 'Dependency Disabled' });
-                } else if (dependency.status === 'Error') {
-                    returnable.push({ name: Dependency, status: 'Dependency Error' });
-                } else if (dependency.status === 'Template') {
-                    returnable.push({ name: Dependency, status: 'Template' });
+                    returnable.push({ Name: Dependency, Status: 'Dependency Missing' });
+                } else if (dependency.Status === 'Disabled') {
+                    returnable.push({ Name: Dependency, Status: 'Dependency Disabled' });
+                } else if (dependency.Status === 'Error') {
+                    returnable.push({ Name: Dependency, Status: 'Dependency Error' });
+                } else if (dependency.Status === 'Template') {
+                    returnable.push({ Name: Dependency, Status: 'Template' });
                 } else {
-                    returnable.push({ name: Dependency, status: 'Enabled' });
+                    returnable.push({ Name: Dependency, Status: 'Enabled' });
                 }
             });
             return returnable;
@@ -277,7 +273,7 @@ module.exports = {
                 name: this.Name,
                 description: this.Description,
                 toggle: this.Enabled,
-                status: this.status,
+                status: this.Status,
                 dependencies: this.Dependencies,
                 author: this.Author,
                 version: this.Version
