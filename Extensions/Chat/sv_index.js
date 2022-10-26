@@ -31,7 +31,8 @@ on('DiscordFramework:Extensions:Extension:Load', () => {
 
                     CancelEvent();
 
-                    const Player = require(GetResourcePath(GetCurrentResourceName()) + '/Core/index').Players.get(source);
+                    const Players = require(GetResourcePath(GetCurrentResourceName()) + '/Core/players');
+                    const Player = new Players.Player(source);
                     const PlayerRoles = [].concat.apply([], Player.Discord.Guilds.map(Guild => Guild.Roles)) ;
 
                     let RoleName = Config.DefaultRole;
