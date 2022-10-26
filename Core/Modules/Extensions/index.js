@@ -38,7 +38,7 @@ module.exports.Module = class Exetnsions extends Modules {
 
             let i = 1;
             AddPrint('Extensions', `
-    ^3Extensions Count: ^4${SortedExtensions.size}
+    ^3Extensions Count: ^4${SortedExtensions.length}
     ^3Extensions: \n${Table(SortedExtensions.map((extension, index) => {
         i === 1 ? i++ : i--;
         const color = (i === 1 ? '^4' : '^9');
