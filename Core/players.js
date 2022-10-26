@@ -201,7 +201,6 @@ const Player = class Player {
                     ID: guild.id,
                     Name: guild.name,
                     Administrator: Member.permissions.has('ADMINISTRATOR'),
-                    Permissions: Member.permissions.toArray(),
                     Roles: Member.roles.cache.map(role => ({ ID: role.id, Name: role.name }))
                 };
             });
@@ -622,18 +621,16 @@ const Player = class Player {
         Discord.Client.on('guildMemberUpdate', (oldM, newM) => {
             if(this.Discord.ID && newM.id === this.Discord.ID && !this.Server.Connections.DisconnectedAt) {
                 console.log(`(${this.getServerId()}) ${this.getName()}'s roles were updated!`);
-                if(this.Discord.Guilds.find(guild => guild.id === newM.guild.id)) {
-                    const prevGuild = this.Discord.Guilds.find(guild => guild.id === newM.guild.id);
-                    prevGuild.Name = newM.guild.name;
-                    prevGuild.Administrator = newM.permissions.has('ADMINISTRATOR');
-                    prevGuild.Permissions = newM.permissions.toArray();
-                    prevGuild.Roles = newM.roles.cache.map(role => ({ ID: role.id, Name: role.name }));
+                const Guild = this.Discord.Guilds.find(guild => guild.ID === newM.guild.id);
+                if(Guild) {
+                    Guild.Name = newM.guild.name;
+                    Guild.Administrator = newM.permissions.has('ADMINISTRATOR');
+                    Guild.Roles = newM.roles.cache.map(role => ({ ID: role.id, Name: role.name }));
                 } else {
                     this.Discord.Guilds.push({
                         ID: newM.guild.id,
                         Name: newM.guild.name,
                         Administrator: newM.permissions.has('ADMINISTRATOR'),
-                        Permissions: newM.permissions.toArray(),
                         Roles: newM.roles.cache.map(role => ({ ID: role.id, Name: role.name }))
                     });
                 }
