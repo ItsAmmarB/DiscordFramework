@@ -37,11 +37,11 @@ module.exports.Module = class Exetnsions extends Modules {
         i === 1 ? i++ : i--;
         const color = (i === 1 ? '^4' : '^9');
         const result = {};
-        result['^3Index'] = (extension.status === 'Template' ? '^6' : color) + (index + 1);
-        result['^3Name'] = (extension.status === 'Template' ? '^6' : color) + extension.name;
-        result['^3Status'] = extension.status === 'Template' ? '^6' + extension.status : extension.status !== 'Enabled' ? '^8' + extension.status : '^2' + extension.status;
-        result['^3Author'] = (extension.status === 'Template' ? '^6' : color) + (extension.author ?? 'Unknown');
-        result['^3Version'] = (extension.status === 'Template' ? '^6' : color) + (extension.version ?? 'Unknown');
+        result['^3Index'] = (extension.Status === 'Template' ? '^6' : color) + (index + 1);
+        result['^3Name'] = (extension.Status === 'Template' ? '^6' : color) + extension.Name;
+        result['^3Status'] = extension.Status === 'Template' ? '^6' + extension.Status : extension.Status !== 'Enabled' ? '^8' + extension.Status : '^2' + extension.Status;
+        result['^3Author'] = (extension.Status === 'Template' ? '^6' : color) + (extension.Author ?? 'Unknown');
+        result['^3Version'] = (extension.Status === 'Template' ? '^6' : color) + (extension.Version ?? 'Unknown');
         return result;
     }))}
     `);

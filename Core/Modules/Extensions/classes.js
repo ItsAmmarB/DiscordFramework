@@ -65,61 +65,61 @@ module.exports = {
             if(typeof extension !== 'object') throw new Error(`Class constructor param must be an object, "${typeof extension}" was provided!`);
 
             // Check Extension name
-            if (!extension.name) throw new Error('REG_EXTENSION: attempted to register a nameless extension');
-            if (typeof extension.name !== 'string') {
+            if (!extension.Name) throw new Error('REG_EXTENSION: attempted to register a nameless extension');
+            if (typeof extension.Name !== 'string') {
                 throw new Error('REG_EXTENSION: Extension "Name" must be typeof String');
             }
             /**
              * name The name of the extension
              */
-            this.name = extension.name;
+            this.Name = extension.Name;
 
             // Check Extension description if available
-            if (extension.description) {
-                if (typeof extension.description !== 'string') {
+            if (extension.Description) {
+                if (typeof extension.Description !== 'string') {
                     this.#Register('Error');
                     throw new Error('REG_EXTENSION: Extension "Description" must be typeof string');
                 }
-                this.description = extension.description;
+                this.Description = extension.Description;
             } else {
-                this.description = 'anonymous';
+                this.Description = 'anonymous';
             }
 
             // Check Extension toggle
-            if (!extension.toggle && typeof extension.toggle === 'undefined') throw new Error('REG_EXTENSION: attempted to register an extension without a toggle "Enabled"');
-            if (typeof extension.toggle !== 'boolean') throw new Error('REG_EXTENSION: Extension "Toggle" must be typeof Boolean');
-            this.toggle = extension.toggle;
+            if (!extension.Enabled && typeof extension.Enabled === 'undefined') throw new Error('REG_EXTENSION: attempted to register an extension without a toggle "Enabled"');
+            if (typeof extension.Enabled !== 'boolean') throw new Error('REG_EXTENSION: Extension "Toggle" must be typeof Boolean');
+            this.Enabled = extension.Enabled;
 
             // Check Extension dependencies if available
-            if (extension.dependencies) {
-                if (typeof extension.dependencies !== 'object' || !Array.isArray(extension.dependencies)) throw new Error('REG_EXTENSION: Extension "Dependencies" must be typeof Array');
-                this.dependencies = extension.dependencies;
+            if (extension.Dependencies) {
+                if (typeof extension.Dependencies !== 'object' || !Array.isArray(extension.Dependencies)) throw new Error('REG_EXTENSION: Extension "Dependencies" must be typeof Array');
+                this.Dependencies = extension.Dependencies;
             } else {
-                this.dependencies = [];
+                this.Dependencies = [];
             }
 
             // Check Extension author if available
-            if (extension.author) {
-                if (typeof extension.author !== 'string') throw new Error('REG_EXTENSION: Extension "Author" must be typeof string');
-                this.author = extension.author;
+            if (extension.Author) {
+                if (typeof extension.Author !== 'string') throw new Error('REG_EXTENSION: Extension "Author" must be typeof string');
+                this.Author = extension.Author;
             } else {
-                this.author = 'unknown';
+                this.Author = 'unknown';
             }
 
             // Check Extension version if available
-            if (extension.version) {
-                if (typeof extension.version !== 'string') throw new Error('REG_EXTENSION: Extension "Version" must be typeof string');
-                this.version = extension.version;
+            if (extension.Version) {
+                if (typeof extension.Version !== 'string') throw new Error('REG_EXTENSION: Extension "Version" must be typeof string');
+                this.Version = extension.Version;
             } else {
-                this.version = 'unknown';
+                this.Version = 'unknown';
             }
 
             // Check Extension config if available
-            if (extension.config) {
-                if (typeof extension.config !== 'object') throw new Error('REG_EXTENSION: Extension "Config" must be typeof object');
-                this.config = extension.config;
+            if (extension.Config) {
+                if (typeof extension.Config !== 'object') throw new Error('REG_EXTENSION: Extension "Config" must be typeof object');
+                this.Config = extension.Config;
             } else {
-                this.config = {};
+                this.Config = {};
             }
 
             this.status = null;
@@ -134,12 +134,12 @@ module.exports = {
             try {
 
                 // Check if the extension is a mere template and #register it as 'Template'
-                if (this.name === 'Template') {
+                if (this.Name === 'Template') {
                     return this.#Register('Template');
                 }
 
                 // Check if the extension is supposed to be toggle and if not then #register it as disabled
-                if (!this.toggle) {
+                if (!this.Enabled) {
                     return this.#Register('Disabled');
                 }
 
@@ -156,39 +156,60 @@ module.exports = {
          * The registration step of making an extensions
          * @param {string} status The status to register the extension as
          */
-        #Register(status) {
+        async #Register(status) {
 
             this.status = status;
 
             const extension = {
-                name: this.name,
-                description: this.description,
-                toggle: this.toggle,
-                dependencies: this.dependencies,
-                status: this.status,
-                version: this.version,
-                author: this.author,
-                config: this.config
+                Name: this.Name,
+                Description: this.Description,
+                Enabled: this.Enabled,
+                Dependencies: this.Dependencies,
+                Status: this.status,
+                Version: this.Version,
+                Author: this.Author,
+                Config: this.Config
             };
 
             const Extensions = require('./index').Extensions;
 
-            if(this.dependencies.length > 0) {
+            if(this.Dependencies.length > 0) {
 
                 let dependencies = this.#CheckDependencies(Extensions);
-                if(dependencies.find(d => d.status === 'Template')) {
-                    dependencies = dependencies.filter(d => d.status !== 'Template');
-                    console.warn(`Template cannot be a dependency for an extension; Dependency was ignored in the "${this.name}" extension`);
-                }
-                if(dependencies.find(d => d.name === this.name)) {
-                    dependencies = dependencies.filter(d => d.name !== this.name);
-                    console.warn(`An extension cannot be a dependency for itself; Dependency was ignored in the "${this.name}" extension`);
-                }
-                if(dependencies.find(d => d.status !== 'Enabled')) {
-                    emit('DiscordFramework:Extension:Registered', this);
-                    this.status = dependencies.status;
+
+                if(dependencies.filter(d => d.status !== 'Enabled').length > 0) {
+
+                    let counter = 0;
+                    while(dependencies.filter(d => d.status !== 'Enabled').length > 0) {
+                        dependencies = this.#CheckDependencies(Extensions);
+
+                        if(dependencies.find(d => d.status === 'Template')) {
+                            dependencies = dependencies.filter(d => d.status !== 'Template');
+                            console.warn(`Template cannot be a dependency for an extension; Dependency was ignored in the "${this.Name}" extension`);
+                        }
+                        if(dependencies.find(d => d.Name === this.Name)) {
+                            dependencies = dependencies.filter(d => d.Name !== this.Name);
+                            console.warn(`An extension cannot be a dependency for itself; Dependency was ignored in the "${this.Name}" extension`);
+                        }
+                        // if(dependencies.find(d => d.status !== 'Enabled')) {
+                        //     emit('DiscordFramework:Extension:Registered', this);
+                        //     this.status = dependencies.status;
+                        //     Extensions.add(extension);
+                        // }
+                        console.log(this.Name);
+
+                        if(counter === 20) {
+                            this.status = dependencies[0].status;
+                            Extensions.add(extension);
+                        }
+                        await this.Delay(100);
+                        counter++;
+                    }
+
+                } else {
                     Extensions.add(extension);
                 }
+
             } else {
                 Extensions.add(extension);
             }
@@ -205,7 +226,7 @@ module.exports = {
          */
         #CheckDependencies(Extensions) {
             const returnable = [];
-            this.dependencies.map(Dependency => {
+            this.Dependencies.map(Dependency => {
                 const dependency = Extensions.get(Dependency);
                 if (!dependency) {
                     returnable.push({ name: Dependency, status: 'Dependency Missing' });
@@ -228,12 +249,12 @@ module.exports = {
          * @example this.Run(true) // this will return in an error "Extension does not have a Run() method!"
          */
         Run(Errorable = false) {
-            if(Errorable) console.error(new Error(`${this.name} Extension doesn't have a Run() method.`));
-            if(global.DebugMode) {console.debug(`${this.name} Extension has an empty Run() method.`);} // this isn't an error or a warning but a mere console log for debugging reasons
+            if(Errorable) console.error(new Error(`${this.Name} Extension doesn't have a Run() method.`));
+            if(global.DebugMode) {console.debug(`${this.Name} Extension has an empty Run() method.`);} // this isn't an error or a warning but a mere console log for debugging reasons
         }
 
         RunClient(PlayerId) {
-            emitNet('DiscordFramework:Extensions:RunClientSide:' + this.name, PlayerId ? PlayerId : -1);
+            emitNet('DiscordFramework:Extensions:RunClientSide:' + this.Name, PlayerId ? PlayerId : -1);
         }
 
         /**
@@ -253,13 +274,13 @@ module.exports = {
          */
         get Info() {
             return {
-                name: this.name,
-                description: this.description,
-                toggle: this.toggle,
+                name: this.Name,
+                description: this.Description,
+                toggle: this.Enabled,
                 status: this.status,
-                dependencies: this.dependencies,
-                author: this.author,
-                version: this.version
+                dependencies: this.Dependencies,
+                author: this.Author,
+                version: this.Version
             };
         }
 
@@ -268,9 +289,9 @@ module.exports = {
          * @return {object} The provided config object provided in super()
          * @example this.Config // output: {}
          */
-        get Config() {
-            return this.config;
-        }
+        // get Config() {
+        //     return this.Config;
+        // }
 
     },
     /**
@@ -297,7 +318,7 @@ module.exports = {
          * @returns {object} extension details
          */
         get(name) {
-            return this.toArray().find(e => e.name === name);
+            return this.toArray().find(e => e.Name === name);
         }
 
         /**
