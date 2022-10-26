@@ -58,7 +58,6 @@ onNet('DiscordFramework:Extensions:RunClientSide:Blacklist', () => {
     };
 
     const BlacklistInterval = () => {
-        console.log(Weapons.Enabled, Vehicles.Enabled);
         if(!Weapons.Enabled && !Vehicles.Enabled) return;
 
         setInterval(() => {

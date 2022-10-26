@@ -8,7 +8,7 @@ on('DiscordFramework:Extensions:Extension:Load', () => {
             super({
                 Name: 'Chat', // Change to extension name
                 Description: 'An extension that provides chat roles and proximity', // Add a brief decription of what does the extension do
-                Enabled: true, // Whether the extension is supposed to be enabled or disabled
+                Enabled: false, // Whether the extension is supposed to be enabled or disabled
                 Dependencies: [], // Add the dependencies/other extensions needed for this extension to be usable
                 Version: '1.0', // The current version of the extension if available
                 Author: 'ItsAmmarB',
