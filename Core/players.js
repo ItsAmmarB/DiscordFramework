@@ -88,9 +88,9 @@ const Player = class Player {
         }
 
         this.PUID = null;
-        this.Name = GetPlayerName(PlayerId) || null;
         this.Server = {
             ID: PlayerId,
+            Name: GetPlayerName(PlayerId) || null,
             Identifiers: this.GetIdentifiers(PlayerId, true),
             Connections: {
                 Status: 'unknown',
@@ -228,7 +228,7 @@ const Player = class Player {
      * @return {string} Player Name
      */
     getName() {
-        return this.Name;
+        return this.Server.Name;
     }
 
     /**
