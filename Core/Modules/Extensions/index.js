@@ -28,12 +28,18 @@ module.exports.Module = class Exetnsions extends Modules {
         on('DiscordFramework:Extensions:Extension:Loaded', () => {
             if(Extensions.size !== this.ExtensionsFiles.filter(e => e.files.length > 0).length) return;
 
+            const EnabledExtensions = Extensions.toArray().filter(e => e.Status === 'Enabled');
+            const NoneEnabledExtensions = Extensions.toArray().filter(e => e.Status !== 'Enabled' && e.Status !== 'Template');
+            const TemplateExtensions = Extensions.toArray().filter(e => e.Status === 'Template');
+
+            const SortedExtensions = [...EnabledExtensions, ...NoneEnabledExtensions, ...TemplateExtensions ];
+
             const { AddPrint, Table } = require('../Console/index');
 
             let i = 1;
             AddPrint('Extensions', `
-    ^3Extensions Count: ^4${Extensions.size}
-    ^3Extensions: \n${Table(Extensions.toArray().map((extension, index) => {
+    ^3Extensions Count: ^4${SortedExtensions.size}
+    ^3Extensions: \n${Table(SortedExtensions.map((extension, index) => {
         i === 1 ? i++ : i--;
         const color = (i === 1 ? '^4' : '^9');
         const result = {};

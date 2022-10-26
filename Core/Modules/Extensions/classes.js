@@ -162,35 +162,39 @@ module.exports = {
 
             const Extensions = require('./index').Extensions;
 
-            if(this.Dependencies.length > 0) {
+            if(status === 'Enabled') {
 
-                let dependencies = this.#CheckDependencies(Extensions);
-                if(dependencies.filter(d => d.Status !== 'Enabled').length > 0) {
+                if(this.Dependencies.length > 0) {
 
-                    let counter = 0;
-                    while(dependencies.filter(d => d.Status !== 'Enabled').length > 0) {
-                        dependencies = this.#CheckDependencies(Extensions);
+                    let dependencies = this.#CheckDependencies(Extensions);
+                    if(dependencies.filter(d => d.Status !== 'Enabled').length > 0) {
 
-                        if(dependencies.find(d => d.Status === 'Template')) {
-                            dependencies = dependencies.filter(d => d.Status !== 'Template');
-                            console.warn(`Template cannot be a dependency for an extension; Dependency was ignored in the "${this.Name}" extension`);
-                        }
-                        if(dependencies.find(d => d.Status === 'Disabled')) {
-                            emit('DiscordFramework:Extension:Registered', this);
-                            this.Status = 'Dependency Disabled';
-                            break;
-                        }
-                        if(dependencies.find(d => d.Name === this.Name)) {
-                            dependencies = dependencies.filter(d => d.Name !== this.Name);
-                            console.warn(`An extension cannot be a dependency for itself; Dependency was ignored in the "${this.Name}" extension`);
+                        let counter = 0;
+                        while(dependencies.filter(d => d.Status !== 'Enabled').length > 0) {
+                            dependencies = this.#CheckDependencies(Extensions);
+
+                            if(dependencies.find(d => d.Status === 'Template')) {
+                                dependencies = dependencies.filter(d => d.Status !== 'Template');
+                                console.warn(`Template cannot be a dependency for an extension; Dependency was ignored in the "${this.Name}" extension`);
+                            }
+                            if(dependencies.find(d => d.Status === 'Disabled')) {
+                                emit('DiscordFramework:Extension:Registered', this);
+                                this.Status = 'Dependency Disabled';
+                                break;
+                            }
+                            if(dependencies.find(d => d.Name === this.Name)) {
+                                dependencies = dependencies.filter(d => d.Name !== this.Name);
+                                console.warn(`An extension cannot be a dependency for itself; Dependency was ignored in the "${this.Name}" extension`);
+                            }
+
+                            if(counter === 20) {
+                                this.Status = dependencies[0].Status;
+                                break;
+                            }
+                            await this.Delay(100);
+                            counter++;
                         }
 
-                        if(counter === 20) {
-                            this.Status = dependencies[0].Status;
-                            break;
-                        }
-                        await this.Delay(100);
-                        counter++;
                     }
 
                 }
