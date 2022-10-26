@@ -6,18 +6,23 @@ on('DiscordFramework:Extensions:Extension:Load', () => {
         constructor() {
             const config = require(GetResourcePath(GetCurrentResourceName()) + '/Extensions/Chat/config');
             super({
-                name: 'Chat', // Change to extension name
-                description: 'An extension that provides chat roles and proximity', // Add a brief decription of what does the extension do
-                toggle: true, // Whether the extension is supposed to be enabled or disabled
-                dependencies: [], // Add the dependencies/other extensions needed for this extension to be usable
-                version: '1.0', // The current version of the extension if available
-                author: 'ItsAmmarB',
-                config: config
+                Name: 'Chat', // Change to extension name
+                Description: 'An extension that provides chat roles and proximity', // Add a brief decription of what does the extension do
+                Enabled: true, // Whether the extension is supposed to be enabled or disabled
+                Dependencies: [], // Add the dependencies/other extensions needed for this extension to be usable
+                Version: '1.0', // The current version of the extension if available
+                Author: 'ItsAmmarB',
+                Config: config
             });
 
         }
 
         Run() {
+
+            on('DiscordFramework:Player:Joined', Player => {
+                // Trigger the client side
+                this.RunClient(Player.Server.ID);
+            });
 
             const Config = this.Config;
 

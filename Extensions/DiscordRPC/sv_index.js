@@ -5,13 +5,13 @@ on('DiscordFramework:Extensions:Extension:Load', () => {
     new class DiscordRPC extends Extension {
         constructor() {
             super({
-                name: 'DiscordRPC', // Change to extension name
-                description: 'A discord rich presence extension', // Add a brief decription of what does the extension do
-                toggle: true, // Whether the extension is supposed to be enabled or disabled
-                dependencies: [], // Add the dependencies/other extensions needed for this extension to be usable
-                version: '1.0', // The current version of the extension if available
-                author: 'ItsAmmarB',
-                config: {}
+                Name: 'DiscordRPC', // Change to extension name
+                Description: 'A discord rich presence extension', // Add a brief decription of what does the extension do
+                Enabled: true, // Whether the extension is supposed to be enabled or disabled
+                Dependencies: [], // Add the dependencies/other extensions needed for this extension to be usable
+                Version: '1.0', // The current version of the extension if available
+                Author: 'ItsAmmarB',
+                Config: {}
             });
 
         }

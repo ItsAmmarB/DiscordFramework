@@ -1,19 +1,19 @@
 onNet('DiscordFramework:Extensions:RunClientSide:Permissions', () => {
+    console.log('^2[^0Extensions^2:^0Permissions^2]^6: ^3Client script initializing!');
 
     let Player = null;
     let Config = null;
 
-    console.log('^2[^0Extensions^2:^0Permissions^2]^6: ^3Client script initializing!');
 
-    onNet('DiscordFramework:Permissions:Initialize', (_player, _config) => {
+    onNet('DiscordFramework:Extension:Permissions:Initialize', (_player, _config) => {
 
         Config = _config;
         console.log('^2[^0Extensions^2:^0Permissions^2]^6: ^3Received client config!');
         Player = _player;
 
-        onNet('DiscordFramework:Permissions:UpdatePermissions', __player => {
-            Player = __player;
+        onNet('DiscordFramework:Extension:Permissions:UpdatePermissions', __player => {
             console.log('^2[^0Extensions^2:^0Permissions^2]^6: ^3Permissions updated!');
+            Player = __player;
         });
 
         console.log('^2[^0Extensions^2:^0Permissions^2]^6: ^3Client script initialized!');
@@ -23,14 +23,14 @@ onNet('DiscordFramework:Extensions:RunClientSide:Permissions', () => {
          * @param {Array<String>} Roles An array or roles' IDs or users' IDs
          * @param {String} Guild A guild ID (Optional)
          */
-        const CheckPermission = (Roles, GuildID = null) => {
+        const CheckPermission = Roles => {
 
             // if "allowEveryone" then just save the time and just return true; otherwise keep going... :P
-            if (this.Config.allowEveryone) return true;
+            if (Config.AllowEveryone) return true;
 
             // Veriables checking
-            if(!Roles) return new Error('Unknown Roles');
-            if(!Array.isArray(Roles)) return new Error('Roles must be typeof Array');
+            if(!Roles) throw new Error('Unknown Roles');
+            if(!Array.isArray(Roles)) throw new Error('Roles must be typeof Array');
 
             // Get and check of the player has a network object store in the Core
             // const Player = require(GetResourcePath(GetCurrentResourceName()) + '/Core/index').Players.get(PlayerId);
@@ -47,13 +47,15 @@ onNet('DiscordFramework:Extensions:RunClientSide:Permissions', () => {
              *
              * The returned guild(s) are the "AllowedGuilds"; which means they can be looked into; AKA. *allowed*
              */
-            const AllowedGuilds = this.GetAllowedGuilds(GuildID);
-            if (AllowedGuilds.length < 1) return false;
+            // const AllowedGuilds = GetAllowedGuilds(GuildID);
+            // if (AllowedGuilds.length < 1) return false;
+
+            // console.log(AllowedGuilds);
 
             /**
              * Get basic player/member information for easy access later;
              */
-            const MemberGuilds = Player.Discord.Guilds.filter(g => AllowedGuilds.find(_g => _g.ID === g.ID));
+            const MemberGuilds = Player.Discord.Guilds.filter(g => Config.MainGuildOnly.Enabled ? g.ID === Config.MainGuildOnly.ID : g);
             const IsMemberAdministrator = MemberGuilds.find(guild => guild.Administrator) ? true : false;
 
             /**
@@ -61,8 +63,8 @@ onNet('DiscordFramework:Extensions:RunClientSide:Permissions', () => {
              * and the same goes for "selfPermission", if the member's ID was present within the provided "Roles"; then also just return
              * true to save time and ... you know it; CPU usage :D
              */
-            if (this.Config.DiscordAdmin && IsMemberAdministrator) return true;
-            if (this.Config.SelfPermission && Roles.includes(Player.Discord.ID)) return true;
+            if (Config.DiscordAdmin && IsMemberAdministrator) return true;
+            if (Config.SelfPermission && Roles.includes(Player.Discord.ID)) return true;
 
             /**
              * This is very confusing as I don't even know how I did it myself
@@ -86,21 +88,10 @@ onNet('DiscordFramework:Extensions:RunClientSide:Permissions', () => {
             return false;
         };
 
-        const GetAllowedGuilds = (GuildID = null) => {
-            if (GuildID) {
-                return GetAllowedGuilds().filter(Guild => Guild.ID === GuildID);
-            } else {
-                return Config.Guilds.filter(Guild => Config.MainGuildOnly ? Guild.ID === Config.RegisteredMainGuild.ID : Guild);
-            }
-        };
-
         // FiveM Exports for external use
         exports('Permissions', () => {
             return {
-                CheckPermission: (Roles, Guild = null) => CheckPermission(Roles, Guild),
-                GetAllowedGuilds: (Guild = null) => GetAllowedGuilds(Guild),
-                GetDiscordID:  Player.Discord.ID,
-                GetServerID: Player.Server.ID
+                CheckPermission: Roles => CheckPermission(Roles)
             };
         });
     });

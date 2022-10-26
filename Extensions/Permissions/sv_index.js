@@ -6,13 +6,13 @@ on('DiscordFramework:Extensions:Extension:Load', () => {
         constructor() {
             const Config = require(GetResourcePath(GetCurrentResourceName()) + '/Extensions/Permissions/config');
             super({
-                name: 'Permissions', // Change to extension name
-                description: 'Provides permissions checking using Discord roles', // Add a brief decription of what does the extension do
-                toggle: true, // Whether the extension is supposed to be enabled or disabled
-                dependencies: [], // Add the dependencies/other extensions needed for this extension to be usable
-                version: '1.2', // The current version of the extension if available
-                author: 'ItsAmmarB',
-                config: Config
+                Name: 'Permissions', // Change to extension name
+                Description: 'Provides permissions checking using Discord roles', // Add a brief decription of what does the extension do
+                Enabled: true, // Whether the extension is supposed to be enabled or disabled
+                Dependencies: [], // Add the dependencies/other extensions needed for this extension to be usable
+                Version: '1.2', // The current version of the extension if available
+                Author: 'ItsAmmarB',
+                Config: Config
             });
 
         }
@@ -32,7 +32,7 @@ on('DiscordFramework:Extensions:Extension:Load', () => {
                     const config = { ... this.Config };
                     delete config.acePermissions;
 
-                    emitNet('DiscordFramework:Permissions:Initialize', Player.Server.ID, Player, config);
+                    emitNet('DiscordFramework:Extension:Permissions:Initialize', Player.Server.ID, Player, config);
                 }
 
             });
@@ -44,7 +44,7 @@ on('DiscordFramework:Extensions:Extension:Load', () => {
             });
 
             on('DiscordFrameworK:Player:Roles:Updated', Player => {
-                emitNet('DiscordFramework:Permissions:UpdatePermissions', Player.Server.ID, Player);
+                emitNet('DiscordFramework:Extension:Permissions:UpdatePermissions', Player.Server.ID, Player);
             });
 
             this.#Exports();
@@ -57,43 +57,29 @@ on('DiscordFramework:Extensions:Extension:Load', () => {
          * @param {Array<String>} Roles An array or roles' IDs or users' IDs
          * @param {String} Guild A guild ID (Optional)
          */
-        CheckPermission(PlayerId, Roles, GuildID = null) {
+        CheckPermission(PlayerId, Roles) {
 
             // if "allowEveryone" then just save the time and just return true; otherwise keep going... :P
             if (this.Config.AllowEveryone || PlayerId === 0) return true;
 
             // Veriables checking
-            if(!PlayerId) return new Error('Unknown PlayerID');
+            if(!PlayerId) throw new Error('Unknown PlayerID');
             if(!isNaN(PlayerId)) PlayerId = String(PlayerId); // if number then turn it into a string
-            if(typeof PlayerId !== 'string') return new Error('PlayerID must be typeof String');
+            if(typeof PlayerId !== 'string') throw new Error('PlayerID must be typeof String');
 
-            if(!Roles) return new Error('Unknown Roles');
-            if(!Array.isArray(Roles)) return new Error('Roles must be typeof Array');
+            if(!Roles) throw new Error('Unknown Roles');
+            if(!Array.isArray(Roles)) throw new Error('Roles must be typeof Array');
 
             // Get and check of the player has a network object store in the Core
-            const { Player } = require(GetResourcePath(GetCurrentResourceName()) + '/Core/players.js');
+            const { Player } = require(GetResourcePath(GetCurrentResourceName()) + '/Core/players');
             const player = new Player(PlayerId);
 
             if (!player || !player.Discord.ID) return false;
 
             /**
-             * If "Guild" was provided, then look for the server whilst also keeping in mind;
-             * if "MainGuildOnly" was true, only and only check the main guild if the IDs match; but
-             * if "MainGuildOnly" was false; then check all registered guilds provided in the config
-             * for a matching guild ID;
-             *
-             * but if "Guild" was not provided; then check all registered guild in the config for matching roles
-             * with those provided;
-             *
-             * The returned guild(s) are the "AllowedGuilds"; which means they can be looked into; AKA. *allowed*
-             */
-            const AllowedGuilds = this.GetAllowedGuilds(GuildID);
-            if (AllowedGuilds.length < 1) return false;
-
-            /**
              * Get basic player/member information for easy access later;
              */
-            const MemberGuilds = player.Discord.Guilds.filter(g => AllowedGuilds.find(_g => _g.ID === g.ID));
+            const MemberGuilds = player.Discord.Guilds.filter(g => this.Config.MainGuildOnly.Enabled ? g.ID === this.Config.MainGuildOnly.ID : g);
             const IsMemberAdministrator = MemberGuilds.find(guild => guild.Administrator) ? true : false;
 
             /**
@@ -124,19 +110,6 @@ on('DiscordFramework:Extensions:Extension:Load', () => {
             })) return true;
 
             return false;
-        }
-
-        /**
-         * Used to get all of the allowed guilds or search for one within the allowed guilds for the members' roles to be fetched from; guilds must be registered in the config
-         * @param GuildID The guild ID (Optional)
-         * @return object
-         */
-        GetAllowedGuilds(GuildID = null) {
-            if (GuildID) {
-                return this.GetAllowedGuilds().filter(Guild => Guild.ID === GuildID);
-            } else {
-                return this.Config.Guilds.filter(Guild => this.Config.MainGuildOnly ? Guild.ID === this.Config.RegisteredMainGuild.ID : Guild);
-            }
         }
 
         async AcePermissionsAdd(Player) {
@@ -200,8 +173,7 @@ on('DiscordFramework:Extensions:Extension:Load', () => {
             // CFX Exports
             exports('Permissions', () => {
                 return {
-                    CheckPermission: (PlayerId, Roles, Guild = null) => this.CheckPermission(PlayerId, Roles, Guild),
-                    GetAllowedGuilds: (Guild = null) => this.GetAllowedGuilds(Guild)
+                    CheckPermission: (PlayerId, Roles) => this.CheckPermission(PlayerId, Roles)
                 };
             });
 

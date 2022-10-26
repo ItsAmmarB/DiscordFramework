@@ -1,6 +1,8 @@
 module.exports = {
-    MainGuildOnly: false, // This will make the extension use the MainGuild specified in the Discord Module only as a permissions guild
-    RegisteredMainGuild: require('../../Core/modules').Modules.get('Discord').config.MainGuild, // no need to change this, it will be overridden by the MainGuild from the Discord Module's config
+    MainGuildOnly: { // This will make the extension use the MainGuild specified in the Discord Module only as a permissions guild
+        Enabled: false,
+        ... require('../../Core/modules').Modules.get('Discord').config.MainGuild
+    },
     AllowEveryone: false, // Give permission to everyone, EVERY PERSON/PLAYER WILL HAVE EVERY SINGLE PERMISSION; this is a dangerous toggle!!!!
     DiscordAdmin: false, // If a player is present in the discord server and has administrator permission, if this toggle is true, they will have permission to everything, otherwise no
     /**
@@ -28,17 +30,6 @@ module.exports = {
      * also; it doesn't hurt to keep it on; "true"
      */
     SelfPermission: true,
-    Guilds: [
-        /**
-         * Those are the only guilds a player's roles will be used from; essentially locking permissions to the guilds below
-         *
-         * meaning if someone has a role from a server that is not specified below, he would not have that link role-permission
-         */
-        {
-            ID: '354062777737936896',
-            Name: 'JusticeCommunityRP'
-        }
-    ],
     AcePermissions: {
         Enabled: true,
         Permissions: [
