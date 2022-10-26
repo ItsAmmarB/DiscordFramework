@@ -1,19 +1,42 @@
 // eslint-disable-next-line no-unused-vars
 module.exports = {
+    /**
+     * Proximity is exactly what it say, it turns chat into a proximity based chat
+     * the distanst needed for players to be able to communicate is the Radious.
+     *
+     * Setting Enabled to false will turn this feature off, where everyone can see anyone's message
+     * regardless of distance.
+     */
     Proximity: {
-        Enabled: true,
-        Radius: 60
+        Enabled: true, // self-explainatory
+        Radius: 60 // This is in GTA units; I think..
     },
+    /**
+     * The message template; change it to what you want it to looks like
+     * available variables;
+     * [role, name, id, message]
+     * NOTE: it must be in between cruly-brackets
+     */
     Template: [ '{role} ^0^r| {name} | {id} : ', '{message}' ],
-    Suggestions: [
-        { name: '/togchat', help: 'Enables or Disables chat from client side. (YOU WILL NOT SEE ANYTHING AT ALL)' }
-    ],
-    Messages: {
-        Enabled: ['^1(INFO)', ' ^1Chat has been enabled'],
-        Disabled: ['^1(INFO)', ' ^1Chat has been disabled']
-    },
-    DefaultRole: '^8^*Civilian^r', // In GTA V units
+    DefaultRole: '^8^*Civilian^r', // The default chat role
+    /**
+     * Roles is an object that contains all chat roles with their
+     * corresponding name, the role name does not have to be the same as discord role name
+     *
+     * You can also include Discord users' IDs if you think you have someone special,
+     * just put their Discord user ID instead of the Role ID.
+     *
+     * ROLE TMEPLATE:    'ROLE ID': 'ROLE NAME'
+     * USER TMEPLATE:    'USER ID': 'ROLE NAME'
+     *
+     * Examples below
+     */
     Roles: {
+        // ItsAmamrB    (A special person)
+        '357842475328733186': '^0^*Mr. Snow^r',
+        // JamesV       (Also a special person)
+        '199406317520027648': '^9^*The Big Kahuna^r',
+
         // JCRP Owner
         '739978732877512776': '^1^*Community Command^r',
 
