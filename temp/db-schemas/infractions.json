@@ -1,0 +1,45 @@
+[
+    {
+        "infractions": [
+            {
+                "_id": "6452e06d66cf325f0d784cb9",
+                "type": "Ban",
+                "details": {
+                    "reason": "Some reason",
+                    "duration": 0,
+                    "timestamp": 1686298733956
+                },
+                "moderator": "6482e06d66cf325f0d785cb9"
+            },
+            {
+                "_id": "6452e06d66cf325f0d784cb9",
+                "type": "Kick",
+                "details": {
+                    "reason": "Some reason",
+                    "timestamp": 1686298733956
+                },
+                "moderator": "6482e06d66cf325f0d785cb9"
+            },
+            {
+                "_id": "6452e06d66cf325f0d784cb9",
+                "type": "Mute",
+                "details": {
+                    "reason": "Some reason",
+                    "duration": 0,
+                    "timestamp": 1686298733956
+                },
+                "moderator": "6482e06d66cf325f0d785cb9"
+            },
+            {
+                "_id": "6452e06d66cf325f0d784cb9",
+                "type": "Admin Jail",
+                "details": {
+                    "reason": "Some reason",
+                    "duration": 0,
+                    "timestamp": 1686298733956
+                },
+                "moderator": "6482e06d66cf325f0d785cb9"
+            }
+        ]
+    }
+]

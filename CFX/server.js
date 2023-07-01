@@ -1,10 +1,11 @@
-setTimeout(() => {
-    require(GetResourcePath(GetCurrentResourceName()) + '/Core/index');
-}, 500);
+const Config = require(`${GetResourcePath(GetCurrentResourceName())}/src/config`);
+emitNet('DiscordFramework:DebuggingMode', Config.development.debuggingMode);
+global.debug = msg => {
+    if(!Config.development.debuggingMode) return;
+    console.log(`^5[DEBUG] ^3${msg}^0`);
+};
 
-// --------------------------------------
-//               EXPORTS
-// --------------------------------------
+global.Delay = async MS => await new Promise(resolve => setTimeout(resolve, MS));
 
 /**
  * This registers exports without changing the environment behavior of the calling file
@@ -14,14 +15,4 @@ on('DiscordFramework:Export:Create', (Name, Function) => {
     if(global.DebugMode) console.debug(Name, 'export was create!');
 });
 
-// Credit: https://stackoverflow.com/questions/610406/javascript-equivalent-to-printf-string-format
-if (!String.prototype.format) {
-    String.prototype.format = function format() {
-        const args = arguments[0];
-        let text = this;
-        for (const elm in args) {
-            text = text.replace(`{${elm}}`, match => args[elm] != 'undefined' ? args[elm] : match);
-        }
-        return text;
-    };
-}
+require(`${GetResourcePath(GetCurrentResourceName())}/src/index`);

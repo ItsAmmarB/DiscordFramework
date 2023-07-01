@@ -1,18 +1,14 @@
 {
   "name": "discordframework",
   "version": "0.1.0-indev",
-  "testedFxServerVersion": "5757",
   "description": "A feature-rich, customizable, and modular framework that utilizes Discord and MongoDB",
+  "type": "commonjs",
   "dependencies": {
     "discord.js": "^13.8.0",
-    "mongodb": "^4.7.0"
+    "mongodb": "^4.7.0",
+    "ms": "^2.1.3"
   },
   "devDependencies": {
-    "@babel/core": "^7.18.9",
-    "@babel/eslint-parser": "^7.18.9",
-    "@babel/eslint-plugin": "^7.17.7",
-    "@babel/preset-env": "^7.18.9",
-    "babel-eslint": "^10.1.0",
     "eslint": "^8.20.0"
   },
   "scripts": {
@@ -20,13 +16,13 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/JusticeCommunityRP/DiscordFramework.git"
+    "url": "git+https://github.com/ItsAmmarB/DiscordFramework.git"
   },
   "author": "ItsAmmarB#7897",
   "private": true,
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/JusticeCommunityRP/DiscordFramework/issues"
+    "url": "https://github.com/ItsAmmarB/DiscordFramework/issues"
   },
-  "homepage": "https://github.com/JusticeCommunityRP/DiscordFramework#readme"
+  "homepage": "https://github.com/ItsAmmarB/DiscordFramework#readme"
 }

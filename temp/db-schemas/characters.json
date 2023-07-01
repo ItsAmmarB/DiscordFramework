@@ -1,0 +1,26 @@
+[
+    {
+        "_id": "6482e06d66cf325f0d785cb9",
+        "player": "6482e06d66cf325f0d785cb9",
+        "character": {
+            "name": {
+                "first": "Tahir",
+                "last": "Khan"
+            },
+            "age": 32,
+            "nationality": "Pakastani",
+            "dateOfBirth": 129736764512,
+            "occupation": "unemployed",
+            "money": {
+                "cash": 200,
+                "bank": 221442
+            },
+            "realEstate": [],
+            "vehicles": {
+                "land": [],
+                "air": [],
+                "sea": []
+            }
+        }
+    }
+]
