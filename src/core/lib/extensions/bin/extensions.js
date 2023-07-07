@@ -1,8 +1,10 @@
-const Extensions = class Extensions extends Set {
+const Extension = require('./extension');
+
+const Extensions = new class Extensions extends Set {
     /**
      * Gets the specified extension if available
      * @param {string} name The name of the extension
-     * @returns {object} extension details
+     * @returns {Extension} extension details
      */
     get(name) {
         return this.toArray().find(e => e.Name === name);
@@ -10,10 +12,11 @@ const Extensions = class Extensions extends Set {
 
     /**
      * Returns the players Collection as an array
-     * @returns {(Array<object>)} Array of players objects
+     * @returns {Extension[]} Array of players objects
      */
     toArray() {
         return Array.from(this.values(), element => element);
     }
-
 };
+
+module.exports = Extensions;
