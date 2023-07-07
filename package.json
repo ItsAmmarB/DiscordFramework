@@ -19,7 +19,7 @@
     "url": "git+https://github.com/ItsAmmarB/DiscordFramework.git"
   },
   "author": "ItsAmmarB#7897",
-  "private": true,
+  "private": false,
   "license": "ISC",
   "bugs": {
     "url": "https://github.com/ItsAmmarB/DiscordFramework/issues"
