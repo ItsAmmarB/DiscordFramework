@@ -115,3 +115,10 @@ yarn.lock
 _dump
 
 src/config.js
+
+
+# eslint stuff
+.eslintignore
+.eslintrc.json
+
+docs/
