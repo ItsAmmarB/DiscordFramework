@@ -700,7 +700,7 @@ const Player = class Player {
 
         Discord.client.on('guildMemberUpdate', (oldM, newM) => {
             if(this.Discord.id && newM.id === this.Discord.id && !this.Server.connections.disconnectedAt) {
-                debug(`(${this.getServerId()}) ${this.getName()}'s roles were updated!`);
+                Debug(`(${this.getServerId()}) ${this.getName()}'s roles were updated!`);
                 const Guild = this.Discord.guilds.find(guild => guild.ID === newM.guild.id);
                 if(Guild) {
                     Guild.Name = newM.guild.name;
