@@ -104,7 +104,7 @@ on('playerConnecting', async (playerName, setKickReason, deferrals) => {
     if(Config.connection.requireMember.enabled) {
         deferrals.update(`Checking community membership${dots}`);
 
-        const Member = await GetMember(cPlayer.getDiscordId(), Config.core.discord.mainGuild.id);
+        const Member = await GetMember(cPlayer.getDiscordId(), Config.core.discord.communityGuild.id);
         if (!Member) return deferrals.done(Config.connection.requireMember.message);
     }
 

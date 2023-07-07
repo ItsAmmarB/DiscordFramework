@@ -68,7 +68,7 @@ const GetSharedGuilds = UserId => {
  * @param {Discord.Snowflake} GuildId The discord guild id
  * @return {Promise<Discord.Role|null>} Discord Role
  */
-const GetRole = async (RoleId, GuildId = Config.core.discord.mainGuild.id) => {
+const GetRole = async (RoleId, GuildId = Config.core.discord.communityGuild.id) => {
 
     if (!RoleId) throw new Error('DiscordFramework: Discord --> GetRole() No role ID provided');
     if (!IsSnowFlake(RoleId)) throw new Error('DiscordFramework: Discord --> GetRole() Invalid role ID provided');
@@ -94,7 +94,7 @@ const GetRole = async (RoleId, GuildId = Config.core.discord.mainGuild.id) => {
  * @param {Discord.Snowflake} GuildId The discord guild id
  * @returns {Promise<Discord.GuildMember|null>} Discord GuildMember
  */
-const GetMember = async (UserId, GuildId = Config.core.discord.mainGuild.id) => {
+const GetMember = async (UserId, GuildId = Config.core.discord.communityGuild.id) => {
 
     if (!UserId) throw new Error('DiscordFramework: Discord --> GetMember() No player ID provided');
 
