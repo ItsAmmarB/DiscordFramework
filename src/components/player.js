@@ -728,6 +728,20 @@ const PlayerSet = class PlayerSet extends Set {
  */
 const NetworkPlayers = new PlayerSet();
 
+if(Debug) {
+    RegisterCommand('Players', (source) => {
+        if(source > 0) return console.log('ServerFX terminal command only!');
+        return console.log(NetworkPlayers);
+    });
+    RegisterCommand('Player', (source, args) => {
+        if(source > 0) return console.log('ServerFX terminal command only!');
+        if(!args[0]) return console.log('missing 1 argument (player identifer)');
+        const _Player = NetworkPlayers.get(args[0]);
+        if(!_Player) return console.log('Player not found!');
+        return console.log(_Player);
+    });
+}
+
 
 module.exports = {
     NetworkPlayers,
