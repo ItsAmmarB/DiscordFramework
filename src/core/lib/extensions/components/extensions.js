@@ -1,5 +1,9 @@
 const Extension = require('./extension');
 
+/**
+ * A modified Set() to enhance extensions management
+ * @returns {Set<Extension>}
+ */
 const Extensions = new class Extensions extends Set {
     /**
      * Gets the specified extension if available
@@ -7,7 +11,7 @@ const Extensions = new class Extensions extends Set {
      * @returns {Extension} extension details
      */
     get(name) {
-        return this.toArray().find(e => e.Name === name);
+        return this.toArray().find(e => e.name === name);
     }
 
     /**

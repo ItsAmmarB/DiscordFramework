@@ -1,5 +1,7 @@
+/**
+ * This block starts the Core modules before allowing any player to connect to the server
+ */
 require('./core/index');
-
 let isCoreReady = false;
 on('DiscordFramework:Core:Ready', () => {
     CountPlaytime();
@@ -18,8 +20,7 @@ const Config = require('./config');
 let GetMember = null;
 let UpdateMany = null;
 
-const { NetworkPlayers, Players, Player } = require('./core/bin/player');
-const ConnectingPlayers = new Players();
+const { Player, NetworkPlayers } = require('./components/player');
 
 const CountPlaytime = () => setInterval(() => {
     UpdateMany('Players', { '_id': { $in: NetworkPlayers.toArray().filter(p => !p.Server.connections.disconnectedAt).map(p => p.PUID) } }, {
@@ -51,12 +52,13 @@ on('playerConnecting', async (playerName, setKickReason, deferrals) => {
         .setStatus('Connecting')
         .setConnectingAt(Date.now());
 
+    await Delay(100);
     deferrals.update(`Checking bans${dots}`);
 
     await Delay(250);
-
     const cPlayerDatabase = await cPlayer.getDatabase();
-    const cPlayerOutStandingBans = cPlayerDatabase.infractions.filter(infraction => infraction.type === 'Ban' && ((infraction.details.timestamp + infraction.details.duration) >= Date.now() || infraction.details.duration === 0));
+    await Delay(250);
+    const cPlayerOutStandingBans = await cPlayerDatabase.infractions.filter(infraction => infraction.type === 'Ban' && ((infraction.details.timestamp + infraction.details.duration) >= Date.now() || infraction.details.duration === 0));
 
     if(cPlayerOutStandingBans.length > 0) {
         deferrals.update(`Verifying ban${dots}`);
@@ -123,7 +125,7 @@ on('playerConnecting', async (playerName, setKickReason, deferrals) => {
     cPlayer.pushToNetwork();
     await Delay(300);
 
-    deferrals.done('');
+    deferrals.done('Connected!');
 
 });
 
@@ -184,9 +186,6 @@ on('playerDropped', Reason => {
     console.log(`^1 ===> ^0${dPlayer.getServerId()} ^1| ^0${dPlayer.getName()} ^1 ${Reason === 'Exiting' ? 'left' : Reason}^0`);
 });
 
-RegisterCommand('players', () => {
-    console.log(Players);
-});
 
 module.exports = {
     /**
@@ -206,13 +205,15 @@ module.exports = {
     Export: (Name, Function) => {
         emit('DiscordFramework:Export:Create', Name, Function);
     },
+
     /**
      * Adds a function to the ConnectionExecutables array.
      * The ConnectionExecutables is an array of functions that
      * gets executed when the player connection handshake is about
-     * to finish are the player is about to join
-     * @param {function(player<Player.prototype>, deferrals<object>)} Function The function to execute on player connection
-     * @return {void}
+     * to finish and the player is about to join
+     * @param {function(Player, Deferrals)} Function The function to execute on player connection
      */
-    ConnectionCheck: Function => ConnectionExecutables.push(Function)
+    onConnection: Function => {
+        ConnectionExecutables.push(Function);
+    }
 };

@@ -25,7 +25,7 @@ Client.login(Config.core.discord.token);
 const GetGuild = async GuildId => {
 
     if (!GuildId) throw new Error('DiscordFramework: Discord --> GetGuild() No guild ID provided');
-    if (!IsSnowFlake(GuildId)) throw new Error('DiscordFramework: Discord --> GetRole() Invalid guild ID provided');
+    if (!IsSnowFlake(GuildId)) throw new Error('DiscordFramework: Discord --> GetGuild() Invalid guild ID provided');
 
     let Guild = null;
     try {
@@ -45,14 +45,14 @@ const GetGuild = async GuildId => {
  */
 const GetSharedGuilds = UserId => {
 
-    if (!UserId) throw new Error('DiscordFramework: Discord --> GetMember() No player ID provided');
-    if (!IsSnowFlake(UserId)) throw new Error('DiscordFramework: Discord --> GetMember() Invalid player ID provided');
+    if (!UserId) throw new Error('DiscordFramework: Discord --> GetSharedGuilds() No player ID provided');
+    if (!IsSnowFlake(UserId)) throw new Error('DiscordFramework: Discord --> GetSharedGuilds() Invalid player ID provided');
 
-    const { NetworkPlayers } = require('../../bin/player');
+    const { NetworkPlayers } = require('../../../components/player');
     if(NetworkPlayers.ValidateIdentifier(UserId) !== 'Discord') {
         // Check whether the provided ID is a server ID or a Discord ID; and if not discord, then fetch the player data and retrieve their Discord ID
         const Player = NetworkPlayers.get(UserId);
-        if (!Player) throw new Error('DiscordFramework: Discord --> GetMember() Player does not have a PlayerNetworkObject');
+        if (!Player) throw new Error('DiscordFramework: Discord --> GetSharedGuilds() Player does not have a PlayerNetworkObject');
         UserId = Player.discordId;
     }
 
@@ -98,7 +98,7 @@ const GetMember = async (UserId, GuildId = Config.core.discord.communityGuild.id
 
     if (!UserId) throw new Error('DiscordFramework: Discord --> GetMember() No player ID provided');
 
-    const { NetworkPlayers } = require('../../bin/player');
+    const { NetworkPlayers } = require('../../../components/player');
     if(NetworkPlayers.ValidateIdentifier(UserId) !== 'Discord') {
         // Check whether the provided ID is a server ID or a Discord ID; and if not discord, then fetch the player data and retrieve their Discord ID
         const Player = NetworkPlayers.get(UserId);
@@ -131,7 +131,7 @@ const GetUser = async UserId => {
 
     if (!UserId) throw new Error('DiscordFramework: Discord --> GetUser() No player ID provided');
 
-    const { NetworkPlayers } = require('../../bin/player');
+    const { NetworkPlayers } = require('../../../components/player');
     // Check whether the provided ID is a server ID or a Discord ID; and if not discord, then fetch the player data and retrieve their Discord ID
     if(NetworkPlayers.ValidateIdentifier(UserId) !== 'Discord') {
         const Player = NetworkPlayers.get(UserId);
@@ -175,7 +175,7 @@ const IsSnowFlake = SnowFlake => {
 /**
  * All CFX Exports are callbacks. since Asynchronous functions aren't compatible with lua/C#
  */
-emit('DiscordFramework:Export:Create', 'MongoDB', () => {
+emit('DiscordFramework:Export:Create', 'Discord', () => {
     return {
         GetGuild: (GuildId, Callback) => {
             GetGuild(GuildId).finally(Callback);

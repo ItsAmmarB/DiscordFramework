@@ -24,5 +24,5 @@ server_scripts {
     'cfx/server.js',
 
     -- Extensions' files
-    'src/extensions/**/sv_*.js'
+    -- 'src/extensions/**/sv_*.js'  -- This is better loaded from the Extensions module to regulate when the server files start loading
 }

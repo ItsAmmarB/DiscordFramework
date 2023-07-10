@@ -1,16 +1,26 @@
-const Status = [
-    'Ready',
-    'Enabled',
-    'Disabled',
-    'Error',
-    'Dependency Disabled',
-    'Dependency Error',
-    'Dependency Missing',
-    'Self-Dependency',
-    'Template'
-];
+const Discord = require('../../discord/index');
+const MongoDB = require('../../mongodb/index');
+const Extensions = require('./extensions');
+
+const Utilities = require('../../../../utilities');
+
+
+const Status = {
+    Ready: 'Ready',
+    Enabled: 'Enabled',
+    Disabled: 'Disabled',
+    Error: 'Error',
+    Dependency_Disabled: 'Dependency Disabled',
+    Dependency_Error: 'Dependency Error',
+    Dependency_Missing: 'Dependency Missing',
+    Self_Dependency: 'Self-Dependency',
+    Template: 'Template'
+};
 
 class Extension {
+
+    // Configurable class variables
+
     /**
      * The name of the extension
      */
@@ -39,31 +49,46 @@ class Extension {
      * The configuration parameters related to the extension
      */
     config = {};
+
+    // Non-*Configurable class variables
+
+    /**
+     * The main runtime function
+     */
+    function = null;
+    /**
+     * The main runtime function
+     */
+    cfxExports = {};
+
     /**
      * The current status of the extension
      */
     status = '';
-
     /**
      * Whether an error had occured in this extension or not
      */
-    error = false;
+    #error = false;
 
     /**
      *
-     * @param {string} name Extension name; must be a string
-     * @param {string|null} description Extension description; must be a string (optional; null by default)
-     * @param {boolean} toggle Extension toggle; must be a boolean (optional; false by default)
-     * @param {string[]|null} dependencies Extension dependencies; must be an array of strings (optional; null by default)
-     * @param {string|null} version Extension version; must be a string (optional; null by default)
-     * @param {string|null} author Extension author; must be a string (optional; null by default)
-     * @param {object} config Extension config; must be an object (optional; null by default)
+     * @param {Object} extension - The extension's details such as name, description, verion, author, etc..
+     * @param {string} extension.name - Extension name; must be a string
+     * @param {string|null} extension.description - Extension description; must be a string (optional)
+     * @param {boolean} extension.toggle - Extension toggle; must be a boolean (optional; false by default)
+     * @param {string[]|null} extension.dependencies - Extension dependencies; must be an array of strings (optional)
+     * @param {string|null} extension.version - Extension version; must be a string (optional)
+     * @param {string|null} extension.author - Extension author; must be a string (optional)
+     * @param {object} extension.config - Extension config; must be an object (optional)
      */
-    constructor(name, description, toggle, dependencies, version, author, config) {
+    constructor({ name, description, toggle, dependencies, version, author, config }) {
+
+        // This line was commented because this class can be used in both ways just as equally
+        if(Extension.prototype.constructor !== this.constructor) console.log(`The Extension class was meant to be invoked as a new instance for each extension; using it as a parent class for an extended class for ${name ? 'the "' + name + '"' : 'an'} extension will lose some of its useful methods/methods' parameters such as Extension.setFunction() parameters and Extension.setCFXExports()`);
 
         // Check Extension name
         if(!name) return this.#flagError('REG_EXTENSION: attempted to register an extension without a name!');
-        if(typeof name !== 'string') this.#flagError(`REG_EXTENSION: Extension "name" must be typeof String, "${typeof name}" was provided!`);
+        if(typeof name !== 'string') this.#flagError(`REG_EXTENSION: Extension "name" type must be "String", received "${typeof name}"!`);
         this.name = name;
 
         // Check Extension description if available
@@ -72,7 +97,7 @@ class Extension {
                 this.description = description;
             }
             else {
-                new Error(`REG_EXTENSION: Extension "description" must be typeof string, "${typeof description}" was provided!`);
+                this.#flagError(`REG_EXTENSION: Extension "description" type must be "String", received "${typeof description}"!`);
             }
         }
 
@@ -82,7 +107,7 @@ class Extension {
                 this.toggle = toggle;
             }
             else {
-                new Error(`REG_EXTENSION: Extension "Toggle" must be typeof Boolean; "${typeof toggle}" was provided!`);
+                this.#flagError(`REG_EXTENSION: Extension "Toggle" type must be "Boolean"; received "${typeof toggle}"!`);
             }
         };
 
@@ -93,7 +118,7 @@ class Extension {
                 this.dependencies = dependencies;
             }
             else {
-                new Error(`REG_EXTENSION: Extension "Dependencies" must be typeof Array, "${typeof dependencies}" was provided!`);
+                this.#flagError(`REG_EXTENSION: Extension "Dependencies" type must be "Array", received "${typeof dependencies}"!`);
             }
         };
 
@@ -103,7 +128,7 @@ class Extension {
                 this.author = author;
             }
             else {
-                new Error(`REG_EXTENSION: Extension "Author" must be typeof string, "${typeof author}" was provided!`);
+                this.#flagError(`REG_EXTENSION: Extension "Author" type must be "String", received "${typeof author}"!`);
             }
         }
 
@@ -113,7 +138,7 @@ class Extension {
                 this.version = version;
             }
             else {
-                new Error(`REG_EXTENSION: Extension "Version" must be typeof string, "${typeof version}" was provided!`);
+                this.#flagError(`REG_EXTENSION: Extension "Version" type must be "String", received "${typeof version}"!`);
             }
         }
 
@@ -123,11 +148,12 @@ class Extension {
                 this.config = config;
             }
             else {
-                new Error(`REG_EXTENSION: Extension "Config" must be typeof object, "${typeof config}" was provided!`);
+                this.#flagError(`REG_EXTENSION: Extension "Config" type must be "Object", received "${typeof config}"!`);
             }
         }
 
-        const Extensions = require('./extensions');
+        if(Extensions.get(this.name)) return this.#flagError(`REG_EXTENSION: Attempting to register an extension with a duplicate name "${this.name}"!`);
+
         Extensions.add(this);
         this.#register(Extensions);
     }
@@ -136,8 +162,9 @@ class Extension {
     /**
      * The registration step of making an extensions
      * @private
+     * @async
      */
-    async #register(Extensions) {
+    async #register() {
 
         // Check if the extension is a mere template and #register it as 'Template'
         if(this.name === 'Template') {
@@ -150,12 +177,12 @@ class Extension {
         }
 
         // Whether an error was passed to the method
-        if(this.error) {
+        if(this.#error) {
             this.setStatus('Error');
         }
 
         if(this.dependencies.length > 0) {
-            const dependencies = await this.#checkDependencies(Extensions);
+            const dependencies = this.#checkDependencies(Extensions);
 
             if(dependencies.length !== this.dependencies.length) {
                 while(dependencies.length !== this.dependencies.length) {
@@ -196,10 +223,10 @@ class Extension {
      * @returns {string[]} array of dependencies' status
      * @example [ {name: string, status: string}, ... ]
      */
-    async #checkDependencies(Extensions) {
+    #checkDependencies() {
 
         const returnable = [];
-        await this.dependencies.forEach(async Dependency => {
+        this.dependencies.forEach(async Dependency => {
 
             if(Dependency === this.name) return returnable.push({ name: dependency.name, status: 'Self-Dependency' });
 
@@ -229,58 +256,54 @@ class Extension {
      * @private
      */
     #initialize() {
-        try {
-            /**
+        /**
              * The run method is only triggered if the status was "Ready"; if not then don't
              * this is especially useful if an author manually changed the extension status to "Enabled" using Extension.setStatus()
              * if the extension is supposed to be enabled before the core is ready; such as a web panel; or an API
              * that way so the Extensions module doesn't run the code twice, or the extension doesn't even have a run method
              * instead it run on file read immediately!
              */
-            if(this.status === 'Ready') {
-                on('DiscordFramework:Clients:Ready', () => {
-                    this.Run();
-                    this.setStatus('Enabled');
-                });
-            }
-        }
-        catch (err) {
-            this.#register('Error');
-            console.error(err);
+        if(this.status === 'Ready') {
+            this.setStatus('Enabled');
+            on('DiscordFramework:Core:Ready', async () => {
+                await this.delay(500);
+                this.execute(this, { Discord, MongoDB, Utilities });
+            });
         }
     }
 
     #flagError(error) {
         this.status = error;
-        throw new Error(error);
+        console.error(error);
     }
 
     // EXTERNALLY ACCESSIBLE METHOD
 
     /**
-     * Sets the extension status to be shown in console
-     * This does not need to be changed, and does not functionally effect anything at all
-     * @param {string} status The new extension status
-     * @returns {Extension}
-     */
-    setStatus(status) {
-        this.status = status;
-        return this;
+     * Executes the main runtime function automatically when the framework core is ready if the extension is ready
+     * @param {Extension} ExtensionInfo - Some useful untilities to be used in your extension such as discord & MongoDB exports, and other handy functions
+     * @param {Object} Utils - Some useful untilities to be used in your extension such as discord & MongoDB exports, and other handy functions
+     * @param {Discord} Utils.Discord - The Discord exports
+     * @param {MongoDB} Utils.MongoDB - The MongoDB exports
+     * @param {Utilities} Utils.Utilities - Some useful untilities and shortcuts to be used in your extension
+    */
+    execute(ExtensionInfo, Utils) {
+        if(!this.function) return;
+        try {
+            this.function(ExtensionInfo, Utils);
+        }
+        catch(err) {
+            this.#flagError(err);
+        }
     }
 
-    /**
-     * The main runtime method that will automatically be called after extension registration
-     */
-    run() {
-        if(global.DebugMode) console.error(`${this.Name} Extension doesn't have a Run() method.`);
-    }
-
-    runClient(PlayerId) {
-        emitNet('DiscordFramework:Extensions:RunClientSide:' + this.Name, PlayerId ? PlayerId : -1);
+    executeClient(PlayerId) {
+        emitNet('DiscordFramework:Extensions:RunClientSide:' + this.name, PlayerId ? PlayerId : -1);
     }
 
     /**
      * A fancy and a quick way to hold code execution
+     * @readonly
      * @param {number} WaitMS A wait time in milliseconds
      * @returns {promise<void>}
      * @example await this.delay(2000) // hold execution for 2 seconds
@@ -290,9 +313,46 @@ class Extension {
     }
 
     /**
+     * Sets the extension status to be shown in console
+     * This does not need to be changed, and does not functionally effect anything at all
+     * @readonly
+     * @param {string} status The new extension status
+     * @returns {Extension}
+     */
+    setStatus(status) {
+        this.status = status;
+        return this;
+    }
+
+    /**
+     * Sets the main runtime function that will automatically be executed when the framework core is ready if the extension is ready
+     * @readonly
+     * @param {function(Extension, {Discord: Discord, MongoDB: MongoDB, Utilities: Utilities })} Function - The main runtime function
+     */
+    setFunction(Function) {
+        this.function = Function;
+        return this;
+    }
+
+    /**
+     * Sets the extensions's Exports cfx to be used by other resources
+     * - Note that any asynchronous function must be converted to a callback function to avoid cfx errors and cfx exports limitations
+     * @readonly
+     * @param {Object} Exports - An object with the export name as key and the exportable as value
+     */
+    setCFXExports(Exports) {
+        if(typeof Exports !== 'object') return this.#flagError(`Extension<${this.name}>.setCFXExports() Parameter type must be "Object"; received "${typeof Exports}"!`);
+        if(Array.isArray(Object)) return this.#flagError(`Extension<${this.name}>.setCFXExports() Parameter type must be "Object"; received "Array"!`);
+
+        this.cfxExports = Exports;
+        emit('DiscordFramework:Extensions:UpdateCFXExports');
+        return this;
+    }
+
+    /**
      * An extension info/detail getter method that return extension information
-     * @return {object} The provided information provided in super()
-     * @example this.Info // output: {name: string, description: string, toggle: boolean, status: string, dependencies: Array, author: string, version: string}
+     * @readonly
+     * @return {Object} The provided information provided in super()
      */
     getInfo() {
         return {
@@ -302,18 +362,26 @@ class Extension {
             status: this.status,
             dependencies: this.dependencies,
             author: this.author,
-            version: this.version,
-            config: this.config
+            version: this.version
         };
     }
 
     /**
-     * A config getter method that returns the extensions configuration
-     * @return {object} The provided config object provided in super()
-     * @example this.Config // output: {}
+     * Gets the extensions Config
+     * @readonly
+     * @return {Object} The provided config object provided in super()
      */
     getConfig() {
         return this.config;
+    }
+
+    /**
+     * Gets the extensions CFX Exports
+     * @readonly
+     * @return {Object} The provided config object provided in super()
+     */
+    getCFXExports() {
+        return this.cfxExports;
     }
 
 }

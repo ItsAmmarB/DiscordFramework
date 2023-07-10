@@ -1,14 +1,19 @@
-module.exports = (xs) => {
-    if (xs.length === 0) {return 'No data found';}
+/**
+ * Turns an array into a table
+ * @param {Object[]} array An array of objects containing the data to reform into a table
+ * @returns {string} A table string
+ */
+const Table = array => {
+    if (array.length === 0) {return 'No data found';}
     else {
         const widths = [];
         const cells = [];
-        for (let i = 0; i <= xs.length; i++) {cells.push([]);}
-        for (const s in xs[0]) {
+        for (let i = 0; i <= array.length; i++) {cells.push([]);}
+        for (const s in array[0]) {
             let len = s.length;
             cells[0].push(s);
-            for (let i = 0; i < xs.length; i++) {
-                const ss = '' + xs[i][s];
+            for (let i = 0; i < array.length; i++) {
+                const ss = '' + array[i][s];
                 len = Math.max(len, ss.length);
                 cells[i + 1].push(ss);
             }
@@ -27,4 +32,8 @@ module.exports = (xs) => {
         for (let i = s.length; i < n; i++) {res += ' ';}
         return res;
     }
+};
+
+module.exports = {
+    Table
 };
