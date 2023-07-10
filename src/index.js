@@ -125,8 +125,7 @@ on('playerConnecting', async (playerName, setKickReason, deferrals) => {
     cPlayer.pushToNetwork();
     await Delay(300);
 
-    deferrals.done('Connected!');
-
+    deferrals.done();
 });
 
 // Triggered when the player's connected request is received by the server
@@ -200,18 +199,29 @@ module.exports = {
      * at the same time.
      *
      * @param {string} Name The desired name of the exports()
-     * @param {function} Function The function to be executed upon call
+     * @param {function} Function The function to be executed upon exports call
      */
     Export: (Name, Function) => {
         emit('DiscordFramework:Export:Create', Name, Function);
     },
 
+
+    /**
+     * The function to be executed on player connection
+     * @callback onConnectionFunction
+     * @param {Player} player - The player network object
+     * @param {Object} deferrals - The connection defferals object
+     */
     /**
      * Adds a function to the ConnectionExecutables array.
      * The ConnectionExecutables is an array of functions that
      * gets executed when the player connection handshake is about
      * to finish and the player is about to join
-     * @param {function(Player, Deferrals)} Function The function to execute on player connection
+     * @param {onConnectionFunction} Function The function to execute on player connection
+     * @example
+     * onConnection((player, deferrals) => {
+     *      // This code will be executed on player connection
+     * })
      */
     onConnection: Function => {
         ConnectionExecutables.push(Function);
