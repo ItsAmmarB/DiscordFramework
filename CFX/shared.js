@@ -12,5 +12,6 @@ global.Delay = async MS => await new Promise(resolve => setTimeout(resolve, MS))
  */
 global.Debug = msg => {
     const isDebugEnabled = String(GetResourceMetadata(GetCurrentResourceName(), 'debug_mode', 0)).toLowerCase() === 'true' ? true : false;
+    if(!msg) return isDebugEnabled;
     if(isDebugEnabled) console.log(`^5[DEBUG] ^3${msg.split('\n').join('\n        ')}^0`);
 };
