@@ -34,6 +34,10 @@ class Extension {
      */
     toggle = false;
     /**
+     * The current status of the extension
+     */
+    status = '';
+    /**
      * An array of the extensions dependencies
      */
     dependencies = [];
@@ -50,25 +54,24 @@ class Extension {
      */
     config = {};
 
-    // Non-*Configurable class variables
 
     /**
      * The main runtime function
      */
-    function = null;
-    /**
-     * The main runtime function
-     */
-    cfxExports = {};
+    _cfxExports = {};
+
+    // Non-Configurable class variables
+
 
     /**
-     * The current status of the extension
+     * The main extension function to be executed whenever the framework core ready event is triggered
      */
-    status = '';
+    #_function = null;
     /**
      * Whether an error had occured in this extension or not
+     * @private
      */
-    #error = false;
+    #_error = false;
 
     /**
      *
@@ -167,7 +170,7 @@ class Extension {
     async #register() {
 
         // Check if the extension is a mere template and #register it as 'Template'
-        if(this.name === 'Template') {
+        if(this.name === 'Template' && !this.toggle) {
             this.setStatus('Template');
         }
 
@@ -177,7 +180,7 @@ class Extension {
         }
 
         // Whether an error was passed to the method
-        if(this.#error) {
+        if(this.#_error) {
             this.setStatus('Error');
         }
 
@@ -281,24 +284,59 @@ class Extension {
 
     /**
      * Executes the main runtime function automatically when the framework core is ready if the extension is ready
-     * @param {Extension} ExtensionInfo - Some useful untilities to be used in your extension such as discord & MongoDB exports, and other handy functions
-     * @param {Object} Utils - Some useful untilities to be used in your extension such as discord & MongoDB exports, and other handy functions
-     * @param {Discord} Utils.Discord - The Discord exports
-     * @param {MongoDB} Utils.MongoDB - The MongoDB exports
-     * @param {Utilities} Utils.Utilities - Some useful untilities and shortcuts to be used in your extension
-    */
+     * @param {Extension} ExtensionInfo - The current extension's provided information on creation such as name, description, toggle, version, author, config and other hidden variables
+     * @param {Object} Utils - A shortcut paramter that provides very useful core module exports and other function, networked objects and connection methods
+     * @param {Discord} Utils.Discord - Discord module exports including the Discord client
+     * @param {MongoDB} Utils.MongoDB - MongoDB module exports including the MongoDB client
+     * @param {Utilities} Utils.Utilities - Some useful functions and networked variables such as Player Class, Players Class, Network Players & their information, Connections, onConnection() (for when a player is connecting) and etc..
+     */
     execute(ExtensionInfo, Utils) {
-        if(!this.function) return;
+        if(!this.#_function) return;
         try {
-            this.function(ExtensionInfo, Utils);
+            this.#_function(ExtensionInfo, Utils);
         }
         catch(err) {
             this.#flagError(err);
         }
     }
 
-    executeClient(PlayerId) {
-        emitNet('DiscordFramework:Extensions:RunClientSide:' + this.name, PlayerId ? PlayerId : -1);
+    /**
+     * Starts executing client side code with a specific event name!
+     * - This can be used as a sequencing method to run the players' client side after fetching/obtaining certain data
+     * then using this method is send such data to the client side
+     * - Any addtional parameters aside from Payload will not be lost
+     * @param {Object} Payload - An object containing the targeted client id and payload to send to client
+     * @param {Number} Payload.playerId - The player ID to trigger their client side event; if not provided, will trigger all players' client events
+     * @param {{}} Payload.payload - A payload to send to the players' client side event
+     * @example
+     * Extension.executeClient({
+     *      playerId: player.id,
+     *      payload: {
+     *          targetedVehicle: {
+     *              model: 'nero',
+     *              entityId: 144213,
+     *              estimateCost: 2100000,
+     *              Location: {
+     *                  areaName: 'Los Santos Downtown',
+     *                  streetName: 'Grove Street',
+     *              }
+     *          }
+     *      }
+     * })
+     */
+    executeClient(Payload) {
+        let playerId = -1;
+        if(Payload.playerId) {
+            if(isNaN(Payload.playerId)) return this.#flagError(`Extension<${this.name}>.executeClient(Payload.playerId, ...) Payload.playerId type must be "Number"!`);
+            playerId = Payload.playerId;
+        };
+        let payload = null;
+        if(Payload.payload) {
+            if(typeof Payload.payload !== 'object' || Array.isArray(Payload.payload)) return this.#flagError(`Extension<${this.name}>.executeClient(Payload.payload, ...) Payload.payload type must be "Object"!`);
+            payload = Payload.payload;
+        }
+
+        emitNet('DiscordFramework:Extensions:RunClientSide:' + this.name, playerId, payload);
     }
 
     /**
@@ -325,12 +363,32 @@ class Extension {
     }
 
     /**
+     * The main extension function to be executed whenever the framework core ready event is triggered
+     * @callback ExtensionFunction
+     * @param {ExtensionInfo} ExtensionInfo - The current extension's provided information on creation such as name, description, toggle, version, author, config and other hidden variables
+     * @param {Utils} Utils - A shortcut paramter that provides very useful core module exports and other function, networked objects and connection methods
+     */
+    /**
+     * @typedef {Extension} ExtensionInfo - The current extension's provided information on creation such as name, description, toggle, version, author, config and other hidden variables
+     */
+    /**
+     * @typedef {Object} Utils - A shortcut paramter that provides very useful core module exports and other function, networked objects and connection methods
+     * @property {Discord} Discord - Discord module exports including the Discord client
+     * @property {MongoDB} MongoDB - MongoDB module exports including the MongoDB client
+     * @property {Utilities} Utilities - Some useful functions and networked variables such as Player Class, Players Class, Network Players & their information, Connections, onConnection() (for when a player is connecting) and etc..
+     */
+    /**
      * Sets the main runtime function that will automatically be executed when the framework core is ready if the extension is ready
-     * @readonly
-     * @param {function(Extension, {Discord: Discord, MongoDB: MongoDB, Utilities: Utilities })} Function - The main runtime function
+     * @param {ExtensionFunction} Function - The main extension function to be executed whenever the framework core ready event is triggered
+     * @returns {Extension}
+     * @credits Vitim.us (for the annotation) - https://stackoverflow.com/questions/24214962/whats-the-proper-way-to-document-callbacks-with-jsdoc
+     * @example
+     * Extension.setFunction((ExtensionInfo, { Discord, MongoDB, Utilities }) => {
+     *      Discord.client.user.setActivity('A FiveM Server!', { type: 'WATCHING' });
+     * })
      */
     setFunction(Function) {
-        this.function = Function;
+        this.#_function = Function;
         return this;
     }
 
@@ -339,12 +397,22 @@ class Extension {
      * - Note that any asynchronous function must be converted to a callback function to avoid cfx errors and cfx exports limitations
      * @readonly
      * @param {Object} Exports - An object with the export name as key and the exportable as value
+     * @example
+     * Cars.setCFXExports({
+     *      GetHashFromVehicleModel: (VehicleModel) => {
+     *          // Some Code Here
+     *      }
+     * })
+     *
+     *
+     * // And importing those exports will look something like this;
+     * exports.DiscordFramework.Extensions().Cars.GetHashFromVehicleModel('Adder')
      */
     setCFXExports(Exports) {
         if(typeof Exports !== 'object') return this.#flagError(`Extension<${this.name}>.setCFXExports() Parameter type must be "Object"; received "${typeof Exports}"!`);
         if(Array.isArray(Object)) return this.#flagError(`Extension<${this.name}>.setCFXExports() Parameter type must be "Object"; received "Array"!`);
 
-        this.cfxExports = Exports;
+        this._cfxExports = Exports;
         emit('DiscordFramework:Extensions:UpdateCFXExports');
         return this;
     }
@@ -381,7 +449,7 @@ class Extension {
      * @return {Object} The provided config object provided in super()
      */
     getCFXExports() {
-        return this.cfxExports;
+        return this._cfxExports;
     }
 
 }
