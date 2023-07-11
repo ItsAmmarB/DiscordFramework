@@ -7,15 +7,15 @@ const Player = class Player {
         const player = NetworkPlayers.get(PlayerId);
         if(player) {
             try{
-                if(!player.Server.connections.disconnectedAt) return player;
+                if(!player.server.connections.disconnectedAt) return player;
             }
             catch(err) {
-                console.log(player);
             }
         };
 
         this.PUID = null;
-        this.Server = {
+
+        this.server = {
             id: PlayerId,
             name: GetPlayerName(PlayerId) || null,
             identifiers: Player.GetIdentifiers(PlayerId, 1),
@@ -23,19 +23,20 @@ const Player = class Player {
                 status: 'unknown',
                 connectingAt: null,
                 connectedAt: null,
+                joiningAt: null,
                 joinedAt: null,
                 disconnectedAt: null,
                 disconnectReason: null
             }
         };
-        this.Discord = {
-            id: this.Server.identifiers.find(identifier => identifier.includes('discord:')) ? this.Server.identifiers.find(identifier => identifier.includes('discord:')).split(':')[1] : null,
+        this.discord = {
+            id: this.server.identifiers.find(identifier => identifier.includes('discord:')) ? this.server.identifiers.find(identifier => identifier.includes('discord:')).split(':')[1] : null,
             guilds: null
         };
-        this.Cache = {
+        this.cache = {
         }; // extensions and different resources can store things here and use it
 
-        if (this.Discord.id) {
+        if (this.discord.id) {
             this.#DiscordGuildsUpdate();
         }
 
@@ -55,7 +56,7 @@ const Player = class Player {
      * @return {string} Player Name
      */
     getName() {
-        return this.Server.name;
+        return this.server.name;
     }
 
     /**
@@ -63,14 +64,14 @@ const Player = class Player {
      * @return {string} Server ID
      */
     getServerId() {
-        return this.Server.id;
+        return this.server.id;
     }
 
     /**
      * Set the player's server ID
      */
     setServerId(ServerId) {
-        this.Server.id = ServerId;
+        this.server.id = ServerId;
         this.#UpdateDatabaseInformation();
         return this;
     }
@@ -80,7 +81,7 @@ const Player = class Player {
      * @return {(void|string)} Discord ID
      */
     getDiscordId() {
-        return this.Discord.id;
+        return this.discord.id;
     }
 
     /**
@@ -88,7 +89,7 @@ const Player = class Player {
      * @return {string[]} player identifiers
      */
     getIdentifiers() {
-        return this.Server.identifiers;
+        return this.server.identifiers;
     }
 
     /**
@@ -96,15 +97,15 @@ const Player = class Player {
      * @return {string[]} current status of the player
      */
     getStatus() {
-        return this.Server.connections.status;
+        return this.server.connections.status;
     }
 
     /**
      * Sets the player status
      * @param {string} Status The new player status
      */
-    setStatus(Status) {
-        this.Server.connections.status = Status;
+    #setStatus(Status) {
+        this.server.connections.status = Status;
         return this;
     }
 
@@ -113,7 +114,7 @@ const Player = class Player {
      * @return {<{Status: string, ConnectingAt: number, JoinedAt: number, DisconnectedAt: number, DisconnectReason: (void|string)}>} Connections details
      */
     getConnections() {
-        return this.Server.connections;
+        return this.server.connections;
     }
 
     /**
@@ -121,7 +122,8 @@ const Player = class Player {
      * @param {number} timestamp A Unix timestamp
      */
     setConnectingAt(timestamp) {
-        this.Server.connections.connectingAt = timestamp;
+        this.server.connections.connectingAt = timestamp;
+        this.#setStatus('Connecting');
         return this;
     }
 
@@ -130,7 +132,18 @@ const Player = class Player {
      * @param {number} timestamp A Unix timestamp
      */
     setConnectedAt(timestamp) {
-        this.Server.connections.connectedAt = timestamp;
+        this.server.connections.connectedAt = timestamp;
+        this.#setStatus('Connected');
+        return this;
+    }
+
+    /**
+     * Sets the timestamp when the player has started joining
+     * @param {number} timestamp A Unix timestamp
+     */
+    setJoiningAt(timestamp) {
+        this.server.connections.joiningAt = timestamp;
+        this.#setStatus('Joining');
         return this;
     }
 
@@ -139,7 +152,8 @@ const Player = class Player {
      * @param {number} timestamp A Unix timestamp
      */
     setJoinedAt(timestamp) {
-        this.Server.connections.joinedAt = timestamp;
+        this.server.connections.joinedAt = timestamp;
+        this.#setStatus('Joined');
         return this;
     }
 
@@ -148,7 +162,8 @@ const Player = class Player {
      * @param {number} timestamp A Unix timestamp
      */
     setDisconnectedAt(timestamp) {
-        this.Server.connections.disconnectedAt = timestamp;
+        this.server.connections.disconnectedAt = timestamp;
+        this.#setStatus('Disconnected');
         return this;
     }
 
@@ -157,7 +172,7 @@ const Player = class Player {
      * @param {string} reason Why the player disconnected
      */
     setDisconnectReason(reason) {
-        this.Server.connections.disconnectReason = reason;
+        this.server.connections.disconnectReason = reason;
         return this;
     }
 
@@ -180,7 +195,7 @@ const Player = class Player {
      * @return {hash} the player's ped
      */
     getPed() {
-        return GetPlayerPed(this.Server.id);
+        return GetPlayerPed(this.server.id);
     }
 
     /**
@@ -188,7 +203,7 @@ const Player = class Player {
      * @param {hash} model
      */
     setPed(model) {
-        SetPlayerModel(this.Server.id, model);
+        SetPlayerModel(this.server.id, model);
     }
 
     /**
@@ -196,7 +211,7 @@ const Player = class Player {
      * @return {boolean} whether the player is invincible or not
      */
     getInvincible() {
-        return GetPlayerInvincible(this.Server.id);
+        return GetPlayerInvincible(this.server.id);
     }
 
     /**
@@ -204,7 +219,7 @@ const Player = class Player {
      * @param {boolean} bool
      */
     setInvincible(bool) {
-        SetPlayerInvincible(this.Server.id, bool);
+        SetPlayerInvincible(this.server.id, bool);
     }
 
     /**
@@ -212,7 +227,7 @@ const Player = class Player {
      * @return {boolean} whether player is trying to evade the cops
      */
     getIsEvadingWantedLevel() {
-        return IsPlayerEvadingWantedLevel(this.Server.id);
+        return IsPlayerEvadingWantedLevel(this.server.id);
     }
 
     /**
@@ -220,7 +235,7 @@ const Player = class Player {
      * @return {number} wanted level
      */
     getWantedLevel() {
-        return GetPlayerWantedLevel(this.Server.id);
+        return GetPlayerWantedLevel(this.server.id);
     }
 
     /**
@@ -228,7 +243,7 @@ const Player = class Player {
      * @param {number} level 0 - 5 representing the stars
      */
     setWantedLevel(level) {
-        SetPlayerWantedLevel(this.Server.id, level, false);
+        SetPlayerWantedLevel(this.server.id, level, false);
     }
 
     /**
@@ -260,7 +275,7 @@ const Player = class Player {
      * @return {boolean} Whether ped is frozen or not
      */
     getFreezePosition() {
-        return this.Cache.Frozen || null;
+        return this.cache.Frozen || null;
     }
 
     /**
@@ -269,7 +284,7 @@ const Player = class Player {
      */
     setFreezePosition(bool) {
         FreezeEntityPosition(this.getPed(), bool);
-        this.Cache.Frozen = bool;
+        this.cache.Frozen = bool;
     }
 
     /**
@@ -343,7 +358,7 @@ const Player = class Player {
      */
     setRagdoll(bool) {
         SetPedCanRagdoll(this.getPed(), bool);
-        this.Cache.CanRagdoll = bool;
+        this.cache.CanRagdoll = bool;
     }
 
     /**
@@ -351,7 +366,7 @@ const Player = class Player {
      * @return {boolean} Ragdoll state
      */
     getRagdoll() {
-        return this.Cache.CanRagdoll || null;
+        return this.cache.CanRagdoll || null;
     }
 
     /**
@@ -359,7 +374,7 @@ const Player = class Player {
      * @param {number} bucket 0 - 63
      */
     setRoutingBucket(bucket) {
-        SetPlayerRoutingBucket(this.Server.id, bucket);
+        SetPlayerRoutingBucket(this.server.id, bucket);
         SetEntityRoutingBucket(this.getPed(), bucket);
     }
 
@@ -368,7 +383,7 @@ const Player = class Player {
      * @return {boolean} Routing bucket ID
      */
     getRoutingBucket() {
-        return GetPlayerRoutingBucket(this.Server.id);
+        return GetPlayerRoutingBucket(this.server.id);
     }
 
 
@@ -411,7 +426,7 @@ const Player = class Player {
      */
     clearWantedLevel() {
         if(this.wantedLevel) {
-            ClearPlayerWantedLevel(this.Server.id);
+            ClearPlayerWantedLevel(this.server.id);
         }
     }
 
@@ -420,7 +435,7 @@ const Player = class Player {
      * @param {string} reason the reason for the kick
      */
     kick(reason = 'No reason provided') {
-        DropPlayer(this.Server.id, reason);
+        DropPlayer(this.server.id, reason);
     }
 
     /**
@@ -442,7 +457,7 @@ const Player = class Player {
      * @return {boolean} whether player is ace allowed or not
      */
     isAceAllowed(ace) {
-        return IsPlayerAceAllowed(this.Server.id, ace) ? true : false;
+        return IsPlayerAceAllowed(this.server.id, ace) ? true : false;
     }
 
     pushToNetwork() {
@@ -465,8 +480,8 @@ const Player = class Player {
         }
 
 
-        for (let i = 0; i < GetNumPlayerIdentifiers(this.Server.id); i++) {
-            const Identifier = GetPlayerIdentifier(this.Server.id, i);
+        for (let i = 0; i < GetNumPlayerIdentifiers(this.server.id); i++) {
+            const Identifier = GetPlayerIdentifier(this.server.id, i);
             if(returnAsArray) {
                 Identifiers.push(Identifier);
             }
@@ -513,7 +528,7 @@ const Player = class Player {
         const { helpers: { FindOne, InsertOne, UpdateOne } } = require('../core/lib/mongodb/index');
 
         // Database
-        FindOne('Players', { 'information.identifiers': { $in: this.Server.identifiers } }, async result => {
+        FindOne('Players', { 'information.identifiers': { $in: this.server.identifiers } }, async result => {
             if (result) {
 
                 this.PUID = result._id;
@@ -523,19 +538,19 @@ const Player = class Player {
 
                 // Update serverId and lastSeenTimestamp
                 Query.$set = {
-                    'information.serverId': this.Server.id,
+                    'information.serverId': this.server.id,
                     'information.lastSeenTimestamp': Date.now()
                 };
 
                 // Check for new Identifiers and update
-                const NewIdentifiers = this.Server.identifiers.filter(identifier => !result.information.identifiers.includes(identifier));
+                const NewIdentifiers = this.server.identifiers.filter(identifier => !result.information.identifiers.includes(identifier));
                 if (NewIdentifiers.length > 0) {
                     if (!Query.$push) Query.$push = {};
                     Query.$push['information.identifiers'] = { $each: NewIdentifiers };
                 }
 
                 // Check for a new name change and update
-                const NewName = this.Server.name;
+                const NewName = this.server.name;
                 if (NewName !== result.information.names[0].name) {
                     if (!Query.$push) Query.$push = {};
                     Query.$push['information.names'] = {
@@ -547,7 +562,7 @@ const Player = class Player {
                 // Check Location
                 const fetch = require('node-fetch');
 
-                let GeoIP = await fetch('http://ip-api.com/json/' + this.Server.identifiers.find(iden => iden.includes('ip:')).split(':')[1]);
+                let GeoIP = await fetch('http://ip-api.com/json/' + this.server.identifiers.find(iden => iden.includes('ip:')).split(':')[1]);
                 GeoIP = await GeoIP.json();
                 if (GeoIP.status.toLowerCase() === 'success') {
                     Query.$set['information.location'] = `${GeoIP.country}, ${GeoIP.regionName}, ${GeoIP.city}`;
@@ -565,12 +580,12 @@ const Player = class Player {
                 const NewPlayer = {
                     _id: this.PUID,
                     information: {
-                        discordId: this.Discord.id,
-                        serverId: this.Server.id,
+                        discordId: this.discord.id,
+                        serverId: this.server.id,
                         playtime: 0,
                         lastSeenTimestamp: Date.now(),
-                        identifiers: this.Server.identifiers,
-                        names: [{ name: this.Server.name, timestamp: Date.now() }],
+                        identifiers: this.server.identifiers,
+                        names: [{ name: this.server.name, timestamp: Date.now() }],
                         location: null
                     },
                     infractions: [],
@@ -580,7 +595,7 @@ const Player = class Player {
                 // Get the player's country AKA. GeoIP
                 const fetch = require('node-fetch');
 
-                // let GeoIP = await fetch('http://ip-api.com/json/' + this.Server.identifiers.find(iden => iden.includes('ip:')).split(':')[1]);
+                // let GeoIP = await fetch('http://ip-api.com/json/' + this.server.identifiers.find(iden => iden.includes('ip:')).split(':')[1]);
                 let GeoIP = await fetch('http://ip-api.com/json/51.36.221.139');
                 GeoIP = await GeoIP.json();
                 if (GeoIP.status.toLowerCase() === 'success') {
@@ -600,8 +615,8 @@ const Player = class Player {
 
         const Discord = require('../core/lib/discord/index');
 
-        this.Discord.guilds = Discord.helpers.GetSharedGuilds(this.Discord.id).map(guild => {
-            const Member = guild.members.resolve(this.Discord.id);
+        this.discord.guilds = Discord.helpers.GetSharedGuilds(this.discord.id).map(guild => {
+            const Member = guild.members.resolve(this.discord.id);
             return {
                 ID: guild.id,
                 Name: guild.name,
@@ -611,16 +626,16 @@ const Player = class Player {
         });
 
         Discord.client.on('guildMemberUpdate', (oldM, newM) => {
-            if(this.Discord.id && newM.id === this.Discord.id && !this.Server.connections.disconnectedAt) {
+            if(this.discord.id && newM.id === this.discord.id && !this.server.connections.disconnectedAt) {
                 Debug(`(${this.getServerId()}) ${this.getName()}'s roles were updated!`);
-                const Guild = this.Discord.guilds.find(guild => guild.ID === newM.guild.id);
+                const Guild = this.discord.guilds.find(guild => guild.ID === newM.guild.id);
                 if(Guild) {
                     Guild.Name = newM.guild.name;
                     Guild.Administrator = newM.permissions.has('ADMINISTRATOR');
                     Guild.Roles = newM.roles.cache.map(role => ({ ID: role.id, Name: role.name }));
                 }
                 else {
-                    this.Discord.guilds.push({
+                    this.discord.guilds.push({
                         ID: newM.guild.id,
                         Name: newM.guild.name,
                         Administrator: newM.permissions.has('ADMINISTRATOR'),
@@ -655,10 +670,10 @@ const PlayerSet = class PlayerSet extends Set {
         }
         else {
             Identifier = String(Identifier);
-            const ValIden = this.ValidateIdentifier(Identifier);
+            const ValIden = this.validateIdentifier(Identifier);
             if (ValIden === 'Server') {
                 const _Players = this.toArray();
-                const _Player = _Players.filter(player => String(player.Server.id) === Identifier).sort((a, b) => b.Server.id - a.Server.id)[0];
+                const _Player = _Players.filter(player => String(player.server.id) === Identifier).sort((a, b) => b.server.id - a.server.id)[0];
                 if (_Player) {
                     return _Player;
                 }
@@ -668,7 +683,7 @@ const PlayerSet = class PlayerSet extends Set {
             }
             else if (ValIden === 'Discord') {
                 const _Players = this.toArray();
-                const _Player = _Players.filter(player => String(player.Discord.id) === Identifier).sort((a, b) => b.Server.id - a.Server.id)[0];
+                const _Player = _Players.filter(player => String(player.discord.id) === Identifier).sort((a, b) => b.server.id - a.server.id)[0];
                 if (_Player) {
                     return _Player;
                 }
@@ -678,7 +693,7 @@ const PlayerSet = class PlayerSet extends Set {
             }
             else if (ValIden === 'Identifier') {
                 const _Players = this.toArray();
-                const _Player = _Players.filter(player => player.Server.identifiers.map(iden => String(iden).toLowerCase()).find(iden => iden === Identifier)).sort((a, b) => b.Server.id - a.Server.id)[0];
+                const _Player = _Players.filter(player => player.server.identifiers.map(iden => String(iden).toLowerCase()).find(iden => iden === Identifier)).sort((a, b) => b.server.id - a.server.id)[0];
                 if (_Player) {
                     return _Player;
                 }
@@ -695,13 +710,80 @@ const PlayerSet = class PlayerSet extends Set {
 
     /**
      * Returns the Players Collection as an array
-     * @returns {object[]} Array of players objects
+     * @returns {Player[]} Array of players objects
      */
     toArray() {
         return Array.from(this.values(), element => element);
     }
 
-    ValidateIdentifier(Identifier) {
+    /**
+     * Filters the network player to any of the available conditions
+     * @param {Array.<('Connecting' | '!Connecting' | 'Connected' | '!Connected' | 'Joining' | '!Joining' | 'Joined' | '!Joined' | 'Disconnected' | '!Disconnected')>} filters - The available filters to filter out the player from the network players
+     * @returns {Player[]} An array of the filtered players
+     * @example
+     * NetworkPlayers.filter(['Joined', '!Disconnected']) // this will return an array of the players who had joined and didn't leave
+     * NetworkPlayers.filter(['Connecting', '!Connected', 'Disconnected']) // this will return an array of the players who started connecting but left before joining
+     */
+    filter(filters) {
+        if(typeof filters !== 'object' && !Array.isArray(filters)) {
+            if(typeof filters === 'string') {
+                filters = [...filters.split('[')[1].split(']')[0].split(',').map(f => f.split('\'')[1])];
+            }
+            else {
+                return console.error('PlayerSet.filter(filters) Filters parameter must be an array!');
+            }
+        }
+        return this.toArray().filter(player => {
+            let filter = player.server.connections.status;
+
+            if(filters.find(f => f === 'Connecting')) {
+                filter = filter && player.server.connections.connectingAt;
+            }
+            if(filters.find(f => f === '!Connecting')) {
+                filter = filter && !player.server.connections.connectingAt;
+            }
+
+            if(filters.find(f => f === 'Connected')) {
+                filter = filter && player.server.connections.connectedAt;
+            }
+            if(filters.find(f => f === '!Connected')) {
+                filter = filter && !player.server.connections.connectedAt;
+            }
+
+            if(filters.find(f => f === 'Joining')) {
+                filter = filter && player.server.connections.joiningAt;
+            }
+            if(filters.find(f => f === '!Joining')) {
+                filter = filter && !player.server.connections.joiningAt;
+            }
+
+            if(filters.find(f => f === 'Joined')) {
+                filter = filter && player.server.connections.joinedAt;
+            }
+            if(filters.find(f => f === '!Joined')) {
+                filter = filter && !player.server.connections.joinedAt;
+            }
+
+            if(filters.find(f => f === 'Disconnected')) {
+                filter = filter && player.server.connections.disconnectedAt;
+            }
+            if(filters.find(f => f === '!Disconnected')) {
+                filter = filter && !player.server.connections.disconnectedAt;
+            }
+
+            return filter;
+        });
+    }
+
+    /**
+     * Checks whether the provided player identifier is an actual identifier
+     * @param {string|number} Identifier A player identifier of any kind
+     * @returns {('Identifier'|'Discord'|'Server')|undefined} The identifier type
+     * @example
+     * NetworkPlayers.validateIdentifier('fivem:63953')
+     * // output: 'Identifier'
+     */
+    validateIdentifier(Identifier) {
         if (Identifier.includes('license:') && typeof Identifier === 'string' ||
             Identifier.includes('discord:') && typeof Identifier === 'string' ||
             Identifier.includes('live:') && typeof Identifier === 'string' ||
@@ -729,9 +811,10 @@ const PlayerSet = class PlayerSet extends Set {
 const NetworkPlayers = new PlayerSet();
 
 if(Debug) {
-    RegisterCommand('Players', (source) => {
+    RegisterCommand('Players', (source, args) => {
         if(source > 0) return console.log('ServerFX terminal command only!');
-        return console.log(NetworkPlayers);
+        if(!args[0]) return console.log(NetworkPlayers);
+        return console.log(NetworkPlayers.filter(args.join('')));
     });
     RegisterCommand('Player', (source, args) => {
         if(source > 0) return console.log('ServerFX terminal command only!');
