@@ -4,6 +4,7 @@ require('./core/index');
 
 const Config = require('./config');
 const { Player, NetworkPlayers } = require('./components/player');
+const Logger = require('./components/logger');
 
 const ConnectionExecutables = [];
 
@@ -86,6 +87,8 @@ on('playerConnecting', async (playerName, setKickReason, deferrals) => {
     }
 
     console.log(`^9 ===> ^0${cPlayerId} ^9| ^0${cPlayer.getName()} ^9is connecting^0`);
+    Logger.player(`[PUID: ${cPlayer.PUID}] ${cPlayer.getServerId()} | ${cPlayer.getName()} is connecting`);
+
     deferrals.update(`Adding player to network${dots}`);
     cPlayer.pushToNetwork();
     clearInterval(dotsInterval);
@@ -110,6 +113,8 @@ on('playerJoining', async TempID => {
     }
 
     console.log(`^4 ===> ^0${jPlayer.getServerId()} ^4| ^0${jPlayer.getName()} ^4is joining^0`);
+    Logger.player(`[PUID: ${jPlayer.PUID}] ${jPlayer.getServerId()} | ${jPlayer.getName()} is joining`);
+
     emit('DiscordFramework:Player:Joining', jPlayer);
 });
 
@@ -132,6 +137,8 @@ onNet('playerJoined', async PlayerId => {
 
     emit('DiscordFramework:Player:Joined', jPlayer);
     console.log(`^2 ===> ^0${jPlayer.getServerId()} ^2| ^0${jPlayer.getName()} ^2joined^0`);
+    Logger.player(`[PUID: ${jPlayer.PUID}] ${jPlayer.getServerId()} | ${jPlayer.getName()} is joined`);
+
 });
 
 // Triggered when a player leaves the server for whatever reason
@@ -142,6 +149,8 @@ on('playerDropped', Reason => {
 
     emit('DiscordFramework:Player:Disconnected', dPlayer, Reason);
     console.log(`^1 ===> ^0${dPlayer.getServerId()} ^1| ^0${dPlayer.getName()} ^1 ${Reason === 'Exiting' ? 'left' : Reason}^0`);
+    Logger.player(`[PUID: ${dPlayer.PUID}] ${dPlayer.getServerId()} | ${dPlayer.getName()} ${Reason === 'Exiting' ? 'left' : Reason}`);
+
 });
 
 
@@ -186,3 +195,8 @@ module.exports = {
         ConnectionExecutables.push(Function);
     }
 };
+
+
+on('txAdmin:events:serverShuttingDown', ({ delay, admin, message }) => {
+    console.log(delay, admin, message);
+});

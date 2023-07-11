@@ -1,4 +1,7 @@
 require('../version')(async Result => {
+    require('../components/logger');
+    await Delay(250);
+    const logger = require('../components/logger');
     const Config = require('../config');
 
     if(Result.checked) {
