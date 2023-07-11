@@ -23,7 +23,7 @@ on('DiscordFramework:Core:Discord:Ready', async () => {
     }
 
     let counter = 0;
-    while(Extensions.toArray.length !== LocalExtensionsFile) {
+    while(Extensions.toArray().length !== LocalExtensionsFile.filter(f => f.files.length > 0).length) {
         if(counter > 20) {
             break;
         }
@@ -31,14 +31,13 @@ on('DiscordFramework:Core:Discord:Ready', async () => {
         counter++;
     }
 
-    if(Extensions.toArray.length !== LocalExtensionsFile) {
+    if(Extensions.toArray().length !== LocalExtensionsFile.filter(f => f.files.length > 0).length) {
         LocalExtensionsFile.filter(lef => !Extensions.toArray().find(e => lef.name.toLowerCase() === e.name.toLowerCase())).forEach(lef => {
             new Extension({ name: lef.name })
                 .setStatus('Unknown');
         });
     }
 
-    await Delay(1000);
     emit('DiscordFramework:Core:Extensions:Ready');
 });
 
