@@ -15,8 +15,8 @@ const Extensions = new class Extensions extends Set {
     }
 
     /**
-     * Returns the players Collection as an array
-     * @returns {Extension[]} Array of players objects
+     * Returns the Extensions Set() as an array
+     * @returns {Extension[]} Array of Extensions
      */
     toArray() {
         return Array.from(this.values(), element => element);
