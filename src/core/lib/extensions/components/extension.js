@@ -169,11 +169,6 @@ class Extension {
      */
     async #register() {
 
-        // Check if the extension is a mere template and #register it as 'Template'
-        if(this.name === 'Template' && !this.toggle) {
-            this.setStatus('Template');
-        }
-
         // Check if the extension is supposed to be toggle and if not then #register it as disabled
         if(!this.toggle) {
             this.setStatus('Disabled');
@@ -182,6 +177,11 @@ class Extension {
         // Whether an error was passed to the method
         if(this.#_error) {
             this.setStatus('Error');
+        }
+
+        // Check if the extension is a mere template and #register it as 'Template'
+        if(this.name === 'Template' && !this.toggle) {
+            this.setStatus('Template');
         }
 
         if(this.dependencies.length > 0) {
