@@ -21,11 +21,11 @@ require('../version')(async Result => {
         Debug('Discord Module Ready!');
 
         discordPrintable =
-                '\n^9Discord' +
-                `\n         ^3Client Details: ^4${Discord.client.user.tag + ' ^6(' + Discord.client.user.id + ')'}` +
-                `\n         ^3Client Invite: ^4${Discord.client.generateInvite({ scopes: ['bot'] })}` +
-                `\n         ^3Discord Users: ^4${Discord.client.users.cache.size + (Discord.client.users.cache.size === 1 ? ' User' : ' Users')}` +
-                `\n         ^3Discord Guilds: \n${Discord.client.guilds.cache.map(guild => `                ^3- ^4${guild.name} ^6(${guild.id})`).join('\n')}` +
+                '\n     ^3 - ^9Discord' +
+                `\n              ^3Client Details: ^4${Discord.client.user.tag + ' ^6(' + Discord.client.user.id + ')'}` +
+                `\n              ^3Client Invite: ^4${Discord.client.generateInvite({ scopes: ['bot'] })}` +
+                `\n              ^3Discord Users: ^4${Discord.client.users.cache.size + (Discord.client.users.cache.size === 1 ? ' User' : ' Users')}` +
+                `\n              ^3Discord Guilds: \n${Discord.client.guilds.cache.map(guild => `                ^3- ^4${guild.name} ^6(${guild.id})`).join('\n')}` +
                 '\n^0';
     });
     const Discord = require('./lib/discord/index');
@@ -40,11 +40,11 @@ require('../version')(async Result => {
 
         const dbInfo = await MongoDB.client.db(Config.core.mongo.databaseName).stats();
         mongoPrintable =
-                '\n^9MongoDB' +
-                `\n         ^3Datebase Name: ^4${Config.core.mongo.databaseName}` +
-                `\n         ^3MongoDB Collections: ^4${dbInfo.collections}` +
-                `\n         ^3MongoDB Documents: ^4${dbInfo.objects}` +
-                `\n         ^3MongoDB Size: ^4${Math.round(((dbInfo.dataSize / 1024) + Number.EPSILON) * 100) / 100} MB ^6(${dbInfo.dataSize} KB)` +
+                '\n     ^3 - ^9MongoDB' +
+                `\n              ^3Datebase Name: ^4${Config.core.mongo.databaseName}` +
+                `\n              ^3MongoDB Collections: ^4${dbInfo.collections}` +
+                `\n              ^3MongoDB Documents: ^4${dbInfo.objects}` +
+                `\n              ^3MongoDB Size: ^4${Math.round(((dbInfo.dataSize / 1024) + Number.EPSILON) * 100) / 100} MB ^6(${dbInfo.dataSize} KB)` +
                 '\n^0';
     });
     const MongoDB = require('./lib/mongodb/index');
@@ -66,14 +66,15 @@ require('../version')(async Result => {
         const Console = require('../components/console');
 
         extensionsPrintable =
-                '\n^9Extensions' +
-                `\n         ^3Extensions Count: ^4${SortedExtensions.length}` +
-                `\n         ^3Extensions: \n${Console.Table(SortedExtensions.map((extension, index) => {
+                '\n     ^3 - ^9Extensions' +
+                `\n              ^3Extensions Count: ^4${SortedExtensions.length}` +
+                `\n              ^3Extensions: \n${Console.Table(SortedExtensions.map((extension, index) => {
                     index = index + 1;
                     const color = Number.isInteger(index / 2) ? '^4' : '^9';
                     const result = {};
                     result['^3Index'] = (extension.status === 'Template' ? '^6' : color) + index;
                     result['^3Name'] = (extension.status === 'Template' ? '^6' : color) + extension.name;
+                    result['^3Description'] = (extension.status === 'Template' ? '^6' : color) + extension.description;
                     result['^3Status'] = extension.status === 'Template' ? '^6' + extension.status : extension.status !== 'Enabled' ? '^8' + extension.status : '^2' + extension.status;
                     result['^3Author'] = (extension.status === 'Template' ? '^6' : color) + (extension.author ? extension.author : 'Unknown');
                     result['^3Version'] = (extension.status === 'Template' ? '^6' : color) + (extension.version ? extension.version : 'Unknown');
@@ -102,7 +103,17 @@ require('../version')(async Result => {
         Extensions
     };
 
-    console.log(discordPrintable + mongoPrintable + extensionsPrintable);
+    console.log(`^3
+`);
+    console.log('');
+    console.log(`
+             █▀▄ █ █▀ █▀▀ █▀█ █▀█ █▀▄ █▀▀ █▀█ ▄▀█ █▀▄▀█ █▀▀ █ █ █ █▀█ █▀█ █▄▀
+             █▄▀ █ ▄█ █▄▄ █▄█ █▀▄ █▄▀ █▀  █▀▄ █▀█ █ ▀ █ ██▄ ▀▄▀▄▀ █▄█ █▀▄ █ █
+    ^3|==============================================================================|^0
+    ${discordPrintable + mongoPrintable + extensionsPrintable}
+    ^3|==============================================================================|^0
+    `);
+
 
     emit('DiscordFramework:Core:Ready');
     Debug('DiscordFramework Core ready!');
