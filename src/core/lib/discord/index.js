@@ -49,7 +49,7 @@ const GetSharedGuilds = UserId => {
     if (!IsSnowFlake(UserId)) throw new Error('DiscordFramework: Discord --> GetSharedGuilds() Invalid player ID provided');
 
     const { NetworkPlayers } = require('../../../components/player');
-    if(NetworkPlayers.ValidateIdentifier(UserId) !== 'Discord') {
+    if(NetworkPlayers.validateIdentifier(UserId) !== 'Discord') {
         // Check whether the provided ID is a server ID or a Discord ID; and if not discord, then fetch the player data and retrieve their Discord ID
         const Player = NetworkPlayers.get(UserId);
         if (!Player) throw new Error('DiscordFramework: Discord --> GetSharedGuilds() Player does not have a PlayerNetworkObject');
@@ -99,7 +99,7 @@ const GetMember = async (UserId, GuildId = Config.core.discord.communityGuild.id
     if (!UserId) throw new Error('DiscordFramework: Discord --> GetMember() No player ID provided');
 
     const { NetworkPlayers } = require('../../../components/player');
-    if(NetworkPlayers.ValidateIdentifier(UserId) !== 'Discord') {
+    if(NetworkPlayers.validateIdentifier(UserId) !== 'Discord') {
         // Check whether the provided ID is a server ID or a Discord ID; and if not discord, then fetch the player data and retrieve their Discord ID
         const Player = NetworkPlayers.get(UserId);
         if (!Player) throw new Error('DiscordFramework: Discord --> GetMember() Player does not have a PlayerNetworkObject');
@@ -133,7 +133,7 @@ const GetUser = async UserId => {
 
     const { NetworkPlayers } = require('../../../components/player');
     // Check whether the provided ID is a server ID or a Discord ID; and if not discord, then fetch the player data and retrieve their Discord ID
-    if(NetworkPlayers.ValidateIdentifier(UserId) !== 'Discord') {
+    if(NetworkPlayers.validateIdentifier(UserId) !== 'Discord') {
         const Player = NetworkPlayers.get(UserId);
         if (!Player) throw new Error('DiscordFramework: Discord --> GetUser() Player does not have a PlayerNetworkObject');
         UserId = Player.discordId;
