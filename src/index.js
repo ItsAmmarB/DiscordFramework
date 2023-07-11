@@ -1,44 +1,39 @@
-/**
- * This block starts the Core modules before allowing any player to connect to the server
- */
-require('./core/index');
-let isCoreReady = false;
-on('DiscordFramework:Core:Ready', () => {
-    CountPlaytime();
-    GetMember = require('./core/lib/discord/index').helpers.GetMember;
-    UpdateMany = require('./core/lib/mongodb/index').helpers.UpdateMany;
-
-    setTimeout(() => isCoreReady = true, 3000); // A 3 seconds timeout to make sure everything is ready
-});
-
-
-
 const ms = require('ms');
 
-const Config = require('./config');
+require('./core/index');
 
+const Config = require('./config');
+const { Player, NetworkPlayers } = require('./components/player');
+
+const ConnectionExecutables = [];
+
+let isCoreReady = false;
 let GetMember = null;
 let UpdateMany = null;
 
-const { Player, NetworkPlayers } = require('./components/player');
 
-const CountPlaytime = () => setInterval(() => {
-    UpdateMany('Players', { '_id': { $in: NetworkPlayers.toArray().filter(p => !p.Server.connections.disconnectedAt).map(p => p.PUID) } }, {
-        $inc: { 'details.playtime': 1 },
-        $set: { 'details.lastSeenTimestmap': Date.now() }
-    });
-}, 60000);
+on('DiscordFramework:Core:Ready', () => {
+    GetMember = require('./core/lib/discord/index').helpers.GetMember;
+    UpdateMany = require('./core/lib/mongodb/index').helpers.UpdateMany;
 
-const ConnectionExecutables = [];
+    isCoreReady = true;
+
+    setInterval(() => {
+        UpdateMany('Players', { '_id': { $in: NetworkPlayers.filter(['!Disconnected']).map(p => p.PUID) } }, {
+            $inc: { 'details.playtime': 1 },
+            $set: { 'details.lastSeenTimestmap': Date.now() }
+        });
+    }, 60000);
+});
+
 // Triggered when the player's connection request is received by the server
 on('playerConnecting', async (playerName, setKickReason, deferrals) => {
-
     const cPlayerId = global.source;
 
     deferrals.defer();
 
     let dots = '';
-    setInterval(() => { dots.length > 3 ? dots = '.' : dots = dots + '.'; }, 750);
+    const dotsInterval = setInterval(() => { dots.length > 3 ? dots = '.' : dots = dots + '.'; }, 750);
 
     while(!isCoreReady) {
         deferrals.update(`Core modules are not ready yet!\nPlease wait${dots}`);
@@ -49,7 +44,6 @@ on('playerConnecting', async (playerName, setKickReason, deferrals) => {
     deferrals.update(`Fetching information${dots}`);
 
     const cPlayer = new Player(cPlayerId)
-        .setStatus('Connecting')
         .setConnectingAt(Date.now());
 
     await Delay(100);
@@ -58,48 +52,19 @@ on('playerConnecting', async (playerName, setKickReason, deferrals) => {
     await Delay(250);
     const cPlayerDatabase = await cPlayer.getDatabase();
     await Delay(250);
-    const cPlayerOutStandingBans = await cPlayerDatabase.infractions.filter(infraction => infraction.type === 'Ban' && ((infraction.details.timestamp + infraction.details.duration) >= Date.now() || infraction.details.duration === 0));
+    let cPlayerOutStandingBans = await cPlayerDatabase.infractions.filter(infraction => infraction.type === 'Ban').filter(infraction => ((infraction.details.timestamp + infraction.details.duration) >= Date.now() || infraction.details.duration === 0));
 
     if(cPlayerOutStandingBans.length > 0) {
         deferrals.update(`Verifying ban${dots}`);
 
-        const cPlayerBan = cPlayerOutStandingBans[0];
-        return deferrals.presentCard({
-            'type': 'AdaptiveCard',
-            'body': [
-                {
-                    'type': 'TextBlock',
-                    'text': `You are banned! (BANID:${cPlayerBan._id})`,
-                    'size': 'Large',
-                    'weight': 'Bolder',
-                    'style': 'heading',
-                    'wrap': true,
-                    'color': 'Attention'
-                },
-                {
-                    'type': 'TextBlock',
-                    'text': cPlayerBan.details.duration > 0 ? ms((cPlayerBan.details.timestamp + cPlayerBan.details.duration) - Date.now(), { long: true }) + ' left to unban' : 'This ban permanent!',
-                    'isSubtle': true,
-                    'wrap': true
-                },
-                {
-                    'type': 'TextBlock',
-                    'text': `Reason: ${cPlayerBan.details.reason}`,
-                    'wrap': true,
-                    'color': 'Warning',
-                    'style': 'columnHeader'
-                },
-                {
-                    'type': 'TextBlock',
-                    'text': `Moderator: ${cPlayerBan.moderator}`,
-                    'wrap': true,
-                    'style': 'columnHeader',
-                    'size': 'Default',
-                    'color': 'Warning'
-                }
-            ]
-        });
-    }
+        /**
+         * I wouldn't go through the effort to change this adaptive card, it's very limited in options and it just looks very subtle right now; but hey, you do you!
+         * if you do decide to change this adaptive card, here is a website that I used to make this one
+         *                             https://adaptivecards.io/designer/
+         */
+        cPlayerOutStandingBans = cPlayerOutStandingBans.map(ban => ({ 'type': 'Container', 'items': [{ 'type': 'TextBlock', 'text': `**ID**: ${ban._id}`, 'wrap': true, 'fontType': 'default', 'size': 'Default', 'weight': 'Default', 'color': 'Light', 'isSubtle': false }, { 'type': 'TextBlock', 'text': `**Reason**: ${ban.details.reason}`, 'wrap': true, 'fontType': 'default', 'size': 'Default', 'weight': 'Default', 'color': 'Light', 'isSubtle': false }, { 'type': 'TextBlock', 'text': `**Duration**: ${ban.details.duration > 0 ? `${ms((ban.details.timestamp + ban.details.duration) - Date.now(), { long: true })} remining` : 'Indefinite'}`, 'wrap': true, 'fontType': 'default', 'size': 'Default', 'weight': 'Default', 'color': 'Light', 'isSubtle': false } ], 'verticalContentAlignment': 'Center', 'horizontalAlignment': 'Left', 'separator': true, 'spacing': 'Small', 'style': 'default' }));
+        return deferrals.presentCard({ 'type': 'AdaptiveCard', 'body': [{ 'type': 'Container', 'items': [ { 'type': 'TextBlock', 'text': '**You have an active ban!**', 'wrap': true, 'size': 'Large', 'weight': 'Bolder', 'color': 'Light', 'isSubtle': false }, { 'type': 'TextBlock', 'text': 'Active bans:', 'wrap': true, 'fontType': 'Monospace', 'size': 'Medium', 'weight': 'Lighter', 'color': 'Light', 'isSubtle': false } ] }, { 'type': 'Container', 'items': cPlayerOutStandingBans, 'style': 'emphasis', 'spacing': 'Small' } ], 'actions': [ { 'type': 'Action.OpenUrl', 'title': 'Need Help?', 'iconUrl': 'https://cdn-icons-png.flaticon.com/128/1660/1660114.png', 'url': Config.core.discord.communityGuild.invite } ] });
+    };
 
     if (!cPlayer.getDiscordId()) return deferrals.done('Discord ID could be detected!');
 
@@ -123,6 +88,7 @@ on('playerConnecting', async (playerName, setKickReason, deferrals) => {
     console.log(`^9 ===> ^0${cPlayerId} ^9| ^0${cPlayer.getName()} ^9is connecting^0`);
     deferrals.update(`Adding player to network${dots}`);
     cPlayer.pushToNetwork();
+    clearInterval(dotsInterval);
     await Delay(300);
 
     deferrals.done();
@@ -133,15 +99,13 @@ on('playerJoining', async TempID => {
     const jPlayerId = global.source;
     const jPlayer = new Player(TempID)
         .setServerId(jPlayerId)
-        .setStatus('Joining')
-        .setConnectedAt(Date.now());
+        .setConnectedAt(Date.now())
+        .setJoiningAt(Date.now());
 
     await Delay(500);
 
     if(!NetworkPlayers.get(jPlayer.getServerId())) { // the only way this could happen, is if the resource were to restart while the player is still joining (in the loadingscreen)
-        jPlayer
-            .setConnectingAt('Resource Restarted!')
-            .pushToNetwork();
+        jPlayer.pushToNetwork();
         await Delay(300);
     }
 
@@ -157,16 +121,12 @@ onNet('playerJoined', async PlayerId => {
     }
 
     const jPlayer = new Player(PlayerId)
-        .setStatus('Joined')
         .setJoinedAt(Date.now());
 
     await Delay(1000);
 
     if(!NetworkPlayers.get(jPlayer.getServerId())) { // the only way this could happen, is if the resource were to restart while the player is in the server
-        jPlayer
-            .setConnectingAt('Resource Restarted!')
-            .setConnectedAt('Resource Restarted!')
-            .pushToNetwork();
+        jPlayer.pushToNetwork();
         await Delay(300);
     }
 
@@ -177,7 +137,6 @@ onNet('playerJoined', async PlayerId => {
 // Triggered when a player leaves the server for whatever reason
 on('playerDropped', Reason => {
     const dPlayer = new Player(global.source)
-        .setStatus('Disconnected')
         .setDisconnectedAt(Date.now())
         .setDisconnectReason(Reason);
 
