@@ -17,7 +17,7 @@ Client.login(Config.core.discord.token);
 // ========================================================
 
 /**
- * Gets a discord guild information from a discord guild id
+ * Obtains a Guild from Discord, or the Guild cache if it's already available.
  * @async
  * @param {Discord.Snowflake} GuildId The discord guild id
  * @return {Promise<Discord.Guild|null>} discord guild
@@ -38,7 +38,7 @@ const GetGuild = async GuildId => {
 };
 
 /**
- * returns a list of all mutual/shared guild between the provided ID and the client
+ * Obtains a list of all shared Guilds between the Client and the Player/User
  * @async
  * @param {Discord.Snowflake|number} UserId The player's server ID
  * @returns {Discord.Guild[]} Array of Guilds
@@ -62,7 +62,7 @@ const GetSharedGuilds = UserId => {
 };
 
 /**
- * Get a discord role information from a discord role id
+ * Obtains a Role from a Discord Guild, or the Role cache if they're already available.
  * @async
  * @param {Discord.Snowflake} RoleId The discord role id
  * @param {Discord.Snowflake} GuildId The discord guild id
@@ -88,7 +88,7 @@ const GetRole = async (RoleId, GuildId = Config.core.discord.communityGuild.id) 
 };
 
 /**
- * Checks a player exists in a discord guild
+ * Obtains a User as a Member from a Discord Guild
  * @async
  * @param {Discord.Snowflake|number} UserId The player server ID or the player discord ID or any player identifier
  * @param {Discord.Snowflake} GuildId The discord guild id
@@ -122,7 +122,7 @@ const GetMember = async (UserId, GuildId = Config.core.discord.communityGuild.id
 };
 
 /**
- * Checks a player exists in a discord guild
+ * Obtains a User from Discord, or the User cache if it's already available.
  * @async
  * @param {Discord.Snowflake|number} UserId The player server ID or the player discord ID or any player identifier
  * @returns {Promise<Discord.User|null>} Discord User
@@ -154,7 +154,7 @@ const GetUser = async UserId => {
 
 
 /**
- * Checked whether the provided parameter is a sknowflake or not
+ * Checked whether the provided parameter is a sknowflake or not by comparing it to a SnowFlake's properties
  * @param {any} SnowFlake
  * @returns {boolean}
  */
