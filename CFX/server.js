@@ -1,27 +1,24 @@
-setTimeout(() => {
-    require(GetResourcePath(GetCurrentResourceName()) + '/Core/index');
-}, 500);
-
-// --------------------------------------
-//               EXPORTS
-// --------------------------------------
-
 /**
  * This registers exports without changing the environment behavior of the calling file
  */
 on('DiscordFramework:Export:Create', (Name, Function) => {
+    Debug(`Exporting Exports.${Name}`);
     exports(Name, Function);
-    if(global.DebugMode) console.debug(Name, 'export was create!');
 });
 
-// Credit: https://stackoverflow.com/questions/610406/javascript-equivalent-to-printf-string-format
-if (!String.prototype.format) {
-    String.prototype.format = function format() {
-        const args = arguments[0];
-        let text = this;
-        for (const elm in args) {
-            text = text.replace(`{${elm}}`, match => args[elm] != 'undefined' ? args[elm] : match);
-        }
-        return text;
-    };
-}
+
+const Logger = require(`${GetResourcePath(GetCurrentResourceName())}/src/components/logger`);
+
+/**
+ * Send a labeled log to the console if debug mode is enabled
+ * @param {string} msg The message to send to the console if debug mode is enabled
+ */
+global.Debug = msg => {
+    const isDebugEnabled = String(GetResourceMetadata(GetCurrentResourceName(), 'debug_mode', 0)).toLowerCase() === 'true' ? true : false;
+    if(!msg) return isDebugEnabled;
+    if(isDebugEnabled) console.log(`^5[DEBUG] ^3${msg.split('\n').join('\n        ')}^0`);
+    Logger.debug(`${msg.split('\n').join('\n        ')}`);
+};
+
+
+require(`${GetResourcePath(GetCurrentResourceName())}/src/index`);

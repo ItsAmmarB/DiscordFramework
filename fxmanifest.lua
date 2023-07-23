@@ -1,54 +1,28 @@
-fx_version 'cerulean'
-
+fx_version 'bodacious'
 game 'gta5'
 
-name 'DiscordFramework'
-description 'A custom framework based on the Discord for permissions'
-author 'ItsAmmarB#7897'
-version 'v4.0-indev'
-url 'https://github.com/ItsAmmarB/DiscordFramework/'
+author 'ItsAmmarB'
+version '0.0.3'
 
 debug_mode 'true'
 
-dependency 'yarn'
+shared_scripts {
+    'cfx/shared.js',
 
-server_script {
-
-    -- CORE
-    'CFX/server.js',
-   
-    -- EXTENSIONS
-    'extensions/**/sv_*.js',
-
-    -- -- UTILS
-    -- 'utils/**/sv_**.js'
-
+    -- Extensions' files
+    'src/extensions/**/sh_*.js'
 }
 
-client_script {
+client_scripts {
+    'cfx/client.js',
 
-    -- CORE
-    'CFX/client.js',
-
-    -- EXTENSIONS
-    'extensions/**/cl_*.js',
-
-    -- -- UTILS
-    -- 'utils/**/cl_**.js'
+    -- Extensions' files
+    'src/extensions/**/cl_*.js'
 }
 
+server_scripts {
+    'cfx/server.js',
 
-shared_script {
-
-    -- -- EXTENSIONS
-    'extensions/**/sh_*.js',
-   
-    -- -- COMMANDS
-    -- 'commands/**/sh_**.js',
-
-    -- -- UTILS
-    -- 'utils/**/sh_**.js'
-   
+    -- Extensions' files
+    -- 'src/extensions/**/sv_*.js'  -- This is better loaded from the Extensions module to regulate when the server files start loading
 }
-
-print('test')

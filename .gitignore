@@ -109,19 +109,19 @@ typings/
 .yarn.installed
 yarn.lock
 
-# ESLint
-.eslintrc.json
-
 # FiveM CFX DATA Resouce Cache folder 
 /cache
 
-# Indev
-/extensions/Session
-/extensions/Playerlist
-
-/utils/EventCallback
-
-/core/discord/config.js
-core/discord/config.js
-
 _dump
+
+src/config.js
+
+
+# eslint stuff
+.eslintignore
+.eslintrc.json
+
+
+docs/
+logs/
+temp/
