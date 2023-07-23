@@ -2,7 +2,7 @@ const Discord = require('../../discord/index');
 const MongoDB = require('../../mongodb/index');
 const Extensions = require('./extensions');
 
-const Utilities = require('../../../../utilities');
+const Utilities = require('../utilities');
 
 
 
@@ -320,6 +320,7 @@ class Extension {
             if(isNaN(playerId)) return this.#flagError(`Extension<${this.name}>.executeClient(playerId, ...) playerId type must be "Number"!`);
         };
         emitNet('DiscordFramework:Extensions:RunClientSide:' + this.name, playerId, payload);
+        return this;
     }
 
     /**
@@ -330,6 +331,7 @@ class Extension {
      * @returns {Extension}
      */
     setStatus(status) {
+        if(!status) return this;
         this.status = status;
         return this;
     }
@@ -360,6 +362,7 @@ class Extension {
      * })
      */
     setFunction(Function) {
+        if(!Function) return this;
         this.#_function = Function;
         return this;
     }
@@ -380,6 +383,7 @@ class Extension {
      * exports.DiscordFramework.Extensions().Cars.GetHashFromVehicleModel('Adder')
      */
     setCFXExports(Exports) {
+        if(!Exports) return this;
         if(typeof Exports !== 'object') return this.#flagError(`Extension<${this.name}>.setCFXExports() Parameter type must be "Object"; received "${typeof Exports}"!`);
         if(Array.isArray(Object)) return this.#flagError(`Extension<${this.name}>.setCFXExports() Parameter type must be "Object"; received "Array"!`);
 
