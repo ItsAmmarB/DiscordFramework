@@ -185,7 +185,7 @@ const Player = class Player {
     async getDatabase(filter = {}) {
         if(typeof filter !== 'object' || typeof filter === 'object' && Array.isArray(filter)) throw new Error('DiscordFramework: Player --> getInfractions() filter must be an Object');
 
-        const { helpers: { FindOne } } = require('../core/lib/mongodb/index');
+        const { helpers: { FindOne } } = require('../core/index').MongoDB;
 
         return await FindOne('Players', filter);
     }
@@ -525,7 +525,7 @@ const Player = class Player {
     #UpdateDatabaseInformation() {
 
         const { ObjectId } = require('mongodb');
-        const { helpers: { FindOne, InsertOne, UpdateOne } } = require('../core/lib/mongodb/index');
+        const { helpers: { FindOne, InsertOne, UpdateOne } } = require('../core/index').MongoDB;
 
         // Database
         FindOne('Players', { 'information.identifiers': { $in: this.server.identifiers } }, async result => {
@@ -612,8 +612,7 @@ const Player = class Player {
     }
 
     #DiscordGuildsUpdate() {
-
-        const Discord = require('../core/lib/discord/index');
+        const Discord = require('../core/index').Discord;
 
         this.discord.guilds = Discord.helpers.GetSharedGuilds(this.discord.id).map(guild => {
             const Member = guild.members.resolve(this.discord.id);
@@ -811,12 +810,12 @@ const PlayerSet = class PlayerSet extends Set {
 const NetworkPlayers = new PlayerSet();
 
 if(Debug) {
-    RegisterCommand('Players', (source, args) => {
+    RegisterCommand('DF_Players', (source, args) => {
         if(source > 0) return console.log('ServerFX terminal command only!');
         if(!args[0]) return console.log(NetworkPlayers);
         return console.log(NetworkPlayers.filter(args.join('')));
     });
-    RegisterCommand('Player', (source, args) => {
+    RegisterCommand('DF_Player', (source, args) => {
         if(source > 0) return console.log('ServerFX terminal command only!');
         if(!args[0]) return console.log('missing 1 argument (player identifer)');
         const _Player = NetworkPlayers.get(args[0]);

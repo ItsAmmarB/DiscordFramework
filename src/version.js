@@ -34,7 +34,6 @@ module.exports = async (Callback) => {
             }
 
             Callback({
-                checked: true,
                 local: LocalVersion,
                 remote: RemoteVersion,
                 upToDate: isUpToDate
@@ -42,11 +41,6 @@ module.exports = async (Callback) => {
         });
 
     }).on('error', () => {
-        Callback({
-            checked: false,
-            local: PackageVersion,
-            remote: 'error',
-            upToDate: isUpToDate
-        });
+        Callback(false);
     });
 };

@@ -1,31 +1,46 @@
 const ms = require('ms');
 
-require('./core/index');
-
 const Config = require('./config');
 const { Player, NetworkPlayers } = require('./components/player');
 const Logger = require('./components/logger');
+const { delay } = require('./utils/functions');
 
-const ConnectionExecutables = [];
+const ConnectionsExecutables = {
+    onConnecting: [],
+    onJoining: [],
+    onJoined: [],
+    onDisconnected: []
+};
 
-let isCoreReady = false;
+let CoreStatus = 'Starting';
 let GetMember = null;
 let UpdateMany = null;
 
+require('./version')(async result => {
+    if(result) {
+        if(!result.upToDate) {
+            console.log(`^3[DiscordFramework] A newer version '${result.remote}' was released! currently running ${result.local}^0`);
+        }
+        else {
+            console.log(`^2[DiscordFramework] Running the latest version! ${result.local}^0`);
+        };
+    }
 
-on('DiscordFramework:Core:Ready', () => {
-    GetMember = require('./core/lib/discord/index').helpers.GetMember;
-    UpdateMany = require('./core/lib/mongodb/index').helpers.UpdateMany;
-
-    isCoreReady = true;
-
-    setInterval(() => {
-        UpdateMany('Players', { '_id': { $in: NetworkPlayers.filter(['!Disconnected']).map(p => p.PUID) } }, {
-            $inc: { 'details.playtime': 1 },
-            $set: { 'details.lastSeenTimestmap': Date.now() }
-        });
-    }, 60000);
+    await require('./core/index').initialize((isReady, Modules) => {
+        CoreStatus = isReady ? 'Ready' : 'Error';
+        if(isReady) {
+            GetMember = Modules.Discord.helpers.GetMember;
+            UpdateMany = Modules.MongoDB.helpers.UpdateMany;
+            setInterval(() => {
+                UpdateMany('Players', { '_id': { $in: NetworkPlayers.filter(['Joined', '!Disconnected']).map(p => p.PUID) } }, {
+                    $inc: { 'information.playtime': 1 },
+                    $set: { 'information.lastSeenTimestmap': Date.now() }
+                });
+            }, 2000);
+        }
+    });
 });
+
 
 // Triggered when the player's connection request is received by the server
 on('playerConnecting', async (playerName, setKickReason, deferrals) => {
@@ -36,9 +51,10 @@ on('playerConnecting', async (playerName, setKickReason, deferrals) => {
     let dots = '';
     const dotsInterval = setInterval(() => { dots.length > 3 ? dots = '.' : dots = dots + '.'; }, 750);
 
-    while(!isCoreReady) {
+    while(CoreStatus !== 'Ready') {
+        if(CoreStatus === 'Error') return deferrals.done('An unexpected error occurred!\nPlease try again later');
         deferrals.update(`Core modules are not ready yet!\nPlease wait${dots}`);
-        await Delay(500);
+        await delay(500);
     }
 
     // Fetching identifiers
@@ -47,12 +63,12 @@ on('playerConnecting', async (playerName, setKickReason, deferrals) => {
     const cPlayer = new Player(cPlayerId)
         .setConnectingAt(Date.now());
 
-    await Delay(100);
+    await delay(100);
     deferrals.update(`Checking bans${dots}`);
 
-    await Delay(250);
+    await delay(250);
     const cPlayerDatabase = await cPlayer.getDatabase();
-    await Delay(250);
+    await delay(250);
     let cPlayerOutStandingBans = await cPlayerDatabase.infractions.filter(infraction => infraction.type === 'Ban').filter(infraction => ((infraction.details.timestamp + infraction.details.duration) >= Date.now() || infraction.details.duration === 0));
 
     if(cPlayerOutStandingBans.length > 0) {
@@ -76,12 +92,9 @@ on('playerConnecting', async (playerName, setKickReason, deferrals) => {
         if (!Member) return deferrals.done(Config.connection.requireMember.message);
     }
 
-    emit('DiscordFramework:Player:Connecting', cPlayer.getServerId(), deferrals);
-
-    if(ConnectionExecutables.length > 0) {
+    if(ConnectionsExecutables.onConnecting.length > 0) {
         deferrals.update(`Awaiting additional executions${dots}`);
-        for (const fn of ConnectionExecutables) {
-            console.log(fn);
+        for (const fn of ConnectionsExecutables.onConnecting) {
             await fn(cPlayer, deferrals);
         }
     }
@@ -91,8 +104,11 @@ on('playerConnecting', async (playerName, setKickReason, deferrals) => {
 
     deferrals.update(`Adding player to network${dots}`);
     cPlayer.pushToNetwork();
+
+    emit('DiscordFramework:Player:Connecting', cPlayer.getServerId(), deferrals);
+
     clearInterval(dotsInterval);
-    await Delay(300);
+    await delay(300);
 
     deferrals.done();
 });
@@ -105,11 +121,17 @@ on('playerJoining', async TempID => {
         .setConnectedAt(Date.now())
         .setJoiningAt(Date.now());
 
-    await Delay(500);
+    await delay(750);
+
+    if(ConnectionsExecutables.onJoining.length > 0) {
+        for (const fn of ConnectionsExecutables.onJoining) {
+            await fn(jPlayer);
+        }
+    }
 
     if(!NetworkPlayers.get(jPlayer.getServerId())) { // the only way this could happen, is if the resource were to restart while the player is still joining (in the loadingscreen)
         jPlayer.pushToNetwork();
-        await Delay(300);
+        await delay(300);
     }
 
     console.log(`^4 ===> ^0${jPlayer.getServerId()} ^4| ^0${jPlayer.getName()} ^4is joining^0`);
@@ -121,18 +143,24 @@ on('playerJoining', async TempID => {
 // Triggered when the player is fully connected and is about to spawn
 onNet('playerJoined', async PlayerId => {
 
-    while(!isCoreReady) {
-        await Delay(500);
+    while(CoreStatus !== 'Ready') {
+        await delay(250);
     }
 
     const jPlayer = new Player(PlayerId)
         .setJoinedAt(Date.now());
 
-    await Delay(1000);
+    await delay(1000);
 
     if(!NetworkPlayers.get(jPlayer.getServerId())) { // the only way this could happen, is if the resource were to restart while the player is in the server
         jPlayer.pushToNetwork();
-        await Delay(300);
+        await delay(300);
+    }
+
+    if(ConnectionsExecutables.onJoined.length > 0) {
+        for (const fn of ConnectionsExecutables.onJoined) {
+            await fn(jPlayer);
+        }
     }
 
     emit('DiscordFramework:Player:Joined', jPlayer);
@@ -142,10 +170,16 @@ onNet('playerJoined', async PlayerId => {
 });
 
 // Triggered when a player leaves the server for whatever reason
-on('playerDropped', Reason => {
+on('playerDropped', async Reason => {
     const dPlayer = new Player(global.source)
         .setDisconnectedAt(Date.now())
         .setDisconnectReason(Reason);
+
+    if(ConnectionsExecutables.onDisconnected.length > 0) {
+        for (const fn of ConnectionsExecutables.onDisconnected) {
+            await fn(dPlayer);
+        }
+    }
 
     emit('DiscordFramework:Player:Disconnected', dPlayer, Reason);
     console.log(`^1 ===> ^0${dPlayer.getServerId()} ^1| ^0${dPlayer.getName()} ^1 ${Reason === 'Exiting' ? 'left' : Reason}^0`);
@@ -155,11 +189,6 @@ on('playerDropped', Reason => {
 
 
 module.exports = {
-    /**
-     * The current state of the core
-     * @return {boolean} True of False
-     */
-    Status: isCoreReady,
     /**
      * A pass-through from native JS export to CFX.re exports().
      * This was implemented because requiring a server side file will cause all CFX.re exports() to be nullified/undefined
@@ -172,31 +201,70 @@ module.exports = {
     Export: (Name, Function) => {
         emit('DiscordFramework:Export:Create', Name, Function);
     },
-
-
     /**
      * The function to be executed on player connection
-     * @callback onConnectionFunction
+     * @callback ConnectingExecutableCallbackFn
      * @param {Player} player - The player network object
      * @param {Object} deferrals - The connection defferals object
      */
     /**
-     * Adds a function to the ConnectionExecutables array.
-     * The ConnectionExecutables is an array of functions that
-     * gets executed when the player connection handshake is about
-     * to finish and the player is about to join
-     * @param {onConnectionFunction} Function The function to execute on player connection
-     * @example
-     * onConnection((player, deferrals) => {
-     *      // This code will be executed on player connection
-     * })
+     * The function to be executed on player connection
+     * @callback OtherExecutableCallbackFn
+     * @param {Player} player - The player network object
      */
-    onConnection: Function => {
-        ConnectionExecutables.push(Function);
+    /**
+     * The ConnectionExecutables is an array of functions that
+     * gets executed when a player connection event takes place like,
+     * - onConnecting: for when a player is starting to connect
+     * - onJoining: for when a player is connected and started to join/load server assests
+     * - onJoined: for when a player is fully joined and loaded
+     * - onDisconnected: for when a player is disconnect for whatever reason
+     */
+    ConnectionExecutables: {
+        /**
+         * Adds a function to the ConnectionExecutables.onConnecting array.
+         * @param {ConnectingExecutableCallbackFn} Function The function to execute
+         * @example
+         * onConnection((player, deferrals) => {
+         *      // This code will be executed when the player is connecting
+         * })
+         */
+        onConnecting: Function => {
+            ConnectionsExecutables.onConnecting.push(Function);
+        },
+        /**
+         * Adds a function to the ConnectionExecutables.onJoining array.
+         * @param {OtherExecutableCallbackFn} Function The function to execute
+         * @example
+         * onConnection((player) => {
+         *      // This code will be executed when the player is joining
+         * })
+         */
+        onJoining: Function => {
+            ConnectionsExecutables.onJoining.push(Function);
+        },
+        /**
+         * Adds a function to the ConnectionExecutables.onJoined array.
+         * @param {OtherExecutableCallbackFn} Function The function to execute
+         * @example
+         * onConnection((player) => {
+         *      // This code will be executed when the player has joined
+         * })
+         */
+        onJoined: Function => {
+            ConnectionsExecutables.onJoined.push(Function);
+        },
+        /**
+         * Adds a function to the ConnectionExecutables.onDisconnected array.
+         * @param {OtherExecutableCallbackFn} Function The function to execute
+         * @example
+         * onConnection((player) => {
+         *      // This code will be executed when the player has disconnected
+         * })
+         */
+        onDisconnected: Function => {
+            ConnectionsExecutables.onDisconnected.push(Function);
+        }
     }
 };
 
-
-on('txAdmin:events:serverShuttingDown', ({ delay, admin, message }) => {
-    console.log(delay, admin, message);
-});

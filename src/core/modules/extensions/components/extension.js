@@ -5,17 +5,6 @@ const Extensions = require('./extensions');
 const Utilities = require('../../../../utilities');
 
 
-const Status = {
-    Ready: 'Ready',
-    Enabled: 'Enabled',
-    Disabled: 'Disabled',
-    Error: 'Error',
-    Dependency_Disabled: 'Dependency Disabled',
-    Dependency_Error: 'Dependency Error',
-    Dependency_Missing: 'Dependency Missing',
-    Self_Dependency: 'Self-Dependency',
-    Template: 'Template'
-};
 
 class Extension {
 
@@ -53,7 +42,6 @@ class Extension {
      * The configuration parameters related to the extension
      */
     config = {};
-
 
     /**
      * The main runtime function
@@ -181,7 +169,7 @@ class Extension {
 
         // Check if the extension is a mere template and #register it as 'Template'
         if(this.name === 'Template' && !this.toggle) {
-            this.setStatus('Template');
+            this.setStatus('Ready');
         }
 
         if(this.dependencies.length > 0) {
@@ -189,7 +177,7 @@ class Extension {
 
             if(dependencies.length !== this.dependencies.length) {
                 while(dependencies.length !== this.dependencies.length) {
-                    await this.delay(250);
+                    await Utilities.delay(250);
                 }
             }
 
@@ -240,7 +228,7 @@ class Extension {
                 while(!dependency) {
                     dependency = Extensions.get(Dependency);
                     if(counter === 20) break;
-                    await this.delay(250);
+                    await Utilities.delay(250);
                     counter++;
                 }
 
@@ -268,19 +256,16 @@ class Extension {
              */
         if(this.status === 'Ready') {
             this.setStatus('Enabled');
-            on('DiscordFramework:Core:Ready', async () => {
-                await this.delay(500);
-                this.execute(this, { Discord, MongoDB, Utilities });
+            on('DiscordFramework:Core:Ready', () => {
+                try {
+                    this.#execute(this, { Discord, MongoDB, Utilities });
+                }
+                catch(Err) {
+                    this.#flagError(Err);
+                }
             });
         }
     }
-
-    #flagError(error) {
-        this.status = error;
-        console.error(error);
-    }
-
-    // EXTERNALLY ACCESSIBLE METHOD
 
     /**
      * Executes the main runtime function automatically when the framework core is ready if the extension is ready
@@ -290,7 +275,7 @@ class Extension {
      * @param {MongoDB} Utils.MongoDB - MongoDB module exports including the MongoDB client
      * @param {Utilities} Utils.Utilities - Some useful functions and networked variables such as Player Class, Players Class, Network Players & their information, Connections, onConnection() (for when a player is connecting) and etc..
      */
-    execute(ExtensionInfo, Utils) {
+    #execute(ExtensionInfo, Utils) {
         if(!this.#_function) return;
         try {
             this.#_function(ExtensionInfo, Utils);
@@ -300,17 +285,22 @@ class Extension {
         }
     }
 
+    #flagError(error) {
+        this.status = 'Error';
+        console.error(error);
+    }
+
+    // EXTERNALLY ACCESSIBLE METHOD
+
     /**
      * Starts executing client side code with a specific event name!
      * - This can be used as a sequencing method to run the players' client side after fetching/obtaining certain data
      * then using this method is send such data to the client side
      * - Any addtional parameters aside from Payload will not be lost
-     * @param {Object} Payload - An object containing the targeted client id and payload to send to client
-     * @param {Number} Payload.playerId - The player ID to trigger their client side event; if not provided, will trigger all players' client events
-     * @param {{}} Payload.payload - A payload to send to the players' client side event
+     * @param {number} [playerId = -1] - The player ID to trigger their client side event; if not provided, will trigger all players' client events
+     * @param {any} [payload = null] - A payload to send to the players' client side event
      * @example
-     * Extension.executeClient({
-     *      playerId: player.id,
+     * Extension.executeClient(player.id, {
      *      payload: {
      *          targetedVehicle: {
      *              model: 'nero',
@@ -324,30 +314,12 @@ class Extension {
      *      }
      * })
      */
-    executeClient(Payload) {
-        let playerId = -1;
-        if(Payload.playerId) {
-            if(isNaN(Payload.playerId)) return this.#flagError(`Extension<${this.name}>.executeClient(Payload.playerId, ...) Payload.playerId type must be "Number"!`);
-            playerId = Payload.playerId;
+    executeClient(playerId = -1, payload = {}) {
+        if(!playerId) playerId = -1;
+        if(playerId) {
+            if(isNaN(playerId)) return this.#flagError(`Extension<${this.name}>.executeClient(playerId, ...) playerId type must be "Number"!`);
         };
-        let payload = null;
-        if(Payload.payload) {
-            if(typeof Payload.payload !== 'object' || Array.isArray(Payload.payload)) return this.#flagError(`Extension<${this.name}>.executeClient(Payload.payload, ...) Payload.payload type must be "Object"!`);
-            payload = Payload.payload;
-        }
-
         emitNet('DiscordFramework:Extensions:RunClientSide:' + this.name, playerId, payload);
-    }
-
-    /**
-     * A fancy and a quick way to hold code execution
-     * @readonly
-     * @param {number} WaitMS A wait time in milliseconds
-     * @returns {promise<void>}
-     * @example await this.delay(2000) // hold execution for 2 seconds
-     */
-    async delay(WaitMS) {
-        return await new Promise(resolve => setTimeout(resolve, WaitMS));
     }
 
     /**
@@ -395,7 +367,6 @@ class Extension {
     /**
      * Sets the extensions's Exports cfx to be used by other resources
      * - Note that any asynchronous function must be converted to a callback function to avoid cfx errors and cfx exports limitations
-     * @readonly
      * @param {Object} Exports - An object with the export name as key and the exportable as value
      * @example
      * Cars.setCFXExports({

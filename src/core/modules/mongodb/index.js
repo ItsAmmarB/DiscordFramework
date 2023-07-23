@@ -153,6 +153,20 @@ const DeleteMany = async (Collection, Filter, Callback) => {
     }
 };
 
+/**
+ * Return a brief information of the MognoDB client
+ * @async
+ * @returns {string} Database name, collections size, documents size, and Database disk size
+ */
+const GetInfo = async () => {
+    const dbInfo = await Client.db(Config.core.mongo.databaseName).stats();
+    return `\n              ^3Datebase Name: ^4${Config.core.mongo.databaseName}` +
+           `\n              ^3MongoDB Collections: ^4${dbInfo.collections}` +
+           `\n              ^3MongoDB Documents: ^4${dbInfo.objects}` +
+           `\n              ^3MongoDB Size: ^4${Math.round(((dbInfo.dataSize / 1024) + Number.EPSILON) * 100) / 100} MB ^6(${dbInfo.dataSize} KB)` +
+           '\n^0';
+};
+
 
 // CFX Exports
 emit('DiscordFramework:Export:Create', 'MongoDB', () => {
@@ -187,6 +201,7 @@ emit('DiscordFramework:Export:Create', 'MongoDB', () => {
 
 module.exports = {
     client: Client,
+    info: GetInfo,
     helpers: {
         InsertOne, InserMany,
         FindOne, FindMany,

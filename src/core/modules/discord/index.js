@@ -171,6 +171,18 @@ const IsSnowFlake = SnowFlake => {
     return true;
 };
 
+/**
+ * Return a brief information of the Discord client
+ * @returns {string} client username & ID, client invite link, users size, and guilds size
+ */
+const GetInfo = () => {
+    return `\n              ^3Client Details: ^4${Client.user.tag + ' ^6(' + Client.user.id + ')'}` +
+           `\n              ^3Client Invite: ^4${Client.generateInvite({ scopes: ['bot'] })}` +
+           `\n              ^3Discord Users: ^4${Client.users.cache.size + (Client.users.cache.size === 1 ? ' User' : ' Users')}` +
+           `\n              ^3Discord Guilds: \n${Client.guilds.cache.map(guild => `                ^3- ^4${guild.name} ^6(${guild.id})`).join('\n')}` +
+           '\n^0';
+};
+
 
 /**
  * All CFX Exports are callbacks. since Asynchronous functions aren't compatible with lua/C#
@@ -198,6 +210,7 @@ emit('DiscordFramework:Export:Create', 'Discord', () => {
 
 module.exports = {
     client: Client,
+    info: GetInfo,
     helpers: {
         GetGuild,
         GetSharedGuilds,
