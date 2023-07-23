@@ -116,12 +116,6 @@ _dump
 
 src/config.js
 
-
-# eslint stuff
-.eslintignore
-.eslintrc.json
-
-
 docs/
 logs/
 temp/
