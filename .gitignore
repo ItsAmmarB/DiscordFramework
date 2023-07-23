@@ -114,8 +114,6 @@ yarn.lock
 
 _dump
 
-src/config.js
-
 docs/
 logs/
 temp/
