@@ -300,7 +300,7 @@ class Extension {
      * @param {number} [playerId = -1] - The player ID to trigger their client side event; if not provided, will trigger all players' client events
      * @param {any} [payload = null] - A payload to send to the players' client side event
      * @example
-     * Extension.executeClient(player.id, {
+     * Extension.runClient(player.id, {
      *      payload: {
      *          targetedVehicle: {
      *              model: 'nero',
@@ -314,12 +314,12 @@ class Extension {
      *      }
      * })
      */
-    executeClient(playerId = -1, payload = {}) {
+    runClient(playerId = -1, payload = {}) {
         if(!playerId) playerId = -1;
         if(playerId) {
             if(isNaN(playerId)) return this.#flagError(`Extension<${this.name}>.executeClient(playerId, ...) playerId type must be "Number"!`);
         };
-        emitNet('DiscordFramework:Extensions:RunClientSide:' + this.name, playerId, payload);
+        emitNet('DiscordFramework:Extensions:RunClient:' + this.name, playerId, payload);
         return this;
     }
 

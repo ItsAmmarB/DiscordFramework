@@ -31,7 +31,7 @@ const Player = class Player {
         };
         this.discord = {
             id: this.server.identifiers.find(identifier => identifier.includes('discord:')) ? this.server.identifiers.find(identifier => identifier.includes('discord:')).split(':')[1] : null,
-            guilds: null
+            guilds: []
         };
         this.cache = {
         }; // extensions and different resources can store things here and use it
@@ -617,28 +617,28 @@ const Player = class Player {
         this.discord.guilds = Discord.helpers.GetSharedGuilds(this.discord.id).map(guild => {
             const Member = guild.members.resolve(this.discord.id);
             return {
-                ID: guild.id,
-                Name: guild.name,
-                Administrator: Member.permissions.has('ADMINISTRATOR'),
-                Roles: Member.roles.cache.map(role => ({ ID: role.id, Name: role.name }))
+                id: guild.id,
+                name: guild.name,
+                administrator: Member.permissions.has('ADMINISTRATOR'),
+                roles: Member.roles.cache.map(role => ({ id: role.id, name: role.name }))
             };
         });
 
         Discord.client.on('guildMemberUpdate', (oldM, newM) => {
             if(this.discord.id && newM.id === this.discord.id && !this.server.connections.disconnectedAt) {
                 Debug(`(${this.getServerId()}) ${this.getName()}'s roles were updated!`);
-                const Guild = this.discord.guilds.find(guild => guild.ID === newM.guild.id);
+                const Guild = this.discord.guilds.find(guild => guild.id === newM.guild.id);
                 if(Guild) {
-                    Guild.Name = newM.guild.name;
-                    Guild.Administrator = newM.permissions.has('ADMINISTRATOR');
-                    Guild.Roles = newM.roles.cache.map(role => ({ ID: role.id, Name: role.name }));
+                    Guild.name = newM.guild.name;
+                    Guild.administrator = newM.permissions.has('ADMINISTRATOR');
+                    Guild.roles = newM.roles.cache.map(role => ({ id: role.id, name: role.name }));
                 }
                 else {
                     this.discord.guilds.push({
-                        ID: newM.guild.id,
-                        Name: newM.guild.name,
-                        Administrator: newM.permissions.has('ADMINISTRATOR'),
-                        Roles: newM.roles.cache.map(role => ({ ID: role.id, Name: role.name }))
+                        id: newM.guild.id,
+                        name: newM.guild.name,
+                        administrator: newM.permissions.has('ADMINISTRATOR'),
+                        roles: newM.roles.cache.map(role => ({ id: role.id, name: role.name }))
                     });
                 }
                 return emit('DiscordFrameworK:Player:Roles:Updated', this);

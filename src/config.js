@@ -25,8 +25,8 @@ module.exports = {
              *        is incorrect all Discord functions throw an error IF no GuildId is provided as an optional parameter
              */
             communityGuild: {
-                id: '1116287895263789186',
-                name: 'The Best Community',
+                id: '733275046302449686',
+                name: 'Lix\'s Model Warehouse',
                 invite: 'https://discord.gg/cY48f6HdY5'
             }
         },

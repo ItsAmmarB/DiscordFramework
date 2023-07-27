@@ -33,7 +33,7 @@ Template.setFunction((ExtensionInfo, { Discord, MongoDB, Utilities }) => {
      *
      * Check the method comment for more information
      */
-    Template.executeClient();
+    Template.runClient();
 
 
     /**
