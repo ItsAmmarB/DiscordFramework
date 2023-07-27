@@ -1,4 +1,4 @@
-const { delay } = require('./utilities');
+const { delay } = require('../../../utils/functions');
 
 const Extension = require('./components/extension');
 const Extensions = require('./components/extensions');
@@ -6,7 +6,8 @@ const Extensions = require('./components/extensions');
 const LocalExtensionsFile = [];
 
 
-on('DiscordFramework:Core:Discord:Ready', async () => {
+on('DiscordFramework:Core:Module:Ready', async (name) => {
+    if(name !== 'Discord') return;
     const { readdirSync } = require('fs');
     const Directory = GetResourcePath(GetCurrentResourceName()) + '/src/extensions';
     const Folders = readdirSync(Directory);
@@ -40,7 +41,7 @@ on('DiscordFramework:Core:Discord:Ready', async () => {
         });
     }
 
-    emit('DiscordFramework:Core:Extensions:Ready');
+    emit('DiscordFramework:Core:Module:Ready', 'Extensions');
 });
 
 on('DiscordFramework:Extensions:UpdateCFXExports', () => {

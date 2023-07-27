@@ -8,7 +8,7 @@ const Config = require('../../../config');
 const Client = new MongoDB.MongoClient(Config.core.mongo.uri, { useUnifiedTopology: true, maxIdleTimeMS: 0, serverSelectionTimeoutMS: 0, socketTimeoutMS: 0, connectTimeoutMS: 0 });
 
 Client.connect().then(() => {
-    emit('DiscordFramework:Core:MongoDB:Ready');
+    emit('DiscordFramework:Core:Module:Ready', 'MongoDB');
 
     // Check and initialize Players collections if not available
     FindOne('Players', { _id: 'Initializer' }, result => {

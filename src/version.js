@@ -1,4 +1,4 @@
-module.exports = async (Callback) => {
+module.exports = async () => {
 
     const { readFileSync } = require('fs');
     const https = require('https');
@@ -21,26 +21,17 @@ module.exports = async (Callback) => {
         res.on('end', () => {
             RemotePackage = JSON.parse(RemotePackage);
             const RemoteVersion = RemotePackage.version;
-
             const lVersion = LocalVersion.includes('-') ? LocalVersion.split('-')[0].split('.').join('') : LocalVersion.split('.').join('');
             const rVersion = RemoteVersion.includes('-') ? RemoteVersion.split('-')[0].split('.').join('') : RemoteVersion.split('.').join('');
 
-            let isUpToDate = null;
             if(rVersion > lVersion) {
-                isUpToDate = false;
+                console.log(`^3[DiscordFramework] A newer version '${RemoteVersion}' was released! currently running ${LocalVersion}^0`);
             }
             else {
-                isUpToDate = true;
+                console.log(`^2[DiscordFramework] Running the latest version! ${LocalVersion}^0`);
             }
 
-            Callback({
-                local: LocalVersion,
-                remote: RemoteVersion,
-                upToDate: isUpToDate
-            });
         });
 
-    }).on('error', () => {
-        Callback(false);
     });
 };

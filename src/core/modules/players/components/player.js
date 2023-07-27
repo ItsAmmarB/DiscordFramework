@@ -1,3 +1,5 @@
+const { NetworkPlayers } = require('./players');
+
 /**
  * A class constructor for player
  * @param {number} PlayerId The player server ID
@@ -185,7 +187,7 @@ const Player = class Player {
     async getDatabase(filter = {}) {
         if(typeof filter !== 'object' || typeof filter === 'object' && Array.isArray(filter)) throw new Error('DiscordFramework: Player --> getInfractions() filter must be an Object');
 
-        const { helpers: { FindOne } } = require('../core/index').MongoDB;
+        const { helpers: { FindOne } } = require('../../../index').MongoDB.module;
 
         return await FindOne('Players', filter);
     }
@@ -525,7 +527,7 @@ const Player = class Player {
     #UpdateDatabaseInformation() {
 
         const { ObjectId } = require('mongodb');
-        const { helpers: { FindOne, InsertOne, UpdateOne } } = require('../core/index').MongoDB;
+        const { helpers: { FindOne, InsertOne, UpdateOne } } = require('../../../index').MongoDB.module;
 
         // Database
         FindOne('Players', { 'information.identifiers': { $in: this.server.identifiers } }, async result => {
@@ -612,7 +614,7 @@ const Player = class Player {
     }
 
     #DiscordGuildsUpdate() {
-        const Discord = require('../core/index').Discord;
+        const Discord = require('../../../index').Discord.module;
 
         this.discord.guilds = Discord.helpers.GetSharedGuilds(this.discord.id).map(guild => {
             const Member = guild.members.resolve(this.discord.id);
@@ -647,186 +649,6 @@ const Player = class Player {
     }
 };
 
-/**
- * A modified Set() that was made to make player details management a lot easier and simpler to obtain and utilize
- */
-const PlayerSet = class PlayerSet extends Set {
-    /**
-     * Get the last entry belonging to the specified player's identifier; including entries where the player had disconnected
-     * @param {String} Identifier A value that identifies a player, it can a sever id, discord id, or an identifier such as license or ip.
-     * @returns {Player} Player
-     */
-    get(Identifier) {
-        // Check if Queries is not an instance of object/array
-        if (!Identifier) return new Error('Players.prototype.get(Identifier) ---> Unknown Identifier');
-        if (typeof Identifier === 'object' && Array.isArray(Identifier)) {
-            const returnable = [];
-            for (let i = 0; i < Identifier.length; i++) {
-                const identifier = this.get(Identifier[i]);
-                returnable.push(identifier);
-            }
-            return returnable;
-        }
-        else {
-            Identifier = String(Identifier);
-            const ValIden = this.validateIdentifier(Identifier);
-            if (ValIden === 'Server') {
-                const _Players = this.toArray();
-                const _Player = _Players.filter(player => String(player.server.id) === Identifier).sort((a, b) => b.server.id - a.server.id)[0];
-                if (_Player) {
-                    return _Player;
-                }
-                else {
-                    return undefined;
-                }
-            }
-            else if (ValIden === 'Discord') {
-                const _Players = this.toArray();
-                const _Player = _Players.filter(player => String(player.discord.id) === Identifier).sort((a, b) => b.server.id - a.server.id)[0];
-                if (_Player) {
-                    return _Player;
-                }
-                else {
-                    return undefined;
-                }
-            }
-            else if (ValIden === 'Identifier') {
-                const _Players = this.toArray();
-                const _Player = _Players.filter(player => player.server.identifiers.map(iden => String(iden).toLowerCase()).find(iden => iden === Identifier)).sort((a, b) => b.server.id - a.server.id)[0];
-                if (_Player) {
-                    return _Player;
-                }
-                else {
-                    return undefined;
-                }
-            }
-            else {
-                return new Error('Players.prototype.get(Identifier) ---> Unknown Identifier');
-            }
-        }
-
-    }
-
-    /**
-     * Returns the Players Collection as an array
-     * @returns {Player[]} Array of players objects
-     */
-    toArray() {
-        return Array.from(this.values(), element => element);
-    }
-
-    /**
-     * Filters the network player to any of the available conditions
-     * @param {Array.<('Connecting' | '!Connecting' | 'Connected' | '!Connected' | 'Joining' | '!Joining' | 'Joined' | '!Joined' | 'Disconnected' | '!Disconnected')>} filters - The available filters to filter out the player from the network players
-     * @returns {Player[]} An array of the filtered players
-     * @example
-     * NetworkPlayers.filter(['Joined', '!Disconnected']) // this will return an array of the players who had joined and didn't leave
-     * NetworkPlayers.filter(['Connecting', '!Connected', 'Disconnected']) // this will return an array of the players who started connecting but left before joining
-     */
-    filter(filters) {
-        if(typeof filters !== 'object' && !Array.isArray(filters)) {
-            if(typeof filters === 'string') {
-                filters = [...filters.split('[')[1].split(']')[0].split(',').map(f => f.split('\'')[1])];
-            }
-            else {
-                return console.error('PlayerSet.filter(filters) Filters parameter must be an array!');
-            }
-        }
-        return this.toArray().filter(player => {
-            let filter = player.server.connections.status;
-
-            if(filters.find(f => f === 'Connecting')) {
-                filter = filter && player.server.connections.connectingAt;
-            }
-            if(filters.find(f => f === '!Connecting')) {
-                filter = filter && !player.server.connections.connectingAt;
-            }
-
-            if(filters.find(f => f === 'Connected')) {
-                filter = filter && player.server.connections.connectedAt;
-            }
-            if(filters.find(f => f === '!Connected')) {
-                filter = filter && !player.server.connections.connectedAt;
-            }
-
-            if(filters.find(f => f === 'Joining')) {
-                filter = filter && player.server.connections.joiningAt;
-            }
-            if(filters.find(f => f === '!Joining')) {
-                filter = filter && !player.server.connections.joiningAt;
-            }
-
-            if(filters.find(f => f === 'Joined')) {
-                filter = filter && player.server.connections.joinedAt;
-            }
-            if(filters.find(f => f === '!Joined')) {
-                filter = filter && !player.server.connections.joinedAt;
-            }
-
-            if(filters.find(f => f === 'Disconnected')) {
-                filter = filter && player.server.connections.disconnectedAt;
-            }
-            if(filters.find(f => f === '!Disconnected')) {
-                filter = filter && !player.server.connections.disconnectedAt;
-            }
-
-            return filter;
-        });
-    }
-
-    /**
-     * Checks whether the provided player identifier is an actual identifier
-     * @param {string|number} Identifier A player identifier of any kind
-     * @returns {('Identifier'|'Discord'|'Server')|undefined} The identifier type
-     * @example
-     * NetworkPlayers.validateIdentifier('fivem:63953')
-     * // output: 'Identifier'
-     */
-    validateIdentifier(Identifier) {
-        if (Identifier.includes('license:') && typeof Identifier === 'string' ||
-            Identifier.includes('discord:') && typeof Identifier === 'string' ||
-            Identifier.includes('live:') && typeof Identifier === 'string' ||
-            Identifier.includes('ip:') && typeof Identifier === 'string' ||
-            Identifier.includes('xbl:') && typeof Identifier === 'string' ||
-            Identifier.includes('fivem:') && typeof Identifier === 'string') {
-            return 'Identifier';
-        }
-        if (!isNaN(Identifier)) {
-            if (Identifier.length === 19) {
-                return 'Discord';
-            }
-            else {
-                return 'Server';
-            }
-        }
-        return undefined;
-    }
-};
-
-/**
- * The players information since the last server start
- * @return {Players}
- */
-const NetworkPlayers = new PlayerSet();
-
-if(Debug) {
-    RegisterCommand('DF_Players', (source, args) => {
-        if(source > 0) return console.log('ServerFX terminal command only!');
-        if(!args[0]) return console.log(NetworkPlayers);
-        return console.log(NetworkPlayers.filter(args.join('')));
-    });
-    RegisterCommand('DF_Player', (source, args) => {
-        if(source > 0) return console.log('ServerFX terminal command only!');
-        if(!args[0]) return console.log('missing 1 argument (player identifer)');
-        const _Player = NetworkPlayers.get(args[0]);
-        if(!_Player) return console.log('Player not found!');
-        return console.log(_Player);
-    });
-}
-
-
 module.exports = {
-    NetworkPlayers,
-    PlayerSet,
     Player
 };

@@ -1,4 +1,4 @@
-const { Extension } = require('../../core/index').Extensions;
+const { module: { Extension } } = require('../../core/index').Extensions;
 
 const Config = require('./config');
 
@@ -20,14 +20,14 @@ const Permissions = new Extension({
  */
 Permissions.setFunction((ExtensionInfo, { Discord, MongoDB, Utilities }) => {
 
-    Utilities.Players.Conenctions.onJoined(player => {
+    Utilities.Players.Connections.onJoined(player => {
         if(player.getDiscordId()) {
             AceAdd(player);
             return Permissions.runClient(player.getServerId(), { player: player, config: Config });
         }
     });
 
-    Utilities.Players.Conenctions.onDisconnected(player => {
+    Utilities.Players.Connections.onDisconnected(player => {
         if(player.getDiscordId()) {
             return AceRemove(player);
         }

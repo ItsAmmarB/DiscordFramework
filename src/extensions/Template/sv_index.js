@@ -1,4 +1,4 @@
-const { Extension } = require('../../core/index').Extensions;
+const { module: { Extension } } = require('../../core/index').Extensions;
 
 const Template = new Extension({
     name: 'Template',

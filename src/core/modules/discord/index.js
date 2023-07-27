@@ -8,7 +8,7 @@ const Config = require('../../../config');
 const Client = new Discord.Client({ intents: 131071, presence: { status: 'dnd', activities: [ { name: 'DiscordFramework', type: 3, url: 'https://github.com/ItsAmmarB/DiscordFramework/' }] } });
 
 Client.on('ready', () => {
-    emit('DiscordFramework:Core:Discord:Ready');
+    emit('DiscordFramework:Core:Module:Ready', 'Discord');
 });
 Client.login(Config.core.discord.token);
 
@@ -48,7 +48,7 @@ const GetSharedGuilds = UserId => {
     if (!UserId) throw new Error('DiscordFramework: Discord --> GetSharedGuilds() No player ID provided');
     if (!IsSnowFlake(UserId)) throw new Error('DiscordFramework: Discord --> GetSharedGuilds() Invalid player ID provided');
 
-    const { NetworkPlayers } = require('../../../components/player');
+    const { NetworkPlayers } = require('../../index').Players.module.helpers;
     if(NetworkPlayers.validateIdentifier(UserId) !== 'Discord') {
         // Check whether the provided ID is a server ID or a Discord ID; and if not discord, then fetch the player data and retrieve their Discord ID
         const Player = NetworkPlayers.get(UserId);
@@ -98,7 +98,7 @@ const GetMember = async (UserId, GuildId = Config.core.discord.communityGuild.id
 
     if (!UserId) throw new Error('DiscordFramework: Discord --> GetMember() No player ID provided');
 
-    const { NetworkPlayers } = require('../../../components/player');
+    const { NetworkPlayers } = require('../../index').Players.module.helpers;
     if(NetworkPlayers.validateIdentifier(UserId) !== 'Discord') {
         // Check whether the provided ID is a server ID or a Discord ID; and if not discord, then fetch the player data and retrieve their Discord ID
         const Player = NetworkPlayers.get(UserId);
@@ -131,7 +131,7 @@ const GetUser = async UserId => {
 
     if (!UserId) throw new Error('DiscordFramework: Discord --> GetUser() No player ID provided');
 
-    const { NetworkPlayers } = require('../../../components/player');
+    const { NetworkPlayers } = require('../../index').Players.module.helpers;
     // Check whether the provided ID is a server ID or a Discord ID; and if not discord, then fetch the player data and retrieve their Discord ID
     if(NetworkPlayers.validateIdentifier(UserId) !== 'Discord') {
         const Player = NetworkPlayers.get(UserId);
@@ -176,11 +176,12 @@ const IsSnowFlake = SnowFlake => {
  * @returns {string} client username & ID, client invite link, users size, and guilds size
  */
 const GetInfo = () => {
-    return `\n              ^3Client Details: ^4${Client.user.tag + ' ^6(' + Client.user.id + ')'}` +
-           `\n              ^3Client Invite: ^4${Client.generateInvite({ scopes: ['bot'] })}` +
-           `\n              ^3Discord Users: ^4${Client.users.cache.size + (Client.users.cache.size === 1 ? ' User' : ' Users')}` +
-           `\n              ^3Discord Guilds: \n${Client.guilds.cache.map(guild => `                ^3- ^4${guild.name} ^6(${guild.id})`).join('\n')}` +
-           '\n^0';
+    const msg = `\n              ^3Client Details: ^4${Client.user.tag + ' ^6(' + Client.user.id + ')'}` +
+                `\n              ^3Client Invite: ^4${Client.generateInvite({ scopes: ['bot'] })}` +
+                `\n              ^3Discord Users: ^4${Client.users.cache.size + (Client.users.cache.size === 1 ? ' User' : ' Users')}` +
+                `\n              ^3Discord Guilds: \n${Client.guilds.cache.map(guild => `                ^3- ^4${guild.name} ^6(${guild.id})`).join('\n')}` +
+                '\n^0';
+    return msg;
 };
 
 

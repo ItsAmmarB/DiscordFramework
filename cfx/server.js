@@ -21,4 +21,4 @@ global.Debug = msg => {
 };
 
 
-require(`${GetResourcePath(GetCurrentResourceName())}/src/index`);
+require(`${GetResourcePath(GetCurrentResourceName())}/src/core/index`);
