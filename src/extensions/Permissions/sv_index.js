@@ -1,5 +1,3 @@
-const { Extension } = require('../../core/index').Extensions;
-
 const Config = require('./config');
 
 const Permissions = new Extension({
