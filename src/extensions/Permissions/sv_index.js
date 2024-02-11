@@ -123,4 +123,3 @@ Permissions.setFunction((ExtensionInfo, { Discord, MongoDB, Utilities }) => {
     };
 
 });
-
