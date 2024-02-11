@@ -114,7 +114,6 @@ Permissions.setFunction((ExtensionInfo, { Discord, MongoDB, Utilities }) => {
         console.log(CheckPermission(args[0], [args[1]], args[2]));
     });
 
-
     Permissions.setCFXExports({
         CheckPermission: (PlayerId, Roles, GuildId) => CheckPermission(PlayerId, Roles, GuildId)
     });
